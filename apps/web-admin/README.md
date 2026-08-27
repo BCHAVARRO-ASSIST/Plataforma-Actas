@@ -1,75 +1,33 @@
-# React + TypeScript + Vite
+# Plataforma de Actas — Web Admin
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación web Single Page Application (SPA) para la administración, control de inventario, emisión de actas y captura de firmas digitales manuscritas.
 
-Currently, two official plugins are available:
+## 🛠️ Stack Tecnológico
+- **Framework**: React 19
+- **Build Tool**: Vite 7
+- **Lenguaje**: TypeScript 5.8
+- **Estilos**: Vanilla CSS modular con variables y diseño responsivo
+- **Iconografía y Gráficos**: SVG nativo interactivo (Donut charts, Timeline bars, métricas ejecutivas)
+- **Firma Digital**: HTML5 Canvas con captura táctil y compatibilidad multidispositivo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Desarrollo Local
 
-## React Compiler
+```bash
+# Instalar dependencias
+npm install
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Iniciar servidor de desarrollo (por defecto http://localhost:5173)
+npm run dev
 
-## Expanding the ESLint configuration
+# Compilar para producción
+npm run build
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+# Validar linting
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+## 🌐 Configuración de Entorno
+Copia `.env.example` a `.env.local` para configurar la URL del backend:
+```env
+VITE_API_URL=http://localhost:8080
 ```

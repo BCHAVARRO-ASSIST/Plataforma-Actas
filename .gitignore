@@ -22,14 +22,11 @@
 .DS_Store
 Thumbs.db
 
-# Respaldos locales de base de datos
-bd/backups/
+# Respaldos y dumps de base de datos
 *.dump
 *.backup
+*.sql.bak
 
 # Runtime storage
 storage/documentos/*
 !storage/documentos/.gitkeep
-
-# Shared contracts generated files
-packages/shared-contracts/generated/

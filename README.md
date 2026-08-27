@@ -1,22 +1,73 @@
 # Plataforma de Actas
 
-## Estructura del repositorio
+Solución empresarial para la gestión del ciclo de vida, entrega física, custodia y control de activos tecnológicos mediante actas electrónicas firmadas digitalmente y selladas con hash criptográfico SHA-256.
 
-- `front/web-admin`: aplicacion web administrativa en React y Vite.
-- `back/api`: API REST en ASP.NET.
-- `bd`: esquema, migraciones, datos semilla y respaldos de PostgreSQL.
-- `infra`: configuracion de Docker, Nginx y Redis.
-- `docs`: documentacion funcional, tecnica y de datos.
-- `tests`: pruebas automatizadas.
-- `packages`: contratos o librerias compartidas, solo cuando sean necesarios.
-- `tools`: utilidades de desarrollo.
+---
 
-Cada capa conserva sus propias dependencias y configuracion. El frontend consume la API mediante `VITE_API_URL`; el backend recibe sus secretos mediante configuracion local o variables de entorno; la base de datos se versiona exclusivamente con scripts dentro de `bd/migrations`.
+## 📁 Estructura del Repositorio
 
-## Desarrollo local
+- **`apps/api`**: Backend en **ASP.NET Core 10** bajo patrón de **Monolito Modular con Vertical Slices** (`Actas`, `Auth`, `Dashboard`, `Equipment`, `Health`, `Reportes`, `Roles`, `Usuarios`), persistencia con **EF Core 10** y generación de PDFs institucionales (**TI-FOR-ACTA-001**) mediante **QuestPDF**.
+- **`apps/web-admin`**: Frontend SPA en **React 19 + TypeScript + Vite + Tailwind CSS**, con soporte para firmas manuscritas digitales en canvas táctil, paneles ejecutivos de métricas y gestión de inventario.
+- **`database`**: Definición de contenedor **PostgreSQL 17** para despliegues.
+- **`tools/migrator`**: Contenedor utilitario para aplicación automatizada de **EF Core Migrations Bundle**.
+- **`infra/docker`**: Orquestación con **Docker Compose** (`db` → `migrator` → `api` → `web`) con dependencias estrictas por comprobación de estado de salud.
+- **`docs`**: Documentación técnica, diagramas entidad-relación, flujos de secuencia y Architectural Decision Records (**ADR 0001** y **0002**).
+- **`tests`**: Proyectos de pruebas automatizadas (`PlataformaActas.Api.UnitTests` y `PlataformaActas.Api.IntegrationTests`).
+- **`storage`**: Almacenamiento local estructurado para documentos PDF generados (`storage/documentos/`).
 
-1. Copia `infra/docker/.env.example` como `infra/docker/.env` y ajusta los valores locales.
-2. Inicia PostgreSQL y Redis con `docker compose --env-file infra/docker/.env -f infra/docker/docker-compose.yml up -d`.
-3. Configura los secretos del backend a partir de `back/api/appsettings.Development.example.json` sin versionar el archivo local.
-4. Ejecuta la API desde `back/api` con `dotnet run`.
-5. Copia `front/web-admin/.env.example` como `front/web-admin/.env.local` y ejecuta `npm.cmd run dev` desde esa carpeta.
+Para una descripción detallada de la arquitectura, consulta [ARQUITECTURA_SISTEMA.md](file:///ARQUITECTURA_SISTEMA.md).
+
+---
+
+## 🚀 Puesta en Marcha y Desarrollo Local
+
+### 1. Requisitos Previos
+- [.NET 10 SDK](https://dotnet.microsoft.com/)
+- [Node.js 22+](https://nodejs.org/) y npm / pnpm
+- [Docker Desktop](https://www.docker.com/) o instancia local de PostgreSQL 17
+
+---
+
+### 2. Ejecución con Docker Compose (Recomendado)
+
+```bash
+# 1. Acceder al directorio de infraestructura
+cd infra/docker
+
+# 2. Configurar variables de entorno si es necesario (utiliza .env por defecto)
+# cp .env.example .env
+
+# 3. Construir y levantar todos los servicios (db, migrator, api, web)
+docker compose up --build -d
+```
+
+- **Frontend Web Admin**: [http://localhost](http://localhost) (Puerto 80)
+- **API Backend**: [http://localhost:8080](http://localhost:8080)
+- **Healthcheck**: [http://localhost:8080/api/health](http://localhost:8080/api/health)
+- **OpenAPI / Swagger**: [http://localhost:8080/openapi/v1.json](http://localhost:8080/openapi/v1.json)
+
+---
+
+### 3. Desarrollo Local Independiente
+
+#### Backend (API .NET 10)
+```bash
+# Restaurar dependencias y compilar solución completa
+dotnet build PlataformaActas.sln
+
+# Ejecutar API
+cd apps/api
+dotnet run
+```
+
+#### Frontend (React 19 + Vite)
+```bash
+cd apps/web-admin
+npm install
+npm run dev
+```
+
+#### Ejecución de Pruebas Automatizadas
+```bash
+dotnet test PlataformaActas.sln
+```
