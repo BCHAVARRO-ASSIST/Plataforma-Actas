@@ -32,14 +32,12 @@ public sealed class JwtTokenService : IJwtTokenService
                 ? minutes
                 : 60;
 
+        // Referencias esenciales del token (sin redundancia de datos personales)
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
             new(ClaimTypes.Name, usuario.UsuarioRed),
-            new(ClaimTypes.Email, usuario.Correo),
-            new(ClaimTypes.Role, rol.Nombre),
-            new("proceso", usuario.Proceso),
-            new("rol_id", rol.Id.ToString())
+            new(ClaimTypes.Role, rol.Nombre)
         };
 
         foreach (var permiso in permisos)

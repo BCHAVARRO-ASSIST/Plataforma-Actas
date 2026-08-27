@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using PlataformaActas.Api.Infrastructure.Persistence;
 using PlataformaActas.Api.Modules.Auth.Models.Dto;
 using PlataformaActas.Api.Modules.Auth.Services;
 
@@ -43,25 +45,51 @@ public static class AuthEndpoints
             ));
         });
 
-        // 2. Usuario autenticado (me)
-        group.MapGet("/me", (HttpContext httpContext) =>
+        // 2. Usuario autenticado (me) - Resuelve los datos desde la BD a partir del ID del token
+        group.MapGet("/me", async (
+            HttpContext httpContext,
+            [FromServices] PlataformaActasDbContext context,
+            CancellationToken cancellationToken) =>
         {
-            var usuarioId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var usuarioRed = httpContext.User.FindFirst(ClaimTypes.Name)?.Value;
-            var correo = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            var rol = httpContext.User.FindFirst(ClaimTypes.Role)?.Value;
-            var permisos = httpContext.User.FindAll("permiso")
-                .Select(c => c.Value)
+            var userIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userIdStr) || !int.TryParse(userIdStr, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            var user = await context.Usuarios
+                .AsNoTracking()
+                .Include(u => u.UsuarioRoles)
+                    .ThenInclude(ur => ur.Rol)
+                        .ThenInclude(r => r.RolPermisos)
+                            .ThenInclude(rp => rp.Permiso)
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+
+            if (user is null || !user.Activo)
+            {
+                return Results.Unauthorized();
+            }
+
+            var rolActivo = user.UsuarioRoles
+                .Select(ur => ur.Rol)
+                .FirstOrDefault(r => r != null && r.Activo);
+
+            var permisos = rolActivo?.RolPermisos
+                .Where(rp => rp.Permiso != null && rp.Permiso.Activo)
+                .Select(rp => rp.Permiso.Nombre)
                 .Distinct()
                 .OrderBy(p => p)
-                .ToList();
+                .ToList() ?? new List<string>();
 
             return Results.Ok(new
             {
-                usuarioId,
-                usuarioRed,
-                correo,
-                rol,
+                usuarioId = user.Id.ToString(),
+                usuarioRed = user.UsuarioRed,
+                nombre = user.Nombre,
+                apellido = user.Apellido,
+                correo = user.Correo,
+                proceso = user.Proceso,
+                rol = rolActivo?.Nombre ?? "Sin rol",
                 permisos
             });
         })
