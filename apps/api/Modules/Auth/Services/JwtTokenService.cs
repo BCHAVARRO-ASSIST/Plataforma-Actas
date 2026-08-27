@@ -32,18 +32,11 @@ public sealed class JwtTokenService : IJwtTokenService
                 ? minutes
                 : 60;
 
-        // Referencias esenciales del token (sin redundancia de datos personales)
+        // El token contiene ÚNICAMENTE la referencia del identificador del usuario (nameid)
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
-            new(ClaimTypes.Name, usuario.UsuarioRed),
-            new(ClaimTypes.Role, rol.Nombre)
+            new(ClaimTypes.NameIdentifier, usuario.Id.ToString())
         };
-
-        foreach (var permiso in permisos)
-        {
-            claims.Add(new Claim("permiso", permiso));
-        }
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

@@ -49,6 +49,7 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<Microsoft.AspNetCore.Authentication.IClaimsTransformation, PlataformaActas.Api.Authorization.UserClaimsTransformation>();
 
 
 // =========================================================

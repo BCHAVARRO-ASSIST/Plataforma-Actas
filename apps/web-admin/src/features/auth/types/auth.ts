@@ -1,9 +1,12 @@
 export interface AuthenticatedUser {
+  usuarioId?: string;
   nombre: string;
   apellido: string;
   usuarioRed: string;
   correo: string;
+  proceso?: string;
   rol: string;
+  permisos?: string[];
 }
 
 export interface LoginCredentials {
@@ -13,6 +16,21 @@ export interface LoginCredentials {
 
 export interface LoginResponse {
   token: string;
+  usuario?: {
+    id: number;
+    nombre: string;
+    apellido: string;
+    usuarioRed: string;
+    correo: string;
+    proceso: string;
+    activo: boolean;
+  };
+  rol?: {
+    id: number;
+    nombre: string;
+    descripcion: string;
+  };
+  permisos?: string[];
 }
 
 export interface AuthContextValue {
@@ -24,4 +42,3 @@ export interface AuthContextValue {
   logout: () => void;
   restoreSession: () => Promise<void>;
 }
-

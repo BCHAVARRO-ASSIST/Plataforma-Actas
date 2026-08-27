@@ -6,15 +6,18 @@ import type {
   LoginResponse,
 } from "../types/auth";
 
-export const AUTH_TOKEN_KEY =
-  "plataforma_actas_token";
+export const AUTH_TOKEN_KEY = "plataforma_actas_token";
+export const AUTH_PERMISSIONS_KEY = "plataforma_actas_permissions";
 
 interface AuthenticatedUserResponse {
+  usuarioId?: string;
   nombre?: string;
   apellido?: string;
   usuarioRed?: string;
   correo?: string;
+  proceso?: string;
   rol?: string;
+  permisos?: string[];
 }
 
 export interface ForgotPasswordRequest {
@@ -80,11 +83,15 @@ export async function login(
     );
   }
 
+  if (data.permisos && Array.isArray(data.permisos)) {
+    localStorage.setItem(AUTH_PERMISSIONS_KEY, JSON.stringify(data.permisos));
+  }
+
   return data;
 }
 
 // =====================================================
-// OBTENER USUARIO AUTENTICADO
+// OBTENER USUARIO AUTENTICADO (ME)
 // =====================================================
 
 export async function getAuthenticatedUser(
@@ -107,12 +114,19 @@ export async function getAuthenticatedUser(
   const data =
     await response.json() as AuthenticatedUserResponse;
 
+  if (data.permisos && Array.isArray(data.permisos)) {
+    localStorage.setItem(AUTH_PERMISSIONS_KEY, JSON.stringify(data.permisos));
+  }
+
   return {
+    usuarioId: data.usuarioId ?? "",
     nombre: data.nombre ?? "",
     apellido: data.apellido ?? "",
     usuarioRed: data.usuarioRed ?? "",
     correo: data.correo ?? "",
+    proceso: data.proceso ?? "",
     rol: data.rol ?? "",
+    permisos: data.permisos ?? [],
   };
 }
 

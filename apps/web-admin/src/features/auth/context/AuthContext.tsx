@@ -11,6 +11,7 @@ import { AuthContext } from "./authContextInstance";
 
 import {
   AUTH_TOKEN_KEY,
+  AUTH_PERMISSIONS_KEY,
   getAuthenticatedUser,
   login as requestLogin,
 } from "../services/authService";
@@ -44,6 +45,7 @@ export function AuthProvider({
   const logout =
     useCallback(() => {
       localStorage.removeItem(AUTH_TOKEN_KEY);
+      localStorage.removeItem(AUTH_PERMISSIONS_KEY);
       setToken(null);
       setUser(null);
       setIsRestoringSession(false);
@@ -81,6 +83,7 @@ export function AuthProvider({
       }
     }, [logout, validateSession]);
 
+  // Carga inicial de sesión
   useEffect(() => {
     let isMounted = true;
     const storedToken =
@@ -96,9 +99,7 @@ export function AuthProvider({
         })
         .catch(() => {
           if (isMounted) {
-            localStorage.removeItem(AUTH_TOKEN_KEY);
-            setToken(null);
-            setUser(null);
+            logout();
           }
         })
         .finally(() => {
@@ -111,7 +112,46 @@ export function AuthProvider({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [logout]);
+
+  // =========================================================================
+  // WATCHDOG DE SEGURIDAD EN TIEMPO REAL
+  // Detecta inmediatamente si el token fue eliminado en Chrome DevTools / Storage
+  // =========================================================================
+  useEffect(() => {
+    const checkTokenIntegrity = () => {
+      const currentStoredToken = localStorage.getItem(AUTH_TOKEN_KEY);
+
+      // Si el estado en memoria tiene token pero en LocalStorage fue eliminado:
+      if (!currentStoredToken && token !== null) {
+        logout();
+        return;
+      }
+
+      // Si el token cambió en otra pestaña
+      if (currentStoredToken && token && currentStoredToken !== token) {
+        setToken(currentStoredToken);
+        validateSession(currentStoredToken).catch(() => logout());
+      }
+    };
+
+    // 1. Escuchar evento nativo de storage (cambios entre pestañas)
+    window.addEventListener("storage", checkTokenIntegrity);
+
+    // 2. Escuchar cuando la ventana/pestaña vuelve a estar activa
+    window.addEventListener("focus", checkTokenIntegrity);
+    document.addEventListener("visibilitychange", checkTokenIntegrity);
+
+    // 3. Intervalo activo rápido (cada 400ms) para detectar eliminación directa en DevTools
+    const intervalId = setInterval(checkTokenIntegrity, 400);
+
+    return () => {
+      window.removeEventListener("storage", checkTokenIntegrity);
+      window.removeEventListener("focus", checkTokenIntegrity);
+      document.removeEventListener("visibilitychange", checkTokenIntegrity);
+      clearInterval(intervalId);
+    };
+  }, [token, logout, validateSession]);
 
   const login =
     useCallback(async (credentials: LoginCredentials) => {
