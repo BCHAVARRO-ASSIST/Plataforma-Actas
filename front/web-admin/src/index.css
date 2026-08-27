@@ -1,0 +1,13 @@
+@import './styles/00-tokens.css';
+@import './styles/01-foundation-dashboard.css';
+@import './styles/02-inventory.css';
+@import './styles/03-actas.css';
+@import './styles/04-acta-detail.css';
+@import './styles/05-new-acta.css';
+@import './styles/06-usuarios.css';
+@import './styles/07-roles.css';
+@import './styles/08-reset-password.css';
+@import './styles/09-login.css';
+@import './styles/10-mensajero.css';
+@import './styles/11-mensajero-detail.css';
+@import './styles/99-harmony-overrides.css';

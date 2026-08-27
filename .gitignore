@@ -1,0 +1,28 @@
+# Dependencias y artefactos generados
+**/node_modules/
+**/dist/
+**/bin/
+**/obj/
+*.tsbuildinfo
+
+# Configuracion local y secretos
+.env
+.env.*
+!.env.example
+**/appsettings.Development.json
+!**/appsettings.Development.example.json
+*.user
+*.suo
+
+# Herramientas y sistema operativo
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Respaldos locales de base de datos
+bd/backups/
+*.dump
+*.backup

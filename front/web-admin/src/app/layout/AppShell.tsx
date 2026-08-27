@@ -1,0 +1,27 @@
+import type { ReactNode } from "react";
+
+interface AppShellProps {
+  sidebar: ReactNode;
+  header: ReactNode;
+  children: ReactNode;
+}
+
+export function AppShell({
+  sidebar,
+  header,
+  children,
+}: AppShellProps) {
+  return (
+    <div className="app-shell">
+      {sidebar}
+
+      <main className="app-main">
+        {header}
+
+        <div className="app-content">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}

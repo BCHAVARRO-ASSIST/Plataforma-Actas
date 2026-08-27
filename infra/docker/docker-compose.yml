@@ -1,0 +1,33 @@
+name: plataforma-actas
+
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: plataforma-actas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-plataforma_actas}
+      POSTGRES_USER: ${POSTGRES_USER:-plataforma_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plataforma_dev_2026}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../../bd/init:/docker-entrypoint-initdb.d:ro
+
+  # redis (Opcional - para cache / revocacion futura de tokens):
+  # redis:
+  #   image: redis:8-alpine
+  #   container_name: plataforma-actas-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+
+volumes:
+
+  postgres_data:
+
+  # redis_data:
