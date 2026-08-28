@@ -156,13 +156,13 @@ export function ActaPage() {
 
         <div>
           <span className="actas-kicker">
-            GESTIÃ“N DOCUMENTAL Y TRAZABILIDAD
+            GESTIÓN DOCUMENTAL Y TRAZABILIDAD
           </span>
 
-          <h1>Control de Actas de Entrega y DevoluciÃ³n</h1>
+          <h1>Control de Actas de Entrega y Devolución</h1>
 
           <p>
-            EmisiÃ³n, supervisiÃ³n y custodia digital de actas con firma manuscrita certificada y sellado criptogrÃ¡fico.
+            Emisión, supervisión y custodia digital de actas con firma manuscrita certificada y sellado criptográfico.
           </p>
         </div>
 
@@ -221,7 +221,7 @@ export function ActaPage() {
 
           <div className="actas-metric-top">
             <span>FIRMADA / ENTREGADA</span>
-            <span>âœ“</span>
+            <span>✓</span>
           </div>
 
           <strong>{deliveredCount}</strong>
@@ -268,7 +268,7 @@ export function ActaPage() {
             <h2>Actas registradas</h2>
 
             <p>
-              Consulta el estado y la informaciÃ³n
+              Consulta el estado y la información
               de cada documento.
             </p>
           </div>
@@ -299,7 +299,7 @@ export function ActaPage() {
                 type="button"
                 onClick={() => setSearch("")}
               >
-                Ã—
+                ×
               </button>
             )}
 

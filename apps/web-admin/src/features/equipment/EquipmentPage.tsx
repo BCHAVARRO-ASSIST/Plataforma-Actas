@@ -190,8 +190,8 @@ export function EquipmentPage() {
   async function handleToggleStatus(item: Equipment) {
     const isActivo = item.estatusEquipo?.toLowerCase() === "activo" || item.estatusEquipo?.toLowerCase() === "asignado";
     const confirmMessage = isActivo
-      ? `Â¿EstÃ¡s seguro de que deseas desactivar el equipo ${item.inventoryKey}?`
-      : `Â¿EstÃ¡s seguro de que deseas activar el equipo ${item.inventoryKey}?`;
+      ? `¿Estás seguro de que deseas desactivar el equipo ${item.inventoryKey}?`
+      : `¿Estás seguro de que deseas activar el equipo ${item.inventoryKey}?`;
 
     if (!window.confirm(confirmMessage)) return;
 
@@ -211,7 +211,7 @@ export function EquipmentPage() {
   }
 
   async function handleDeleteEquipment(item: Equipment) {
-    const confirmMessage = `Â¿EstÃ¡s seguro de que deseas eliminar permanentemente el equipo inactivo ${item.inventoryKey} (${item.nombreEquipo})?\n\nEsta acciÃ³n eliminarÃ¡ el registro de la base de datos.`;
+    const confirmMessage = `¿Estás seguro de que deseas eliminar permanentemente el equipo inactivo ${item.inventoryKey} (${item.nombreEquipo})?\n\nEsta acción eliminará el registro de la base de datos.`;
     if (!window.confirm(confirmMessage)) return;
 
     try {
@@ -251,17 +251,17 @@ export function EquipmentPage() {
       {/* HEADER */}
       <header className="inventory-header">
         <div>
-          <span className="inventory-kicker">CATÃLOGO MAESTRO DE HARDWARE</span>
-          <h1>Inventario de Equipos TecnolÃ³gicos</h1>
+          <span className="inventory-kicker">CATÁLOGO MAESTRO DE HARDWARE</span>
+          <h1>Inventario de Equipos Tecnológicos</h1>
           <p>
-            Control de especificaciones tÃ©cnicas, custodia fÃ­sica, marca y estado operativo de los equipos de la organizaciÃ³n.
+            Control de especificaciones técnicas, custodia física, marca y estado operativo de los equipos de la organización.
           </p>
         </div>
 
         <div className="inventory-header-actions">
           <span className="inventory-live">
             <span className="live-dot" />
-            CatÃ¡logo sincronizado
+            Catálogo sincronizado
           </span>
 
           {canCreate && (
@@ -276,13 +276,13 @@ export function EquipmentPage() {
         </div>
       </header>
 
-      {/* MENSAJE DE Ã‰XITO */}
+      {/* MENSAJE DE ÉXITO */}
       {successMessage && (
         <div className="usuarios-success" style={{ marginBottom: "20px" }}>
-          <span>âœ“</span>
+          <span>✓</span>
           {successMessage}
           <button type="button" onClick={() => setSuccessMessage(null)} aria-label="Cerrar">
-            Ã—
+            ×
           </button>
         </div>
       )}
@@ -313,7 +313,7 @@ export function EquipmentPage() {
           <strong>{activeEquipment}</strong>
           <p>
             {equipment.length > 0
-              ? `${Math.round((activeEquipment / equipment.length) * 100)}% en operaciÃ³n`
+              ? `${Math.round((activeEquipment / equipment.length) * 100)}% en operación`
               : "Sin datos"}
           </p>
         </article>
@@ -333,7 +333,7 @@ export function EquipmentPage() {
             <span>âŒ•</span>
           </div>
           <strong>{filteredEquipment.length}</strong>
-          <p>Coincidencias en bÃºsqueda</p>
+          <p>Coincidencias en búsqueda</p>
         </article>
       </section>
 
@@ -352,12 +352,12 @@ export function EquipmentPage() {
       {/* RESULTADOS INFO */}
       <div className="inventory-results-info">
         <span>
-          Mostrando <strong>{firstItem}</strong> â€“ <strong>{lastItem}</strong> de <strong>{filteredEquipment.length}</strong> equipos
+          Mostrando <strong>{firstItem}</strong> – <strong>{lastItem}</strong> de <strong>{filteredEquipment.length}</strong> equipos
         </span>
 
         {filteredEquipment.length > 0 && (
           <span className="inventory-page-info">
-            PÃ¡gina {currentPage} de {totalPages}
+            Página {currentPage} de {totalPages}
           </span>
         )}
       </div>
@@ -366,7 +366,7 @@ export function EquipmentPage() {
       {filteredEquipment.length === 0 ? (
         <div className="inventory-state">
           <strong>No se encontraron equipos</strong>
-          <small>Prueba ajustando los filtros de bÃºsqueda</small>
+          <small>Prueba ajustando los filtros de búsqueda</small>
         </div>
       ) : (
         <EquipmentTable
@@ -380,7 +380,7 @@ export function EquipmentPage() {
         />
       )}
 
-      {/* PAGINACIÃ“N */}
+      {/* PAGINACIÓN */}
       {totalPages > 1 && (
         <div className="pagination">
           <button

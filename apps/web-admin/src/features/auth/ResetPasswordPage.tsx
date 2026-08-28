@@ -57,7 +57,7 @@ export default function ResetPasswordPage({
 
 
   // =====================================================
-  // VALIDACIÃ“N
+  // VALIDACIÓN
   // =====================================================
 
   const passwordLength =
@@ -72,7 +72,7 @@ export default function ResetPasswordPage({
 
 
   // =====================================================
-  // RESTABLECER CONTRASEÃ‘A
+  // RESTABLECER CONTRASEÑA
   // =====================================================
 
   async function handleSubmit(
@@ -88,7 +88,7 @@ export default function ResetPasswordPage({
     if (!token) {
 
       setError(
-        "El enlace de recuperaciÃ³n no contiene un token vÃ¡lido."
+        "El enlace de recuperación no contiene un token válido."
       );
 
       return;
@@ -98,7 +98,7 @@ export default function ResetPasswordPage({
     if (!hasMinimumLength) {
 
       setError(
-        "La contraseÃ±a debe tener al menos 8 caracteres."
+        "La contraseña debe tener al menos 8 caracteres."
       );
 
       return;
@@ -108,7 +108,7 @@ export default function ResetPasswordPage({
     if (!passwordsMatch) {
 
       setError(
-        "Las contraseÃ±as no coinciden."
+        "Las contraseñas no coinciden."
       );
 
       return;
@@ -144,7 +144,7 @@ export default function ResetPasswordPage({
       setError(
         error instanceof Error
           ? error.message
-          : "No fue posible restablecer la contraseÃ±a."
+          : "No fue posible restablecer la contraseña."
       );
 
     } finally {
@@ -206,8 +206,8 @@ export default function ResetPasswordPage({
 
 
           <p>
-            Configura una nueva contraseÃ±a y
-            vuelve a acceder a toda la operaciÃ³n
+            Configura una nueva contraseña y
+            vuelve a acceder a toda la operación
             de la Plataforma de Actas.
           </p>
 
@@ -215,18 +215,18 @@ export default function ResetPasswordPage({
           <div className="reset-security-card">
 
             <div className="reset-security-icon">
-              âœ“
+              ✓
             </div>
 
             <div>
 
               <strong>
-                RecuperaciÃ³n segura
+                Recuperación segura
               </strong>
 
               <span>
-                Tu enlace de recuperaciÃ³n es
-                temporal y de uso Ãºnico.
+                Tu enlace de recuperación es
+                temporal y de uso único.
               </span>
 
             </div>
@@ -282,12 +282,12 @@ export default function ResetPasswordPage({
 
 
             <h2>
-              Nueva contraseÃ±a
+              Nueva contraseña
             </h2>
 
 
             <p>
-              Crea una contraseÃ±a segura para
+              Crea una contraseña segura para
               proteger tu cuenta.
             </p>
 
@@ -300,13 +300,13 @@ export default function ResetPasswordPage({
           >
 
             {/* ===========================================
-                NUEVA CONTRASEÃ‘A
+                NUEVA CONTRASEÑA
             =========================================== */}
 
             <div className="reset-field">
 
               <label htmlFor="password">
-                Nueva contraseÃ±a
+                Nueva contraseña
               </label>
 
 
@@ -325,7 +325,7 @@ export default function ResetPasswordPage({
                       event.target.value
                     )
                   }
-                  placeholder="Escribe tu nueva contraseÃ±a"
+                  placeholder="Escribe tu nueva contraseña"
                   disabled={loading}
                   autoComplete="new-password"
                 />
@@ -342,8 +342,8 @@ export default function ResetPasswordPage({
                   disabled={loading}
                   aria-label={
                     showPassword
-                      ? "Ocultar contraseÃ±a"
-                      : "Mostrar contraseÃ±a"
+                      ? "Ocultar contraseña"
+                      : "Mostrar contraseña"
                   }
                 >
                   {showPassword
@@ -395,12 +395,12 @@ export default function ResetPasswordPage({
 
                 <span>
                   {passwordLength === 0
-                    ? "Ingresa una contraseÃ±a"
+                    ? "Ingresa una contraseña"
                     : passwordLength < 8
-                    ? "ContraseÃ±a corta"
+                    ? "Contraseña corta"
                     : passwordLength < 12
-                    ? "ContraseÃ±a aceptable"
-                    : "ContraseÃ±a sÃ³lida"}
+                    ? "Contraseña aceptable"
+                    : "Contraseña sólida"}
                 </span>
 
               </div>
@@ -409,13 +409,13 @@ export default function ResetPasswordPage({
 
 
             {/* ===========================================
-                CONFIRMAR CONTRASEÃ‘A
+                CONFIRMAR CONTRASEÑA
             =========================================== */}
 
             <div className="reset-field">
 
               <label htmlFor="confirmPassword">
-                Confirmar contraseÃ±a
+                Confirmar contraseña
               </label>
 
 
@@ -434,7 +434,7 @@ export default function ResetPasswordPage({
                       event.target.value
                     )
                   }
-                  placeholder="Repite la contraseÃ±a"
+                  placeholder="Repite la contraseña"
                   disabled={loading}
                   autoComplete="new-password"
                 />
@@ -451,8 +451,8 @@ export default function ResetPasswordPage({
                   disabled={loading}
                   aria-label={
                     showConfirmPassword
-                      ? "Ocultar contraseÃ±a"
-                      : "Mostrar contraseÃ±a"
+                      ? "Ocultar contraseña"
+                      : "Mostrar contraseña"
                   }
                 >
                   {showConfirmPassword
@@ -475,14 +475,14 @@ export default function ResetPasswordPage({
 
                   <span>
                     {passwordsMatch
-                      ? "âœ“"
+                      ? "✓"
                       : "!"}
                   </span>
 
 
                   {passwordsMatch
-                    ? "Las contraseÃ±as coinciden"
-                    : "Las contraseÃ±as no coinciden"}
+                    ? "Las contraseñas coinciden"
+                    : "Las contraseñas no coinciden"}
 
                 </div>
 
@@ -498,7 +498,7 @@ export default function ResetPasswordPage({
             <div className="reset-requirements">
 
               <div className="requirements-title">
-                La contraseÃ±a debe cumplir
+                La contraseña debe cumplir
               </div>
 
 
@@ -512,11 +512,11 @@ export default function ResetPasswordPage({
                   }
                 >
                   {hasMinimumLength
-                    ? "âœ“"
-                    : "â€¢"}
+                    ? "✓"
+                    : "•"}
                 </span>
 
-                MÃ­nimo 8 caracteres
+                Mínimo 8 caracteres
 
               </div>
 
@@ -531,11 +531,11 @@ export default function ResetPasswordPage({
                   }
                 >
                   {passwordsMatch
-                    ? "âœ“"
-                    : "â€¢"}
+                    ? "✓"
+                    : "•"}
                 </span>
 
-                Las contraseÃ±as deben coincidir
+                Las contraseñas deben coincidir
 
               </div>
 
@@ -564,7 +564,7 @@ export default function ResetPasswordPage({
 
 
             {/* ===========================================
-                MENSAJE Ã‰XITO
+                MENSAJE ÉXITO
             =========================================== */}
 
             {message && (
@@ -572,7 +572,7 @@ export default function ResetPasswordPage({
               <div className="reset-alert reset-alert-success">
 
                 <span>
-                  âœ“
+                  ✓
                 </span>
 
                 <div>
@@ -585,7 +585,7 @@ export default function ResetPasswordPage({
 
 
             {/* ===========================================
-                BOTÃ“N
+                BOTÓN
             =========================================== */}
 
             <button
@@ -600,8 +600,8 @@ export default function ResetPasswordPage({
               <span>
 
                 {loading
-                  ? "Actualizando contraseÃ±a..."
-                  : "Actualizar contraseÃ±a"}
+                  ? "Actualizando contraseña..."
+                  : "Actualizar contraseña"}
 
               </span>
 
@@ -623,7 +623,7 @@ export default function ResetPasswordPage({
               â—ˆ
             </span>
 
-            Tu contraseÃ±a se almacena de forma
+            Tu contraseña se almacena de forma
             segura y protegida.
 
           </div>

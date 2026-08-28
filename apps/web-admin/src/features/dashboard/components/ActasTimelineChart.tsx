@@ -19,7 +19,7 @@ export function ActasTimelineChart({
       <div className="dashboard-block" style={{ padding: "20px" }}>
         <div className="dashboard-block-top">
           <div>
-            <span className="block-kicker">TENDENCIA HISTÃ“RICA</span>
+            <span className="block-kicker">TENDENCIA HISTÓRICA</span>
             <h3>Actas en el Tiempo</h3>
           </div>
           <div style={{ display: "flex", gap: "6px" }}>
@@ -39,13 +39,13 @@ export function ActasTimelineChart({
                   cursor: "pointer",
                 }}
               >
-                {r === "7d" ? "7 dÃ­as" : r === "30d" ? "30 dÃ­as" : "90 dÃ­as"}
+                {r === "7d" ? "7 días" : r === "30d" ? "30 días" : "90 días"}
               </button>
             ))}
           </div>
         </div>
         <div style={{ padding: "40px 20px", textAlign: "center", color: "#64748b" }}>
-          No existen actas registradas en el perÃ­odo seleccionado.
+          No existen actas registradas en el período seleccionado.
         </div>
       </div>
     );
@@ -58,9 +58,9 @@ export function ActasTimelineChart({
     <div className="dashboard-block" style={{ padding: "20px" }}>
       <div className="dashboard-block-top" style={{ marginBottom: "20px" }}>
         <div>
-          <span className="block-kicker">TENDENCIA HISTÃ“RICA</span>
+          <span className="block-kicker">TENDENCIA HISTÓRICA</span>
           <h3 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-            EvoluciÃ³n Temporal de Actas
+            Evolución Temporal de Actas
           </h3>
         </div>
 
@@ -76,9 +76,9 @@ export function ActasTimelineChart({
 
           <div style={{ display: "flex", gap: "4px" }}>
             {[
-              { id: "7d", label: "7 dÃ­as" },
-              { id: "30d", label: "30 dÃ­as" },
-              { id: "90d", label: "90 dÃ­as" },
+              { id: "7d", label: "7 días" },
+              { id: "30d", label: "30 días" },
+              { id: "90d", label: "90 días" },
             ].map((r) => (
               <button
                 key={r.id}

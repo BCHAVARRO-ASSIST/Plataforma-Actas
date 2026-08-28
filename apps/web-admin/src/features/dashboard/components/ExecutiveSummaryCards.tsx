@@ -53,7 +53,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
           <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
             Equipos en Inventario
           </span>
-          <span style={{ fontSize: "12px", color: "#3b82f6", fontWeight: 600 }}>Ver catÃ¡logo â†’</span>
+          <span style={{ fontSize: "12px", color: "#3b82f6", fontWeight: 600 }}>Ver catálogo â†’</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "baseline", gap: "8px", margin: "4px 0 10px" }}>
@@ -68,7 +68,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#059669" }} />
             {kpis.equiposActivos} operativos ({activosPct}%)
           </span>
-          <span style={{ color: "#94a3b8" }}>â€¢</span>
+          <span style={{ color: "#94a3b8" }}>•</span>
           <span>{kpis.equiposInactivos} inactivos</span>
         </div>
       </div>
@@ -99,7 +99,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
           <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            GestiÃ³n de Actas
+            Gestión de Actas
           </span>
           <span style={{ fontSize: "12px", color: "#10b981", fontWeight: 600 }}>Supervisar â†’</span>
         </div>
@@ -116,14 +116,14 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#059669" }} />
             {kpis.actasFirmadas + kpis.actasFinalizadas} firmadas ({firmadasPct}%)
           </span>
-          <span style={{ color: "#94a3b8" }}>â€¢</span>
+          <span style={{ color: "#94a3b8" }}>•</span>
           <span style={{ color: kpis.actasBorrador > 0 ? "#d97706" : "#64748b", fontWeight: kpis.actasBorrador > 0 ? 700 : 400 }}>
             {kpis.actasBorrador} pendientes
           </span>
         </div>
       </div>
 
-      {/* 3. LOGÃSTICA */}
+      {/* 3. LOGÍSTICA */}
       <div
         onClick={() => onNavigate("reportes")}
         style={{
@@ -149,7 +149,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
           <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            OperaciÃ³n y LogÃ­stica
+            Operación y Logística
           </span>
           <span style={{ fontSize: "12px", color: "#6366f1", fontWeight: 600 }}>Ver informes â†’</span>
         </div>
@@ -158,14 +158,14 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
           <strong style={{ fontSize: "32px", fontWeight: 800, color: "#0f172a", lineHeight: 1 }}>
             {kpis.entregasPendientes + kpis.devolucionesPendientes}
           </strong>
-          <span style={{ fontSize: "13px", color: "#64748b" }}>trÃ¡mites pendientes</span>
+          <span style={{ fontSize: "13px", color: "#64748b" }}>trámites pendientes</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#475569", paddingTop: "8px", borderTop: "1px solid #f8fafc" }}>
           <span style={{ color: "#2563eb", fontWeight: 600 }}>
             ðŸ“¦ {kpis.entregasPendientes} entregas
           </span>
-          <span style={{ color: "#94a3b8" }}>â€¢</span>
+          <span style={{ color: "#94a3b8" }}>•</span>
           <span style={{ color: "#6366f1", fontWeight: 600 }}>
             â†© {kpis.devolucionesPendientes} devoluciones
           </span>

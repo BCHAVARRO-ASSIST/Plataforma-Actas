@@ -74,7 +74,7 @@ export function DashboardPage({ onNavigate = () => {} }: DashboardPageProps) {
         <div className="inventory-state">
           <span className="inventory-loader" />
           <strong>Cargando panel principal</strong>
-          <small>Consultando informaciÃ³n en tiempo real...</small>
+          <small>Consultando información en tiempo real...</small>
         </div>
       </main>
     );
@@ -101,7 +101,7 @@ export function DashboardPage({ onNavigate = () => {} }: DashboardPageProps) {
             Resumen General
           </h1>
           <p style={{ margin: 0, color: "#64748b", fontSize: "13px" }}>
-            VisiÃ³n ejecutiva de inventario de hardware y trazabilidad de actas.
+            Visión ejecutiva de inventario de hardware y trazabilidad de actas.
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export function DashboardPage({ onNavigate = () => {} }: DashboardPageProps) {
       {/* 3 TARJETAS EJECUTIVAS PRINCIPALES */}
       {kpis && <ExecutiveSummaryCards kpis={kpis} onNavigate={onNavigate} />}
 
-      {/* ÃšLTIMAS ACTAS EMITIDAS A ANCHO COMPLETO */}
+      {/* ÚLTIMAS ACTAS EMITIDAS A ANCHO COMPLETO */}
       <section style={{ width: "100%", marginTop: "12px" }}>
         <RecentActasCard
           items={recentActivity}

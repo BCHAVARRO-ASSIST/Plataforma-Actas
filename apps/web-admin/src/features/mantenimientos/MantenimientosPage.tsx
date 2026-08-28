@@ -132,8 +132,8 @@ export function MantenimientosPage() {
       <main className="inventory-page">
         <div className="inventory-state">
           <span className="inventory-loader" />
-          <strong>Cargando mÃ³dulo de mantenimientos</strong>
-          <small>Consultando historial de soporte tÃ©cnico...</small>
+          <strong>Cargando módulo de mantenimientos</strong>
+          <small>Consultando historial de soporte técnico...</small>
         </div>
       </main>
     );
@@ -144,10 +144,10 @@ export function MantenimientosPage() {
       {/* HEADER */}
       <header className="inventory-header">
         <div>
-          <span className="inventory-kicker">SOPORTE TÃ‰CNICO Y CONTROL DE HARDWARE</span>
+          <span className="inventory-kicker">SOPORTE TÉCNICO Y CONTROL DE HARDWARE</span>
           <h1>Control de Mantenimientos</h1>
           <p>
-            Programa, registra y supervisa el estado de mantenimientos preventivos y correctivos de los equipos tecnolÃ³gicos.
+            Programa, registra y supervisa el estado de mantenimientos preventivos y correctivos de los equipos tecnológicos.
           </p>
         </div>
 
@@ -166,10 +166,10 @@ export function MantenimientosPage() {
       {/* MENSAJES */}
       {successMessage && (
         <div className="usuarios-success" style={{ marginBottom: "20px" }}>
-          <span>âœ“</span>
+          <span>✓</span>
           {successMessage}
           <button type="button" onClick={() => setSuccessMessage(null)} aria-label="Cerrar">
-            Ã—
+            ×
           </button>
         </div>
       )}
@@ -188,7 +188,7 @@ export function MantenimientosPage() {
             <span>âš™</span>
           </div>
           <strong>{stats.total}</strong>
-          <p>Equipos bajo supervisiÃ³n tÃ©cnica</p>
+          <p>Equipos bajo supervisión técnica</p>
         </article>
 
         <article className="inventory-metric">
@@ -197,7 +197,7 @@ export function MantenimientosPage() {
             <span style={{ color: "#6366f1" }}>â—</span>
           </div>
           <strong style={{ color: "#6366f1" }}>{stats.preventivos}</strong>
-          <p>Revisiones periÃ³dicas registradas</p>
+          <p>Revisiones periódicas registradas</p>
         </article>
 
         <article className="inventory-metric">
@@ -217,8 +217,8 @@ export function MantenimientosPage() {
           <strong style={{ color: "#10b981" }}>{stats.concluidos}</strong>
           <p>
             {stats.total > 0
-              ? `${Math.round((stats.concluidos / stats.total) * 100)}% al dÃ­a`
-              : "100% al dÃ­a"}
+              ? `${Math.round((stats.concluidos / stats.total) * 100)}% al día`
+              : "100% al día"}
           </p>
         </article>
       </section>
@@ -242,7 +242,7 @@ export function MantenimientosPage() {
           <input
             type="text"
             className="search-input"
-            placeholder="Buscar por cÃ³digo, nombre, marca, responsable..."
+            placeholder="Buscar por código, nombre, marca, responsable..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -279,7 +279,7 @@ export function MantenimientosPage() {
             style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
           >
             <option value="">Todos los Estados</option>
-            <option value="si">Concluido / Al dÃ­a</option>
+            <option value="si">Concluido / Al día</option>
             <option value="no">Pendiente</option>
           </select>
         </div>
@@ -314,7 +314,7 @@ export function MantenimientosPage() {
               <th>Tipo Mantenimiento</th>
               <th>Fecha Registro</th>
               <th>Estado</th>
-              <th style={{ textAlign: "center" }}>AcciÃ³n</th>
+              <th style={{ textAlign: "center" }}>Acción</th>
             </tr>
           </thead>
           <tbody>
@@ -335,9 +335,9 @@ export function MantenimientosPage() {
                       <strong className="equipment-key">{r.inventoryKey}</strong>
                     </td>
                     <td>{r.nombreEquipo}</td>
-                    <td>{r.marca ?? "â€”"}</td>
-                    <td>{r.asignadoA ?? "â€”"}</td>
-                    <td>{r.departamento ?? "â€”"}</td>
+                    <td>{r.marca ?? "—"}</td>
+                    <td>{r.asignadoA ?? "—"}</td>
+                    <td>{r.departamento ?? "—"}</td>
                     <td>
                       <span
                         style={{
@@ -353,7 +353,7 @@ export function MantenimientosPage() {
                         {r.tipoMantenimiento ?? "Preventivo"}
                       </span>
                     </td>
-                    <td>{r.fechaMantenimiento ?? "â€”"}</td>
+                    <td>{r.fechaMantenimiento ?? "—"}</td>
                     <td>
                       <span
                         className={isRealizado ? "status-badge status-active" : "status-badge status-warning"}
@@ -379,7 +379,7 @@ export function MantenimientosPage() {
         </table>
       </div>
 
-      {/* PAGINACIÃ“N */}
+      {/* PAGINACIÓN */}
       {totalPages > 1 && (
         <div className="pagination" style={{ marginTop: "20px" }}>
           <button
@@ -402,7 +402,7 @@ export function MantenimientosPage() {
         </div>
       )}
 
-      {/* MODAL DE GESTIÃ“N DE MANTENIMIENTO */}
+      {/* MODAL DE GESTIÓN DE MANTENIMIENTO */}
       {selectedItem && (
         <div
           style={{
@@ -439,7 +439,7 @@ export function MantenimientosPage() {
                 onClick={() => setSelectedItem(null)}
                 style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#64748b" }}
               >
-                âœ•
+                ✕
               </button>
             </div>
 
@@ -459,8 +459,8 @@ export function MantenimientosPage() {
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
                   required
                 >
-                  <option value="Preventivo">Preventivo (Limpieza, revisiÃ³n y diagnÃ³stico)</option>
-                  <option value="Correctivo">Correctivo (ReparaciÃ³n, cambio de partes)</option>
+                  <option value="Preventivo">Preventivo (Limpieza, revisión y diagnóstico)</option>
+                  <option value="Correctivo">Correctivo (Reparación, cambio de partes)</option>
                 </select>
               </div>
 

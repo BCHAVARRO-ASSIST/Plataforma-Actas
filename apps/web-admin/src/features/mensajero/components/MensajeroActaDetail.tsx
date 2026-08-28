@@ -73,7 +73,7 @@ function formatDate(
 
 
 // =====================================================
-// OBSERVACIÃ“N
+// OBSERVACIÓN
 // =====================================================
 
 function getObservation(
@@ -354,7 +354,7 @@ export function MensajeroActaDetail({
           </strong>
 
           <p>
-            Estamos consultando la informaciÃ³n
+            Estamos consultando la información
             del documento.
           </p>
 
@@ -402,7 +402,7 @@ export function MensajeroActaDetail({
             </h1>
 
             <p>
-              No pudimos consultar la informaciÃ³n
+              No pudimos consultar la información
               solicitada.
             </p>
 
@@ -421,7 +421,7 @@ export function MensajeroActaDetail({
           <div>
 
             <span className="mensajero-detail-eyebrow">
-              INFORMACIÃ“N NO DISPONIBLE
+              INFORMACIÓN NO DISPONIBLE
             </span>
 
             <h2>
@@ -431,7 +431,7 @@ export function MensajeroActaDetail({
 
             <p>
               {error ??
-                "El acta no estÃ¡ disponible actualmente."}
+                "El acta no está disponible actualmente."}
             </p>
 
 
@@ -491,7 +491,7 @@ export function MensajeroActaDetail({
     <section className="mensajero-detail-page">
 
       {/* =================================================
-          NAVEGACIÃ“N
+          NAVEGACIÓN
           ================================================= */}
 
       <div className="mensajero-detail-navigation">
@@ -601,7 +601,7 @@ export function MensajeroActaDetail({
 
 
       {/* =================================================
-          IDENTIFICACIÃ“N
+          IDENTIFICACIÓN
           ================================================= */}
 
       <section className="mensajero-detail-identity">
@@ -722,7 +722,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.marca ?? "â€”"}
+                {equipo.marca ?? "—"}
               </strong>
             </div>
 
@@ -733,7 +733,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.procesador ?? "â€”"}
+                {equipo.procesador ?? "—"}
               </strong>
             </div>
 
@@ -744,7 +744,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.memoriaRam ?? "â€”"}
+                {equipo.memoriaRam ?? "—"}
               </strong>
             </div>
 
@@ -755,7 +755,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.discoDuro ?? "â€”"}
+                {equipo.discoDuro ?? "—"}
               </strong>
             </div>
 
@@ -766,7 +766,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.empresa ?? "â€”"}
+                {equipo.empresa ?? "—"}
               </strong>
             </div>
 
@@ -777,7 +777,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.asignadoA ?? "â€”"}
+                {equipo.asignadoA ?? "—"}
               </strong>
             </div>
 
@@ -788,7 +788,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.proveedor ?? "â€”"}
+                {equipo.proveedor ?? "—"}
               </strong>
             </div>
 
@@ -799,7 +799,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.departamento ?? "â€”"}
+                {equipo.departamento ?? "—"}
               </strong>
             </div>
 
@@ -810,7 +810,7 @@ export function MensajeroActaDetail({
               </span>
 
               <strong>
-                {equipo.estatusEquipo ?? "â€”"}
+                {equipo.estatusEquipo ?? "—"}
               </strong>
             </div>
 
@@ -820,7 +820,7 @@ export function MensajeroActaDetail({
 
 
         {/* =================================================
-            INFORMACIÃ“N DEL ACTA
+            INFORMACIÓN DEL ACTA
             ================================================= */}
 
         <article className="mensajero-detail-card">
@@ -834,7 +834,7 @@ export function MensajeroActaDetail({
               </span>
 
               <h2>
-                InformaciÃ³n del acta
+                Información del acta
               </h2>
 
             </div>
@@ -846,7 +846,7 @@ export function MensajeroActaDetail({
 
             <div>
               <span>
-                NÃºmero
+                Número
               </span>
 
               <strong>
@@ -884,7 +884,7 @@ export function MensajeroActaDetail({
 
               <strong>
                 {acta.actaEntregada
-                  ? "SÃ­"
+                  ? "Sí"
                   : "No"}
               </strong>
             </div>
@@ -1012,7 +1012,7 @@ export function MensajeroActaDetail({
               <div className="step-content">
 
                 <span>
-                  CreaciÃ³n
+                  Creación
                 </span>
 
                 <strong>
@@ -1062,7 +1062,7 @@ export function MensajeroActaDetail({
               <div className="step-content">
 
                 <span>
-                  FinalizaciÃ³n
+                  Finalización
                 </span>
 
                 <strong>
@@ -1087,7 +1087,7 @@ export function MensajeroActaDetail({
               <div className="step-content">
 
                 <span>
-                  AnulaciÃ³n
+                  Anulación
                 </span>
 
                 <strong>
@@ -1106,7 +1106,7 @@ export function MensajeroActaDetail({
 
 
         {/* =================================================
-            MOTIVO DE ANULACIÃ“N
+            MOTIVO DE ANULACIÓN
             ================================================= */}
 
         {acta.motivoAnulacion && (
@@ -1122,7 +1122,7 @@ export function MensajeroActaDetail({
                 </span>
 
                 <h2>
-                  Motivo de anulaciÃ³n
+                  Motivo de anulación
                 </h2>
 
               </div>
@@ -1200,7 +1200,7 @@ export function MensajeroActaDetail({
                 onClick={handleFirmar}
                 disabled={firmando || !signatureData}
               >
-                {firmando ? "Registrando firma..." : "âœ“ Confirmar entrega y firmar"}
+                {firmando ? "Registrando firma..." : "✓ Confirmar entrega y firmar"}
               </button>
             </div>
 

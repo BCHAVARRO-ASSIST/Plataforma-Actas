@@ -46,7 +46,7 @@ export function RecentActasCard({ items, onNavigateToActas }: RecentActasCardPro
             TRAZABILIDAD Y REGISTRO
           </span>
           <h2 style={{ margin: "2px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-            Ãšltimas Actas Emitidas
+            Últimas Actas Emitidas
           </h2>
         </div>
 

@@ -48,7 +48,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
           <span>âš™</span>
         </div>
         <strong style={{ color: "#d97706" }}>{kpis.equiposMantenimiento}</strong>
-        <p>En revisiÃ³n o soporte</p>
+        <p>En revisión o soporte</p>
       </article>
 
       {/* TOTAL ACTAS */}
@@ -75,7 +75,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric">
         <div className="inventory-metric-top">
           <span>ACTAS FIRMADAS</span>
-          <span>âœ“</span>
+          <span>✓</span>
         </div>
         <strong style={{ color: "#059669" }}>{kpis.actasFirmadas}</strong>
         <p>Certificadas y con firma</p>

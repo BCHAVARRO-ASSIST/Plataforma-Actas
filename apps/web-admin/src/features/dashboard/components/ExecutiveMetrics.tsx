@@ -85,7 +85,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
             Actas Procesadas
           </span>
           <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#059669" }}>
-            âœ“
+            ✓
           </span>
         </div>
 
@@ -108,7 +108,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
         </div>
       </article>
 
-      {/* 3. LOGÃSTICA DE CAMPO */}
+      {/* 3. LOGÍSTICA DE CAMPO */}
       <article
         style={{
           background: "#ffffff",
@@ -124,7 +124,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: "12px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            OperaciÃ³n de Campo
+            Operación de Campo
           </span>
           <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#2563eb" }}>
             ðŸ“¦
@@ -136,7 +136,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
             {kpis.entregasPendientes + kpis.devolucionesPendientes}
           </strong>
           <span style={{ fontSize: "13px", color: "#64748b", marginLeft: "6px" }}>
-            trÃ¡mites pendientes
+            trámites pendientes
           </span>
         </div>
 
@@ -184,10 +184,10 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12px" }}>
           <span style={{ color: "#059669", fontWeight: 600 }}>
-            âœ“ Mantenimientos al dÃ­a
+            ✓ Mantenimientos al día
           </span>
           <span style={{ color: "#64748b" }}>
-            {kpis.equiposMantenimiento} en revisiÃ³n
+            {kpis.equiposMantenimiento} en revisión
           </span>
         </div>
       </article>

@@ -24,7 +24,7 @@ export default function ForgotPasswordPage({
     setError("");
 
     if (!identifier.trim()) {
-      setError("Ingresa tu usuario o correo electrÃ³nico.");
+      setError("Ingresa tu usuario o correo electrónico.");
       return;
     }
 
@@ -37,7 +37,7 @@ export default function ForgotPasswordPage({
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "No fue posible solicitar la recuperaciÃ³n."
+          : "No fue posible solicitar la recuperación."
       );
     } finally {
       setLoading(false);
@@ -46,7 +46,7 @@ export default function ForgotPasswordPage({
 
   return (
     <main className="recovery-page">
-      <section className="recovery-visual-panel" aria-label="RecuperaciÃ³n de acceso">
+      <section className="recovery-visual-panel" aria-label="Recuperación de acceso">
         <div className="recovery-brand">
           <div className="recovery-brand-mark">PA</div>
           <div>
@@ -68,15 +68,15 @@ export default function ForgotPasswordPage({
           </p>
 
           <div className="recovery-security-card">
-            <span className="recovery-security-icon" aria-hidden="true">âœ“</span>
+            <span className="recovery-security-icon" aria-hidden="true">✓</span>
             <div>
-              <strong>RecuperaciÃ³n segura</strong>
-              <span>El enlace serÃ¡ temporal y de uso Ãºnico.</span>
+              <strong>Recuperación segura</strong>
+              <span>El enlace será temporal y de uso único.</span>
             </div>
           </div>
         </div>
 
-        <span className="recovery-footer">SISTEMA ADMINISTRATIVO Â· 2026</span>
+        <span className="recovery-footer">SISTEMA ADMINISTRATIVO · 2026</span>
       </section>
 
       <section className="recovery-form-panel">
@@ -87,19 +87,19 @@ export default function ForgotPasswordPage({
             onClick={onBackToLogin}
             disabled={loading}
           >
-            <span aria-hidden="true">â†</span> Volver al inicio de sesiÃ³n
+            <span aria-hidden="true">â†</span> Volver al inicio de sesión
           </button>
 
           <div className="recovery-form-header">
             <span className="recovery-form-icon" aria-hidden="true">?</span>
             <span className="recovery-form-kicker">RECUPERAR ACCESO</span>
-            <h2>Â¿Olvidaste tu contraseÃ±a?</h2>
+            <h2>¿Olvidaste tu contraseña?</h2>
             <p>Indica tu usuario o correo y te enviaremos las instrucciones.</p>
           </div>
 
           <form className="recovery-form" onSubmit={handleSubmit}>
             <div className="recovery-field">
-              <label htmlFor="recoveryIdentifier">Usuario o correo electrÃ³nico</label>
+              <label htmlFor="recoveryIdentifier">Usuario o correo electrónico</label>
               <input
                 id="recoveryIdentifier"
                 type="text"
@@ -121,7 +121,7 @@ export default function ForgotPasswordPage({
 
             {message && (
               <div className="recovery-alert recovery-alert-success" role="status">
-                <span aria-hidden="true">âœ“</span>
+                <span aria-hidden="true">✓</span>
                 {message}
               </div>
             )}
@@ -131,7 +131,7 @@ export default function ForgotPasswordPage({
               className="recovery-submit-button"
               disabled={loading}
             >
-              <span>{loading ? "Enviando..." : "Enviar enlace de recuperaciÃ³n"}</span>
+              <span>{loading ? "Enviando..." : "Enviar enlace de recuperación"}</span>
               {!loading && <span aria-hidden="true">â†’</span>}
             </button>
           </form>

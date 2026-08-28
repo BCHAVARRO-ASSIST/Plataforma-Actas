@@ -109,7 +109,7 @@ export function RolesPage() {
 
 
   // =========================================================
-  // CONFIRMACIÃƒâ€œN DE ACCIONES
+  // CONFIRMACIÓN DE ACCIONES
   // =========================================================
 
   const [confirmationAction, setConfirmationAction] =
@@ -558,7 +558,7 @@ export function RolesPage() {
 
 
   // =========================================================
-  // ABRIR CONFIRMACIÃƒâ€œN
+  // ABRIR CONFIRMACIÓN
   // =========================================================
 
   function abrirConfirmacion(
@@ -577,7 +577,7 @@ export function RolesPage() {
 
 
   // =========================================================
-  // CERRAR CONFIRMACIÃƒâ€œN
+  // CERRAR CONFIRMACIÓN
   // =========================================================
 
   function cerrarConfirmacion() {
@@ -593,7 +593,7 @@ export function RolesPage() {
 
 
   // =========================================================
-  // EJECUTAR CONFIRMACIÃƒâ€œN
+  // EJECUTAR CONFIRMACIÓN
   // =========================================================
 
   async function ejecutarConfirmacion() {
@@ -739,7 +739,7 @@ export function RolesPage() {
 
 
   // =========================================================
-  // PROPIEDADES DE CONFIRMACIÃƒâ€œN
+  // PROPIEDADES DE CONFIRMACIÓN
   // =========================================================
 
   const confirmationContent =
@@ -757,14 +757,14 @@ export function RolesPage() {
       ) {
 
         return {
-          eyebrow: "ACCIÃƒâ€œN PERMANENTE",
+          eyebrow: "ACCIÓN PERMANENTE",
           title: "Eliminar rol",
           description:
-            `Ã‚Â¿EstÃƒÂ¡s seguro de eliminar el rol "${rolParaConfirmar.nombre}"?`,
+            `¿Estás seguro de eliminar el rol "${rolParaConfirmar.nombre}"?`,
           detail:
-            "Esta acciÃƒÂ³n eliminarÃƒÂ¡ el perfil y sus relaciones de permisos. No se puede deshacer.",
+            "Esta acción eliminará el perfil y sus relaciones de permisos. No se puede deshacer.",
           actionLabel: "Eliminar rol",
-          icon: "Ãƒâ€”",
+          icon: "×",
           variant: "danger",
         };
 
@@ -778,11 +778,11 @@ export function RolesPage() {
           eyebrow: "CAMBIO DE ESTADO",
           title: "Desactivar rol",
           description:
-            `Ã‚Â¿Deseas desactivar el rol "${rolParaConfirmar.nombre}"?`,
+            `¿Deseas desactivar el rol "${rolParaConfirmar.nombre}"?`,
           detail:
-            "El rol dejarÃƒÂ¡ de estar disponible como perfil activo dentro de la plataforma.",
+            "El rol dejará de estar disponible como perfil activo dentro de la plataforma.",
           actionLabel: "Desactivar",
-          icon: "Ã¢Ë†â€™",
+          icon: "⊘",
           variant: "warning",
         };
 
@@ -792,11 +792,11 @@ export function RolesPage() {
         eyebrow: "CAMBIO DE ESTADO",
         title: "Activar rol",
         description:
-          `Ã‚Â¿Deseas activar el rol "${rolParaConfirmar.nombre}"?`,
+          `¿Deseas activar el rol "${rolParaConfirmar.nombre}"?`,
         detail:
-          "El rol volverÃƒÂ¡ a estar disponible para la gestiÃƒÂ³n de acceso.",
+          "El rol volverá a estar disponible para la gestión de acceso.",
         actionLabel: "Activar",
-        icon: "Ã¢Å“â€œ",
+        icon: "✓",
         variant: "success",
       };
 
@@ -825,7 +825,7 @@ export function RolesPage() {
           </strong>
 
           <span>
-            Consultando la configuraciÃƒÂ³n de seguridad...
+            Consultando la configuración de seguridad...
           </span>
 
         </div>
@@ -858,7 +858,7 @@ export function RolesPage() {
           <h1>Perfiles, Roles y Matriz de Permisos</h1>
 
           <p>
-            AdministraciÃƒÂ³n de polÃƒÂ­ticas de autorizaciÃƒÂ³n y asignaciÃƒÂ³n granular de capacidades operativas.
+            Administración de políticas de autorización y asignación granular de capacidades operativas.
           </p>
 
         </div>
@@ -886,7 +886,7 @@ export function RolesPage() {
         <div className="roles-summary-card">
 
           <div className="roles-summary-icon">
-            Ã¢â€”Ë†
+            ◈
           </div>
 
           <div>
@@ -907,7 +907,7 @@ export function RolesPage() {
         <div className="roles-summary-card">
 
           <div className="roles-summary-icon roles-summary-icon-active">
-            Ã¢Å“â€œ
+            ✓
           </div>
 
           <div>
@@ -928,7 +928,7 @@ export function RolesPage() {
         <div className="roles-summary-card">
 
           <div className="roles-summary-icon roles-summary-icon-inactive">
-            Ã¢â€”Â¯
+            ◯
           </div>
 
           <div>
@@ -949,7 +949,7 @@ export function RolesPage() {
         <div className="roles-summary-card">
 
           <div className="roles-summary-icon">
-            Ã¢â€”Â«
+            ◫
           </div>
 
           <div>
@@ -982,7 +982,7 @@ export function RolesPage() {
           <div>
 
             <strong>
-              No fue posible completar la operaciÃƒÂ³n
+              No fue posible completar la operación
             </strong>
 
             <p>
@@ -1005,7 +1005,7 @@ export function RolesPage() {
           <div>
 
             <span className="roles-panel-kicker">
-              CONFIGURACIÃƒâ€œN
+              CONFIGURACIÓN
             </span>
 
             <h2>
@@ -1032,12 +1032,12 @@ export function RolesPage() {
           <div className="roles-search">
 
             <span>
-              Ã¢Å’â€¢
+              🔍
             </span>
 
             <input
               type="text"
-              placeholder="Buscar por nombre o descripciÃƒÂ³n..."
+              placeholder="Buscar por nombre o descripción..."
               value={busqueda}
               onChange={(event) =>
                 setBusqueda(
@@ -1053,9 +1053,9 @@ export function RolesPage() {
                 onClick={() =>
                   setBusqueda("")
                 }
-                aria-label="Limpiar bÃƒÂºsqueda"
+                aria-label="Limpiar búsqueda"
               >
-                Ãƒâ€”
+                ×
               </button>
 
             )}
@@ -1074,7 +1074,7 @@ export function RolesPage() {
             <div className="roles-empty">
 
               <div className="roles-empty-icon">
-                Ã¢â€”Ë†
+                ◈
               </div>
 
               <h3>
@@ -1082,7 +1082,7 @@ export function RolesPage() {
               </h3>
 
               <p>
-                Prueba con otro tÃƒÂ©rmino de bÃƒÂºsqueda
+                Prueba con otro término de búsqueda
                 o crea un nuevo rol.
               </p>
 
@@ -1146,7 +1146,7 @@ export function RolesPage() {
                   <p className="role-description">
 
                     {rol.descripcion ||
-                      "Este rol no tiene una descripciÃƒÂ³n definida."}
+                      "Este rol no tiene una descripción definida."}
 
                   </p>
 
@@ -1271,7 +1271,7 @@ export function RolesPage() {
 
                   {modal === "crear"
                     ? "+"
-                    : "Ã¢Å“Å½"}
+                    : "✍"}
 
                 </div>
 
@@ -1281,7 +1281,7 @@ export function RolesPage() {
 
                     {modal === "crear"
                       ? "NUEVO PERFIL"
-                      : "CONFIGURACIÃƒâ€œN"}
+                      : "CONFIGURACIÓN"}
 
                   </span>
 
@@ -1297,7 +1297,7 @@ export function RolesPage() {
 
                     {modal === "crear"
                       ? "Define la identidad y los permisos del nuevo perfil."
-                      : "Actualiza la informaciÃƒÂ³n y capacidades del perfil."}
+                      : "Actualiza la información y capacidades del perfil."}
 
                   </p>
 
@@ -1313,7 +1313,7 @@ export function RolesPage() {
                   cerrarModal
                 }
               >
-                Ãƒâ€”
+                ×
               </button>
 
             </div>
@@ -1332,11 +1332,11 @@ export function RolesPage() {
                   <div>
 
                     <h3>
-                      InformaciÃƒÂ³n del rol
+                      Información del rol
                     </h3>
 
                     <p>
-                      Define los datos bÃƒÂ¡sicos del perfil.
+                      Define los datos básicos del perfil.
                     </p>
 
                   </div>
@@ -1368,7 +1368,7 @@ export function RolesPage() {
                     />
 
                     <small>
-                      Utiliza un nombre claro y fÃƒÂ¡cil de identificar.
+                      Utiliza un nombre claro y fácil de identificar.
                     </small>
 
                   </label>
@@ -1377,7 +1377,7 @@ export function RolesPage() {
                   <label className="roles-field roles-field-full">
 
                     <span>
-                      DescripciÃƒÂ³n
+                      Descripción
                     </span>
 
                     <textarea
@@ -1392,8 +1392,8 @@ export function RolesPage() {
                     />
 
                     <small>
-                      Una descripciÃƒÂ³n ayuda a los administradores
-                      a identificar el propÃƒÂ³sito del perfil.
+                      Una descripción ayuda a los administradores
+                      a identificar el propósito del perfil.
                     </small>
 
                   </label>
@@ -1418,7 +1418,7 @@ export function RolesPage() {
                     </h3>
 
                     <p>
-                      Selecciona las acciones que podrÃƒÂ¡ realizar este rol.
+                      Selecciona las acciones que podrá realizar este rol.
                     </p>
 
                   </div>
@@ -1456,7 +1456,7 @@ export function RolesPage() {
                       limpiarPermisos
                     }
                   >
-                    Limpiar selecciÃƒÂ³n
+                    Limpiar selección
                   </button>
 
                 </div>
@@ -1496,7 +1496,7 @@ export function RolesPage() {
                             <div>
 
                               <span className="roles-module-icon">
-                                Ã¢â€”Â«
+                                ◫
                               </span>
 
                               <div>
@@ -1571,7 +1571,7 @@ export function RolesPage() {
 
 
                                     <span className="permission-check">
-                                      Ã¢Å“â€œ
+                                      ✓
                                     </span>
 
 
@@ -1615,7 +1615,7 @@ export function RolesPage() {
                 <span className="roles-footer-dot" />
 
                 <span>
-                  Los cambios se guardarÃƒÂ¡n inmediatamente.
+                  Los cambios se guardarán inmediatamente.
                 </span>
 
               </div>
@@ -1679,7 +1679,7 @@ export function RolesPage() {
               <div className="roles-modal-title">
 
                 <div className="roles-modal-icon">
-                  Ã¢â€”Â«
+                  ◫
                 </div>
 
                 <div>
@@ -1714,7 +1714,7 @@ export function RolesPage() {
                   cerrarModal
                 }
               >
-                Ãƒâ€”
+                ×
               </button>
 
             </div>
@@ -1776,7 +1776,7 @@ export function RolesPage() {
                       limpiarPermisos
                     }
                   >
-                    Limpiar selecciÃƒÂ³n
+                    Limpiar selección
                   </button>
 
                 </div>
@@ -1816,7 +1816,7 @@ export function RolesPage() {
                             <div>
 
                               <span className="roles-module-icon">
-                                Ã¢â€”Â«
+                                ◫
                               </span>
 
                               <div>
@@ -1891,7 +1891,7 @@ export function RolesPage() {
 
 
                                     <span className="permission-check">
-                                      Ã¢Å“â€œ
+                                      ✓
                                     </span>
 
 
@@ -1935,7 +1935,7 @@ export function RolesPage() {
                 <span className="roles-footer-dot" />
 
                 <span>
-                  Los cambios se guardarÃƒÂ¡n inmediatamente.
+                  Los cambios se guardarán inmediatamente.
                 </span>
 
               </div>
@@ -1983,7 +1983,7 @@ export function RolesPage() {
 
 
       {/* =====================================================
-          MODAL DE CONFIRMACIÃƒâ€œN
+          MODAL DE CONFIRMACIÓN
           ===================================================== */}
 
       {confirmationContent &&

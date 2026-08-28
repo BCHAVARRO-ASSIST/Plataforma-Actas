@@ -27,7 +27,7 @@ function formatDate(
   value: string | null
 ): string {
   if (!value) {
-    return "â€”";
+    return "—";
   }
 
   return new Date(
@@ -40,7 +40,7 @@ function formatDate(
 
 
 // =====================================================
-// OBTENER OBSERVACIÃ“N
+// OBTENER OBSERVACIÓN
 // =====================================================
 
 function getObservation(
@@ -55,10 +55,10 @@ function getObservation(
     return (
       data.observacion ||
       data.observaciones ||
-      "â€”"
+      "—"
     );
   } catch {
-    return "â€”";
+    return "—";
   }
 }
 
@@ -81,7 +81,7 @@ export function ActaDetail({
   const [actionError, setActionError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Modal exportaciÃ³n oficial
+  // Modal exportación oficial
   const [isOfficialModalOpen, setIsOfficialModalOpen] = useState(false);
 
   // Anular modal state
@@ -120,7 +120,7 @@ export function ActaDetail({
       setGeneratingDoc(true);
       setActionError(null);
       const res = await generarActaDocumento(acta.id);
-      setSuccessMessage(`Documento oficial generado y persistido con Ã©xito (${(res.tamanoBytes / 1024).toFixed(1)} KB).`);
+      setSuccessMessage(`Documento oficial generado y persistido con éxito (${(res.tamanoBytes / 1024).toFixed(1)} KB).`);
       if (onRefresh) await onRefresh();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Error al generar el documento oficial.");
@@ -130,7 +130,7 @@ export function ActaDetail({
   }
 
   async function handleFinalizar() {
-    if (!window.confirm("Â¿EstÃ¡s seguro de que deseas finalizar este acta? Una vez finalizada no podrÃ¡ modificarse.")) {
+    if (!window.confirm("¿Estás seguro de que deseas finalizar este acta? Una vez finalizada no podrá modificarse.")) {
       return;
     }
 
@@ -150,7 +150,7 @@ export function ActaDetail({
   async function handleConfirmAnular(e: React.FormEvent) {
     e.preventDefault();
     if (!motivoAnulacion.trim()) {
-      setActionError("El motivo de anulaciÃ³n es obligatorio.");
+      setActionError("El motivo de anulación es obligatorio.");
       return;
     }
 
@@ -188,10 +188,10 @@ export function ActaDetail({
       {/* MENSAJES DE ESTADO */}
       {successMessage && (
         <div className="usuarios-success" style={{ marginBottom: "20px" }}>
-          <span>âœ“</span>
+          <span>✓</span>
           {successMessage}
           <button type="button" onClick={() => setSuccessMessage(null)} aria-label="Cerrar">
-            Ã—
+            ×
           </button>
         </div>
       )}
@@ -209,7 +209,7 @@ export function ActaDetail({
       <div className="acta-detail-header">
         <div>
           <span className="page-eyebrow">
-            GestiÃ³n documental Â· SupervisiÃ³n
+            Gestión documental · Supervisión
           </span>
 
           <h1>
@@ -217,12 +217,12 @@ export function ActaDetail({
           </h1>
 
           <p>
-            InformaciÃ³n completa del acta, equipo asociado y estado de entrega.
+            Información completa del acta, equipo asociado y estado de entrega.
           </p>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-          {/* BOTÃ“N VISTA PREVIA OFICIAL */}
+          {/* BOTÓN VISTA PREVIA OFICIAL */}
           {canExport && (
             <button
               type="button"
@@ -247,7 +247,7 @@ export function ActaDetail({
             </button>
           )}
 
-          {/* BOTÃ“N DESCARGAR PDF OFICIAL */}
+          {/* BOTÓN DESCARGAR PDF OFICIAL */}
           {canExport && (
             <button
               type="button"
@@ -289,7 +289,7 @@ export function ActaDetail({
               disabled={loadingAction}
               style={{ minHeight: "38px", padding: "8px 16px", fontSize: "13px" }}
             >
-              {loadingAction ? "Finalizando..." : "âœ“ Finalizar Acta"}
+              {loadingAction ? "Finalizando..." : "✓ Finalizar Acta"}
             </button>
           )}
 
@@ -312,18 +312,18 @@ export function ActaDetail({
 
 
       {/* =================================================
-          INFORMACIÃ“N
+          INFORMACIÓN
       ================================================== */}
 
       <div className="acta-detail-grid">
 
         {/* =================================================
-            INFORMACIÃ“N DEL ACTA
+            INFORMACIÓN DEL ACTA
         ================================================== */}
 
         <section className="acta-detail-card">
           <div className="acta-card-header">
-            <h2>InformaciÃ³n del Acta</h2>
+            <h2>Información del Acta</h2>
           </div>
 
           <div className="acta-info-grid">
@@ -333,7 +333,7 @@ export function ActaDetail({
             </div>
 
             <div className="acta-info-item">
-              <span>NÃºmero de acta</span>
+              <span>Número de acta</span>
               <strong>{acta.numeroActa}</strong>
             </div>
 
@@ -349,17 +349,17 @@ export function ActaDetail({
 
             <div className="acta-info-item">
               <span>Acta entregada</span>
-              <strong>{acta.actaEntregada ? "SÃ­" : "No"}</strong>
+              <strong>{acta.actaEntregada ? "Sí" : "No"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Consultor / Receptor</span>
-              <strong>{acta.destinatarioNombre || acta.destinatarioUsuarioId || "â€”"}</strong>
+              <strong>{acta.destinatarioNombre || acta.destinatarioUsuarioId || "—"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Correo Consultor</span>
-              <strong>{acta.destinatarioCorreo || "â€”"}</strong>
+              <strong>{acta.destinatarioCorreo || "—"}</strong>
             </div>
 
             <div className="acta-info-item">
@@ -368,7 +368,7 @@ export function ActaDetail({
             </div>
 
             <div className="acta-info-item">
-              <span>Fecha de creaciÃ³n</span>
+              <span>Fecha de creación</span>
               <strong>{formatDate(acta.fechaCreacion)}</strong>
             </div>
 
@@ -378,7 +378,7 @@ export function ActaDetail({
             </div>
 
             <div className="acta-info-item">
-              <span>Fecha de finalizaciÃ³n</span>
+              <span>Fecha de finalización</span>
               <strong>{formatDate(acta.fechaFinalizacion)}</strong>
             </div>
           </div>
@@ -407,42 +407,42 @@ export function ActaDetail({
 
             <div className="acta-info-item">
               <span>Marca</span>
-              <strong>{equipo.marca ?? "â€”"}</strong>
+              <strong>{equipo.marca ?? "—"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Procesador</span>
-              <strong>{equipo.procesador ?? "â€”"}</strong>
+              <strong>{equipo.procesador ?? "—"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Memoria RAM</span>
-              <strong>{equipo.memoriaRam ?? "â€”"}</strong>
+              <strong>{equipo.memoriaRam ?? "—"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Disco duro</span>
-              <strong>{equipo.discoDuro ?? "â€”"}</strong>
+              <strong>{equipo.discoDuro ?? "—"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Empresa</span>
-              <strong>{equipo.empresa ?? "â€”"}</strong>
+              <strong>{equipo.empresa ?? "—"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Asignado a</span>
-              <strong>{equipo.asignadoA ?? "â€”"}</strong>
+              <strong>{equipo.asignadoA ?? "—"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Departamento</span>
-              <strong>{equipo.departamento ?? "â€”"}</strong>
+              <strong>{equipo.departamento ?? "—"}</strong>
             </div>
 
             <div className="acta-info-item">
               <span>Estado del equipo</span>
-              <strong>{equipo.estatusEquipo ?? "â€”"}</strong>
+              <strong>{equipo.estatusEquipo ?? "—"}</strong>
             </div>
           </div>
         </section>
@@ -464,12 +464,12 @@ export function ActaDetail({
 
 
         {/* =================================================
-            DOCUMENTO OFICIAL Y CERTIFICACIÃ“N
+            DOCUMENTO OFICIAL Y CERTIFICACIÓN
         ================================================== */}
 
         <section className="acta-detail-card acta-detail-full">
           <div className="acta-card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h2>ðŸ“„ Documento Oficial de CompaÃ±Ã­a (TI-FOR-ACTA-001)</h2>
+            <h2>ðŸ“„ Documento Oficial de Compañía (TI-FOR-ACTA-001)</h2>
             <div style={{ display: "flex", gap: "8px" }}>
               {canExport && (
                 <button
@@ -541,7 +541,7 @@ export function ActaDetail({
                   <img src={signatureImage} alt="Firma del Consultor" style={{ maxHeight: "80px", maxWidth: "90%", objectFit: "contain" }} />
                 ) : (
                   <span style={{ fontSize: "12px", color: acta.estado === "Borrador" ? "#94a3b8" : "#166534", fontStyle: acta.estado === "Borrador" ? "italic" : "normal", fontWeight: 600 }}>
-                    {acta.estado === "Borrador" ? "Firma pendiente por recolectar en campo" : "âœ“ Firma registrada y certificada"}
+                    {acta.estado === "Borrador" ? "Firma pendiente por recolectar en campo" : "✓ Firma registrada y certificada"}
                   </span>
                 )}
               </div>
@@ -550,19 +550,19 @@ export function ActaDetail({
               </div>
             </div>
 
-            {/* INTEGRIDAD CRIPTOGRÃFICA */}
+            {/* INTEGRIDAD CRIPTOGRÁFICA */}
             <div style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px", background: "#f8fafc", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div style={{ fontSize: "12px", fontWeight: 700, color: "#64748b", marginBottom: "6px" }}>
-                  Integridad CriptogrÃ¡fica (SHA-256):
+                  Integridad Criptográfica (SHA-256):
                 </div>
                 <div style={{ fontSize: "11px", fontFamily: "monospace", color: "#0f172a", wordBreak: "break-all", background: "#ffffff", padding: "8px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
-                  {acta.hashSha256 || "Se generarÃ¡ automÃ¡ticamente tras la firma digital."}
+                  {acta.hashSha256 || "Se generará automáticamente tras la firma digital."}
                 </div>
               </div>
 
               <div style={{ fontSize: "11px", color: "#64748b", marginTop: "10px" }}>
-                Documento generado conforme al estÃ¡ndar <strong>TI-FOR-ACTA-001 (ISO 27001)</strong>.
+                Documento generado conforme al estándar <strong>TI-FOR-ACTA-001 (ISO 27001)</strong>.
               </div>
             </div>
           </div>
@@ -571,7 +571,7 @@ export function ActaDetail({
         {acta.motivoAnulacion && (
           <section className="acta-detail-card acta-detail-full">
             <div className="acta-card-header">
-              <h2>Motivo de anulaciÃ³n</h2>
+              <h2>Motivo de anulación</h2>
             </div>
 
             <div className="acta-observation" style={{ color: "#991b1b" }}>
@@ -582,7 +582,7 @@ export function ActaDetail({
 
       </div>
 
-      {/* MODAL FORMATO OFICIAL DE LA COMPAÃ‘ÃA */}
+      {/* MODAL FORMATO OFICIAL DE LA COMPAÑÍA */}
       <OfficialActaModal
         acta={acta}
         isOpen={isOfficialModalOpen}
@@ -620,30 +620,30 @@ export function ActaDetail({
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-              <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 800, color: "#0f172a" }}>AnulaciÃ³n de Acta</h2>
+              <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 800, color: "#0f172a" }}>Anulación de Acta</h2>
               <button
                 type="button"
                 onClick={() => setIsAnularModalOpen(false)}
                 style={{ background: "none", border: "none", fontSize: "16px", cursor: "pointer", color: "#64748b" }}
               >
-                âœ•
+                ✕
               </button>
             </div>
 
             <form onSubmit={handleConfirmAnular}>
               <p style={{ fontSize: "13px", color: "#475569", margin: "0 0 14px 0" }}>
-                Ingresa el motivo detallado de la anulaciÃ³n para el acta <strong>{acta.numeroActa}</strong>. Si el equipo estaba asignado, regresarÃ¡ automÃ¡ticamente a estado activo.
+                Ingresa el motivo detallado de la anulación para el acta <strong>{acta.numeroActa}</strong>. Si el equipo estaba asignado, regresará automáticamente a estado activo.
               </p>
 
               <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
-                Motivo de anulaciÃ³n *
+                Motivo de anulación *
               </label>
               <textarea
                 required
                 rows={3}
                 value={motivoAnulacion}
                 onChange={(e) => setMotivoAnulacion(e.target.value)}
-                placeholder="Ej. Error en nÃºmero de serie del equipo asignado..."
+                placeholder="Ej. Error en número de serie del equipo asignado..."
                 style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "14px", fontFamily: "inherit" }}
               />
 
@@ -662,7 +662,7 @@ export function ActaDetail({
                   className="usuario-delete-button"
                   style={{ padding: "8px 18px", fontSize: "13px", cursor: "pointer" }}
                 >
-                  {loadingAction ? "Anulando..." : "Confirmar AnulaciÃ³n"}
+                  {loadingAction ? "Anulando..." : "Confirmar Anulación"}
                 </button>
               </div>
             </form>

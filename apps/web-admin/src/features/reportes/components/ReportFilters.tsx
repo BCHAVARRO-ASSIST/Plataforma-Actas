@@ -33,14 +33,14 @@ export function ReportFilters({
         }}
       >
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", alignItems: "flex-end" }}>
-          {/* BÃšSQUEDA TEXTUAL */}
+          {/* BÚSQUEDA TEXTUAL */}
           <div>
             <label style={{ display: "block", fontSize: "11px", fontWeight: 700, color: "#475569", marginBottom: "4px" }}>
-              BÃºsqueda rÃ¡pida
+              Búsqueda rápida
             </label>
             <input
               type="text"
-              placeholder="NÃºmero acta, clave, nombre..."
+              placeholder="Número acta, clave, nombre..."
               value={filters.search || ""}
               onChange={(e) => handleChange("search", e.target.value)}
               style={{ width: "100%", padding: "7px 10px", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "13px" }}
@@ -118,12 +118,12 @@ export function ReportFilters({
               >
                 <option value="">Todos los tipos</option>
                 <option value="Entrega">Entrega</option>
-                <option value="DevoluciÃ³n">DevoluciÃ³n</option>
+                <option value="Devolución">Devolución</option>
               </select>
             </div>
           )}
 
-          {/* BOTONES DE ACCIÃ“N */}
+          {/* BOTONES DE ACCIÓN */}
           <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
             <button
               type="button"

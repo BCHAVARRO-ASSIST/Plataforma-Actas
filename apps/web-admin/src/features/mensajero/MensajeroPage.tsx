@@ -31,7 +31,7 @@ interface MensajeroPageProps {
 
 
 // =====================================================
-// PÃGINA DEL MENSAJERO
+// PÁGINA DEL MENSAJERO
 // =====================================================
 
 export function MensajeroPage({
@@ -140,7 +140,7 @@ export function MensajeroPage({
 
 
   // ===================================================
-  // ESTADÃSTICAS
+  // ESTADÍSTICAS
   // ===================================================
 
   const statistics =
@@ -211,10 +211,10 @@ export function MensajeroPage({
         <div className="mensajero-page-heading">
 
           <span className="mensajero-page-eyebrow">
-            OPERACIÃ“N DE CAMPO Y MENSAJERÃA
+            OPERACIÓN DE CAMPO Y MENSAJERÍA
           </span>
 
-          <h1>Mis Actas Asignadas y CertificaciÃ³n de Entregas</h1>
+          <h1>Mis Actas Asignadas y Certificación de Entregas</h1>
 
           <p>
             Gestiona tus traslados asignados, consulta los detalles del equipo y destinatario, y recolecta la firma manuscrita digital para certificar la entrega.
@@ -346,7 +346,7 @@ export function MensajeroPage({
 
 
             <span className="mensajero-kpi-description">
-              Requieren atenciÃ³n
+              Requieren atención
             </span>
 
           </article>
@@ -412,7 +412,7 @@ export function MensajeroPage({
             <span className="mensajero-kpi-description">
 
               {statistics.entregas}{" "}
-              entregas Â·{" "}
+              entregas ·{" "}
               {statistics.devoluciones}{" "}
               devoluciones
 
@@ -433,7 +433,7 @@ export function MensajeroPage({
 
 
         {/* =================================================
-            CABECERA DE LA SECCIÃ“N
+            CABECERA DE LA SECCIÓN
             ================================================= */}
 
         <header className="mensajero-section-header">
@@ -441,7 +441,7 @@ export function MensajeroPage({
           <div className="mensajero-section-heading">
 
             <span className="mensajero-section-kicker">
-              GESTIÃ“N DE ACTAS
+              GESTIÓN DE ACTAS
             </span>
 
 
@@ -605,7 +605,7 @@ export function MensajeroPage({
 
                   <p>
                     Cuando se asigne una acta a tu usuario,
-                    aparecerÃ¡ automÃ¡ticamente en esta secciÃ³n.
+                    aparecerá automáticamente en esta sección.
                   </p>
 
                 </div>

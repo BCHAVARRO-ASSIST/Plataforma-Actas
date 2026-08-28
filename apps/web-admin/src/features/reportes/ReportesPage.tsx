@@ -109,7 +109,7 @@ export function ReportesPage() {
       ]);
       exportToCsv("Reporte_Equipos", headers, rows);
     } else if (activeTab === "actas") {
-      const headers = ["NÃºmero Acta", "Tipo", "Estado", "Clave Equipo", "Nombre Equipo", "Creador", "Destinatario", "Mensajero", "Fecha CreaciÃ³n", "Fecha Firma", "Fecha FinalizaciÃ³n"];
+      const headers = ["Número Acta", "Tipo", "Estado", "Clave Equipo", "Nombre Equipo", "Creador", "Destinatario", "Mensajero", "Fecha Creación", "Fecha Firma", "Fecha Finalización"];
       const rows = actasData.map((a) => [
         a.numeroActa,
         a.tipoActa,
@@ -125,7 +125,7 @@ export function ReportesPage() {
       ]);
       exportToCsv("Reporte_Actas", headers, rows);
     } else if (activeTab === "entregas") {
-      const headers = ["NÃºmero Acta", "Clave Equipo", "Nombre Equipo", "Mensajero", "Destinatario", "Fecha CreaciÃ³n", "Fecha Firma", "Firmada", "Estado"];
+      const headers = ["Número Acta", "Clave Equipo", "Nombre Equipo", "Mensajero", "Destinatario", "Fecha Creación", "Fecha Firma", "Firmada", "Estado"];
       const rows = entregasData.map((e) => [
         e.numeroActa,
         e.equipmentInventoryKey,
@@ -134,12 +134,12 @@ export function ReportesPage() {
         e.destinatarioNombre,
         e.fechaCreacion,
         e.fechaFirma,
-        e.firmado ? "SÃ­" : "No",
+        e.firmado ? "Sí" : "No",
         e.estado,
       ]);
       exportToCsv("Reporte_Entregas", headers, rows);
     } else if (activeTab === "devoluciones") {
-      const headers = ["NÃºmero Acta DevoluciÃ³n", "Acta Origen Vinculada", "Clave Equipo", "Nombre Equipo", "Responsable Entrega", "Fecha CreaciÃ³n", "Fecha Firma", "Estado"];
+      const headers = ["Número Acta Devolución", "Acta Origen Vinculada", "Clave Equipo", "Nombre Equipo", "Responsable Entrega", "Fecha Creación", "Fecha Firma", "Estado"];
       const rows = devolucionesData.map((d) => [
         d.numeroActa,
         d.actaOrigenNumero || d.actaOrigenId,
@@ -160,7 +160,7 @@ export function ReportesPage() {
 
   function handleExportPdf() {
     if (activeTab === "equipos") {
-      const headers = ["Inventario", "Nombre Equipo", "Marca", "Asignado A", "Ãrea", "Empresa", "Estado"];
+      const headers = ["Inventario", "Nombre Equipo", "Marca", "Asignado A", "Área", "Empresa", "Estado"];
       const rows = equiposData.map((e) => [
         e.inventoryKey,
         e.nombreEquipo,
@@ -172,7 +172,7 @@ export function ReportesPage() {
       ]);
       exportToPdf("Reporte Consolidado de Equipos e Inventario", headers, rows);
     } else if (activeTab === "actas") {
-      const headers = ["NÂ° Acta", "Tipo", "Estado", "Equipo", "Destinatario", "Mensajero", "Fecha CreaciÃ³n"];
+      const headers = ["N° Acta", "Tipo", "Estado", "Equipo", "Destinatario", "Mensajero", "Fecha Creación"];
       const rows = actasData.map((a) => [
         a.numeroActa,
         a.tipoActa,
@@ -184,7 +184,7 @@ export function ReportesPage() {
       ]);
       exportToPdf("Reporte Maestro de Actas y Trazabilidad", headers, rows);
     } else if (activeTab === "entregas") {
-      const headers = ["NÂ° Acta", "Equipo", "Mensajero", "Destinatario", "Fecha CreaciÃ³n", "Firma", "Estado"];
+      const headers = ["N° Acta", "Equipo", "Mensajero", "Destinatario", "Fecha Creación", "Firma", "Estado"];
       const rows = entregasData.map((e) => [
         e.numeroActa,
         e.equipmentNombre,
@@ -196,10 +196,10 @@ export function ReportesPage() {
       ]);
       exportToPdf("Reporte de Entregas y Custodia en Campo", headers, rows);
     } else if (activeTab === "devoluciones") {
-      const headers = ["NÂ° DevoluciÃ³n", "Acta Origen", "Equipo", "Responsable", "Fecha CreaciÃ³n", "Estado"];
+      const headers = ["N° Devolución", "Acta Origen", "Equipo", "Responsable", "Fecha Creación", "Estado"];
       const rows = devolucionesData.map((d) => [
         d.numeroActa,
-        d.actaOrigenNumero || "â€”",
+        d.actaOrigenNumero || "—",
         d.equipmentNombre,
         d.responsableEntrega,
         new Date(d.fechaCreacion).toLocaleDateString("es-CO"),
@@ -223,12 +223,12 @@ export function ReportesPage() {
       {/* HEADER */}
       <header className="inventory-header" style={{ marginBottom: "20px" }}>
         <div>
-          <span className="inventory-kicker">INFORMES Y EXPORTACIÃ“N AVANZADA</span>
+          <span className="inventory-kicker">INFORMES Y EXPORTACIÓN AVANZADA</span>
           <h1 style={{ margin: "4px 0 8px", fontSize: "24px", fontWeight: 800, color: "#0f172a" }}>
-            MÃ³dulo de Reportes Oficiales
+            Módulo de Reportes Oficiales
           </h1>
           <p style={{ margin: 0, color: "#475569", fontSize: "14px" }}>
-            ConsolidaciÃ³n y exportaciÃ³n de informaciÃ³n operativa, inventario de hardware y trazabilidad documental.
+            Consolidación y exportación de información operativa, inventario de hardware y trazabilidad documental.
           </p>
         </div>
 
@@ -262,10 +262,10 @@ export function ReportesPage() {
         </div>
       )}
 
-      {/* TABS DE SELECCIÃ“N */}
+      {/* TABS DE SELECCIÓN */}
       <div style={{ display: "flex", gap: "8px", borderBottom: "2px solid #e2e8f0", marginBottom: "20px" }}>
         {[
-          { id: "equipos", label: "ðŸ’» CatÃ¡logo de Equipos", count: equiposData.length },
+          { id: "equipos", label: "ðŸ’» Catálogo de Equipos", count: equiposData.length },
           { id: "actas", label: "ðŸ“‹ Todas las Actas", count: actasData.length },
           { id: "entregas", label: "ðŸ“¦ Reporte de Entregas", count: entregasData.length },
           { id: "devoluciones", label: "â†© Reporte de Devoluciones", count: devolucionesData.length },
@@ -315,10 +315,10 @@ export function ReportesPage() {
         loading={loading}
       />
 
-      {/* KPIS DINÃMICOS */}
+      {/* KPIS DINÁMICOS */}
       <ReportKpi tab={activeTab} data={activeData} />
 
-      {/* GRÃFICA RESUMEN */}
+      {/* GRÁFICA RESUMEN */}
       <ReportCharts tab={activeTab} data={activeData} />
 
       {/* TABLA DE RESULTADOS */}

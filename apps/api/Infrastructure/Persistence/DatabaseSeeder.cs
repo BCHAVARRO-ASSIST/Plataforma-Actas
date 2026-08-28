@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using PlataformaActas.Api.Modules.Equipment.Data.Entities;
+using PlataformaActas.Api.Modules.Usuarios.Data.Entities;
 
 namespace PlataformaActas.Api.Infrastructure.Persistence;
 
@@ -63,36 +65,216 @@ public static class DatabaseSeeder
                   );
                 """);
 
-            // 4. Asegurar usuario admin con hash válido para "Admin123*"
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123*");
-
-            var updated = await context.Database.ExecuteSqlRawAsync("""
-                UPDATE usuarios 
-                SET "PasswordHash" = {0}, "Activo" = TRUE
-                WHERE "UsuarioRed" = 'admin';
-                """, passwordHash);
-
-            if (updated == 0)
-            {
-                await context.Database.ExecuteSqlRawAsync("""
-                    INSERT INTO usuarios ("Nombre", "Apellido", "UsuarioRed", "Correo", "Proceso", "Activo", "PasswordHash", "FechaCreacion")
-                    VALUES ('Administrador', 'Sistema', 'admin', 'admin@plataformaactas.local', 'Tecnología', TRUE, {0}, CURRENT_TIMESTAMP);
-                    """, passwordHash);
-            }
-
-            // 5. Asegurar rol Administrador a usuario admin
+            // 4. Asociar permisos a Mensajero
             await context.Database.ExecuteSqlRawAsync("""
-                INSERT INTO usuario_roles ("UsuarioId", "RolId")
-                SELECT u."Id", r."Id"
-                FROM usuarios u, roles r
-                WHERE u."UsuarioRed" = 'admin' AND r."Nombre" = 'Administrador'
+                INSERT INTO rol_permisos ("RolId", "PermisoId")
+                SELECT r."Id", p."Id"
+                FROM roles r
+                CROSS JOIN permisos p
+                WHERE r."Nombre" = 'Mensajero'
+                  AND p."Modulo" = 'Mensajero'
                   AND NOT EXISTS (
-                      SELECT 1 FROM usuario_roles ur
-                      WHERE ur."UsuarioId" = u."Id" AND ur."RolId" = r."Id"
+                      SELECT 1 FROM rol_permisos rp 
+                      WHERE rp."RolId" = r."Id" AND rp."PermisoId" = p."Id"
                   );
                 """);
 
-            Console.WriteLine("[DatabaseSeeder] Permisos, roles y usuario admin sincronizados con éxito.");
+            // 5. Asegurar usuarios iniciales con contraseña "Admin123*"
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123*");
+
+            var usuariosSeed = new[]
+            {
+                new { Nombre = "Administrador", Apellido = "Sistema", UsuarioRed = "admin", Correo = "admin@plataformaactas.local", Proceso = "Tecnología", Rol = "Administrador" },
+                new { Nombre = "Carlos", Apellido = "Gómez", UsuarioRed = "gestor", Correo = "gestor@plataformaactas.local", Proceso = "Operaciones TI", Rol = "Gestor" },
+                new { Nombre = "Pedro", Apellido = "Ramírez", UsuarioRed = "mensajero", Correo = "mensajero@plataformaactas.local", Proceso = "Mensajería y Logística", Rol = "Mensajero" },
+                new { Nombre = "Juan", Apellido = "Pérez", UsuarioRed = "juan.perez", Correo = "juan.perez@plataformaactas.local", Proceso = "Desarrollo", Rol = "Gestor" },
+                new { Nombre = "María", Apellido = "Rodríguez", UsuarioRed = "maria.rodriguez", Correo = "maria.rodriguez@plataformaactas.local", Proceso = "Talento Humano", Rol = "Auditor" }
+            };
+
+            foreach (var u in usuariosSeed)
+            {
+                var existing = await context.Usuarios.FirstOrDefaultAsync(x => x.UsuarioRed == u.UsuarioRed);
+                if (existing is null)
+                {
+                    var nuevo = new Usuario
+                    {
+                        Nombre = u.Nombre,
+                        Apellido = u.Apellido,
+                        UsuarioRed = u.UsuarioRed,
+                        Correo = u.Correo,
+                        Proceso = u.Proceso,
+                        Activo = true,
+                        PasswordHash = passwordHash,
+                        FechaCreacion = DateTime.UtcNow
+                    };
+                    context.Usuarios.Add(nuevo);
+                    await context.SaveChangesAsync();
+
+                    var rol = await context.Roles.FirstOrDefaultAsync(r => r.Nombre == u.Rol);
+                    if (rol != null)
+                    {
+                        context.UsuarioRoles.Add(new Modules.Roles.Data.Entities.UsuarioRol
+                        {
+                            UsuarioId = nuevo.Id,
+                            RolId = rol.Id
+                        });
+                        await context.SaveChangesAsync();
+                    }
+                }
+            }
+
+            // 6. Asegurar Inventario de Equipos Tecnológicos inicial
+            if (!await context.Equipment.AnyAsync())
+            {
+                var equipos = new List<Equipment>
+                {
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryKey = "EQ-LEN-001",
+                        NombreEquipo = "Lenovo ThinkPad T14 Gen 3",
+                        Empresa = "Sede Principal",
+                        AsignadoA = "Juan Pérez",
+                        Proveedor = "Lenovo Colombia",
+                        Marca = "Lenovo",
+                        Procesador = "Intel Core i7-1260P",
+                        DiscoDuro = "512 GB SSD NVMe",
+                        MemoriaRam = "16 GB DDR4",
+                        Departamento = "Desarrollo y TI",
+                        EstatusEquipo = "Activo",
+                        ActaEntregada = true,
+                        MantenimientoRealizado = false
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryKey = "EQ-DEL-002",
+                        NombreEquipo = "Dell Latitude 5430",
+                        Empresa = "Sede Principal",
+                        AsignadoA = "María Rodríguez",
+                        Proveedor = "Dell Technologies",
+                        Marca = "Dell",
+                        Procesador = "Intel Core i5-1245U",
+                        DiscoDuro = "256 GB SSD",
+                        MemoriaRam = "16 GB DDR4",
+                        Departamento = "Talento Humano",
+                        EstatusEquipo = "Activo",
+                        ActaEntregada = true,
+                        MantenimientoRealizado = false
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryKey = "EQ-HP-003",
+                        NombreEquipo = "HP Z2 G9 Workstation Tower",
+                        Empresa = "Sede Norte",
+                        AsignadoA = "Equipo Diseño Gráfico",
+                        Proveedor = "HP Enterprise",
+                        Marca = "HP",
+                        Procesador = "Intel Core i9-13900K",
+                        DiscoDuro = "1 TB SSD NVMe Gen4",
+                        MemoriaRam = "32 GB DDR5",
+                        Departamento = "Comunicaciones",
+                        EstatusEquipo = "Activo",
+                        ActaEntregada = true,
+                        MantenimientoRealizado = true,
+                        TipoMantenimiento = "Preventivo",
+                        FechaMantenimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-1))
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryKey = "EQ-APL-004",
+                        NombreEquipo = "MacBook Pro 14 M3 Pro",
+                        Empresa = "Sede Principal",
+                        AsignadoA = "Dirección de Tecnología",
+                        Proveedor = "Apple Colombia",
+                        Marca = "Apple",
+                        Procesador = "Apple M3 Pro (11-Core)",
+                        DiscoDuro = "512 GB SSD",
+                        MemoriaRam = "18 GB Unified",
+                        Departamento = "Dirección TI",
+                        EstatusEquipo = "Activo",
+                        ActaEntregada = true,
+                        MantenimientoRealizado = false
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryKey = "EQ-LEN-005",
+                        NombreEquipo = "Lenovo ThinkBook 15 G2",
+                        Empresa = "Sede Principal",
+                        AsignadoA = "En Stock / Sin Asignar",
+                        Proveedor = "Lenovo Colombia",
+                        Marca = "Lenovo",
+                        Procesador = "Intel Core i5-1135G7",
+                        DiscoDuro = "256 GB SSD",
+                        MemoriaRam = "8 GB DDR4",
+                        Departamento = "Bodega TI",
+                        EstatusEquipo = "Inactivo",
+                        ActaEntregada = false,
+                        MantenimientoRealizado = false
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryKey = "EQ-DEL-006",
+                        NombreEquipo = "Monitor Dell UltraSharp U2723QE 27\" 4K",
+                        Empresa = "Sede Principal",
+                        AsignadoA = "Juan Pérez",
+                        Proveedor = "Dell Technologies",
+                        Marca = "Dell",
+                        Procesador = "N/A",
+                        DiscoDuro = "N/A",
+                        MemoriaRam = "N/A",
+                        Departamento = "Desarrollo y TI",
+                        EstatusEquipo = "Activo",
+                        ActaEntregada = true,
+                        MantenimientoRealizado = false
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryKey = "EQ-HP-007",
+                        NombreEquipo = "HP EliteBook 840 G8",
+                        Empresa = "Sede Principal",
+                        AsignadoA = "Mesa de Ayuda",
+                        Proveedor = "HP Inc",
+                        Marca = "HP",
+                        Procesador = "Intel Core i7-1165G7",
+                        DiscoDuro = "512 GB SSD",
+                        MemoriaRam = "16 GB DDR4",
+                        Departamento = "Soporte Técnico",
+                        EstatusEquipo = "Mantenimiento",
+                        ActaEntregada = false,
+                        MantenimientoRealizado = true,
+                        TipoMantenimiento = "Correctivo",
+                        FechaMantenimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5))
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryKey = "EQ-SAM-008",
+                        NombreEquipo = "Samsung Galaxy S23 5G Enterprise",
+                        Empresa = "Sede Principal",
+                        AsignadoA = "Pedro Ramírez",
+                        Proveedor = "Samsung Electronics",
+                        Marca = "Samsung",
+                        Procesador = "Snapdragon 8 Gen 2",
+                        DiscoDuro = "256 GB UFS",
+                        MemoriaRam = "8 GB LPDDR5X",
+                        Departamento = "Mensajería y Logística",
+                        EstatusEquipo = "Activo",
+                        ActaEntregada = true,
+                        MantenimientoRealizado = false
+                    }
+                };
+
+                context.Equipment.AddRange(equipos);
+                await context.SaveChangesAsync();
+            }
+
+            Console.WriteLine("[DatabaseSeeder] Permisos, roles, usuarios y catálogo de equipos sincronizados con éxito.");
         }
         catch (Exception ex)
         {

@@ -37,8 +37,8 @@ export function UnifiedAnalyticsHub({
   const tabs: { id: TabType; label: string; icon: string }[] = [
     { id: "inventario", label: "Inventario de Equipos", icon: "ðŸ’»" },
     { id: "actas", label: "Estado de Actas", icon: "ðŸ“‹" },
-    { id: "tendencia", label: "EvoluciÃ³n Temporal", icon: "ðŸ“ˆ" },
-    { id: "logistica", label: "Rendimiento LogÃ­stico", icon: "ðŸšš" },
+    { id: "tendencia", label: "Evolución Temporal", icon: "ðŸ“ˆ" },
+    { id: "logistica", label: "Rendimiento Logístico", icon: "ðŸšš" },
     { id: "mantenimiento", label: "Soporte y Mantenimiento", icon: "âš™" },
   ];
 
@@ -54,7 +54,7 @@ export function UnifiedAnalyticsHub({
         flexDirection: "column",
       }}
     >
-      {/* HEADER DE PESTAÃ‘AS UNIFICADO */}
+      {/* HEADER DE PESTAÑAS UNIFICADO */}
       <div
         style={{
           display: "flex",
@@ -96,7 +96,7 @@ export function UnifiedAnalyticsHub({
         })}
       </div>
 
-      {/* CONTENIDO DEL MÃ“DULO UNIFICADO */}
+      {/* CONTENIDO DEL MÓDULO UNIFICADO */}
       <div style={{ padding: "16px" }}>
         {activeTab === "inventario" && <EquipmentStatusChart data={equipmentStatus} />}
         {activeTab === "actas" && <ActasStatusChart data={actasStatus} />}

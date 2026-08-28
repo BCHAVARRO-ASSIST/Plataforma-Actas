@@ -10,7 +10,7 @@ export function DeliveriesChart({ data }: DeliveriesChartProps) {
       <div className="dashboard-block" style={{ padding: "20px" }}>
         <div className="dashboard-block-top">
           <div>
-            <span className="block-kicker">CAMPO Y LOGÃSTICA</span>
+            <span className="block-kicker">CAMPO Y LOGÍSTICA</span>
             <h3>Entregas por Mensajero</h3>
           </div>
         </div>
@@ -27,7 +27,7 @@ export function DeliveriesChart({ data }: DeliveriesChartProps) {
     <div className="dashboard-block" style={{ padding: "20px" }}>
       <div className="dashboard-block-top" style={{ marginBottom: "16px" }}>
         <div>
-          <span className="block-kicker">CAMPO Y LOGÃSTICA</span>
+          <span className="block-kicker">CAMPO Y LOGÍSTICA</span>
           <h3 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
             Rendimiento y Entregas por Mensajero
           </h3>

@@ -56,7 +56,7 @@ export function ActaTable({
             <th>Estado</th>
             <th>Entrega</th>
             <th>Fecha</th>
-            <th>AcciÃ³n</th>
+            <th>Acción</th>
           </tr>
         </thead>
 
@@ -157,7 +157,7 @@ export function ActaTable({
                 </div>
               </td>
 
-              {/* ACCIÃ“N */}
+              {/* ACCIÓN */}
 
               <td>
                 <button

@@ -38,7 +38,7 @@ export function FirmaManuscrita({
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    // Configurar resoluciÃ³n de trazo nÃ­tida
+    // Configurar resolución de trazo nítida
     context.lineWidth = 2.5;
     context.lineCap = "round";
     context.lineJoin = "round";
@@ -46,7 +46,7 @@ export function FirmaManuscrita({
   }, []);
 
   // ===================================================
-  // OBTENER POSICIÃ“N
+  // OBTENER POSICIÓN
   // ===================================================
 
   function getPosition(event: React.PointerEvent<HTMLCanvasElement>) {
@@ -77,7 +77,7 @@ export function FirmaManuscrita({
     try {
       canvas.setPointerCapture(event.pointerId);
     } catch {
-      // Ignorar si el puntero ya estÃ¡ capturado
+      // Ignorar si el puntero ya está capturado
     }
 
     context.beginPath();
@@ -157,7 +157,7 @@ export function FirmaManuscrita({
           onPointerLeave={handlePointerUp}
         />
         <div className="firma-guideline">
-          <span>Firme sobre la lÃ­nea</span>
+          <span>Firme sobre la línea</span>
         </div>
       </div>
 
@@ -166,8 +166,8 @@ export function FirmaManuscrita({
           <span className={`firma-dot ${hayFirma ? "has-signature" : ""}`} />
           <span>
             {hayFirma
-              ? "âœ“ Firma manuscrita capturada"
-              : "Utilice su dedo o lÃ¡piz tÃ¡ctil dentro del recuadro"}
+              ? "✓ Firma manuscrita capturada"
+              : "Utilice su dedo o lápiz táctil dentro del recuadro"}
           </span>
         </div>
 

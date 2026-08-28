@@ -103,7 +103,7 @@ export function UsuariosPage() {
     useState(false);
 
   // =========================================================
-  // CONFIRMACIÃ“N ACTIVAR / DESACTIVAR
+  // CONFIRMACIÓN ACTIVAR / DESACTIVAR
   // =========================================================
 
   const [confirmacionAbierta, setConfirmacionAbierta] =
@@ -182,7 +182,7 @@ export function UsuariosPage() {
         setError(
           err instanceof Error
             ? err.message
-            : "No fue posible cargar la informaciÃ³n."
+            : "No fue posible cargar la información."
         );
       } finally {
         setLoading(false);
@@ -193,7 +193,7 @@ export function UsuariosPage() {
   }, []);
 
   // =========================================================
-  // MÃ‰TRICAS
+  // MÉTRICAS
   // =========================================================
 
   const usuariosActivos =
@@ -465,7 +465,7 @@ export function UsuariosPage() {
   }
 
   // =========================================================
-  // ABRIR ASIGNACIÃ“N / CAMBIO DE ROL
+  // ABRIR ASIGNACIÓN / CAMBIO DE ROL
   // =========================================================
 
   function abrirAsignarRol(
@@ -486,7 +486,7 @@ export function UsuariosPage() {
   }
 
   // =========================================================
-  // CERRAR ASIGNACIÃ“N DE ROL
+  // CERRAR ASIGNACIÓN DE ROL
   // =========================================================
 
   function cerrarAsignarRol() {
@@ -567,7 +567,7 @@ export function UsuariosPage() {
   }
 
   // =========================================================
-  // SOLICITAR DESACTIVACIÃ“N
+  // SOLICITAR DESACTIVACIÓN
   // =========================================================
 
   function solicitarDesactivacion(
@@ -594,7 +594,7 @@ export function UsuariosPage() {
   }
 
   // =========================================================
-  // CONFIRMAR DESACTIVACIÃ“N
+  // CONFIRMAR DESACTIVACIÓN
   // =========================================================
 
   async function confirmarDesactivacion() {
@@ -644,7 +644,7 @@ export function UsuariosPage() {
   }
 
   // =========================================================
-  // SOLICITAR ACTIVACIÃ“N
+  // SOLICITAR ACTIVACIÓN
   // =========================================================
 
   function solicitarActivacion(
@@ -671,7 +671,7 @@ export function UsuariosPage() {
   }
 
   // =========================================================
-  // CONFIRMAR ACTIVACIÃ“N
+  // CONFIRMAR ACTIVACIÓN
   // =========================================================
 
   async function confirmarActivacion() {
@@ -734,7 +734,7 @@ export function UsuariosPage() {
   }
 
   // =========================================================
-  // CONFIRMAR ACCIÃ“N
+  // CONFIRMAR ACCIÓN
   // =========================================================
 
   async function confirmarAccion() {
@@ -750,7 +750,7 @@ export function UsuariosPage() {
   }
 
   // =========================================================
-  // CERRAR CONFIRMACIÃ“N
+  // CERRAR CONFIRMACIÓN
   // =========================================================
 
   function cerrarConfirmacion() {
@@ -781,13 +781,13 @@ export function UsuariosPage() {
         <div>
 
           <span className="page-eyebrow">
-            ADMINISTRACIÃ“N DE PERSONAL Y ACCESOS
+            ADMINISTRACIÓN DE PERSONAL Y ACCESOS
           </span>
 
           <h1>Directorio de Usuarios y Cuentas de Red</h1>
 
           <p>
-            Control de cuentas de red, estado de acceso, Ã¡rea o proceso y asignaciÃ³n de roles de seguridad.
+            Control de cuentas de red, estado de acceso, área o proceso y asignación de roles de seguridad.
           </p>
 
         </div>
@@ -806,14 +806,14 @@ export function UsuariosPage() {
 
 
       {/* =====================================================
-          MENSAJE DE Ã‰XITO
+          MENSAJE DE ÉXITO
           ===================================================== */}
 
       {mensaje && (
         <div className="usuarios-success">
 
           <span>
-            âœ“
+            ✓
           </span>
 
           {mensaje}
@@ -825,7 +825,7 @@ export function UsuariosPage() {
             }
             aria-label="Cerrar mensaje"
           >
-            Ã—
+            ×
           </button>
 
         </div>
@@ -833,7 +833,7 @@ export function UsuariosPage() {
 
 
       {/* =====================================================
-          MÃ‰TRICAS
+          MÉTRICAS
           ===================================================== */}
 
       <section className="usuarios-summary">
@@ -914,7 +914,7 @@ export function UsuariosPage() {
           </strong>
 
           <small>
-            Requieren asignaciÃ³n de rol
+            Requieren asignación de rol
           </small>
 
         </article>
@@ -933,7 +933,7 @@ export function UsuariosPage() {
         >
 
           <strong>
-            AtenciÃ³n
+            Atención
           </strong>
 
           <span>
@@ -999,9 +999,9 @@ export function UsuariosPage() {
                   onClick={() =>
                     setBusqueda("")
                   }
-                  aria-label="Limpiar bÃºsqueda"
+                  aria-label="Limpiar búsqueda"
                 >
-                  Ã—
+                  ×
                 </button>
               )}
 
@@ -1152,7 +1152,7 @@ export function UsuariosPage() {
 
                       <span>
                         Modifica los filtros o
-                        el tÃ©rmino de bÃºsqueda.
+                        el término de búsqueda.
                       </span>
 
                     </td>
@@ -1474,7 +1474,7 @@ export function UsuariosPage() {
                   {modoFormulario ===
                   "crear"
                     ? "NUEVO REGISTRO"
-                    : "EDICIÃ“N DE USUARIO"}
+                    : "EDICIÓN DE USUARIO"}
                 </span>
 
                 <h2 id="usuarios-modal-title">
@@ -1495,7 +1495,7 @@ export function UsuariosPage() {
                 disabled={guardando}
                 aria-label="Cerrar"
               >
-                Ã—
+                ×
               </button>
 
             </div>
@@ -1552,7 +1552,7 @@ export function UsuariosPage() {
                         event.target.value
                       )
                     }
-                    placeholder="Ej. PÃ©rez"
+                    placeholder="Ej. Pérez"
                     autoComplete="off"
                     required
                   />
@@ -1588,7 +1588,7 @@ export function UsuariosPage() {
                 <label className="usuarios-field">
 
                   <span>
-                    Correo electrÃ³nico *
+                    Correo electrónico *
                   </span>
 
                   <input
@@ -1627,7 +1627,7 @@ export function UsuariosPage() {
                         event.target.value
                       )
                     }
-                    placeholder="Ej. TecnologÃ­a"
+                    placeholder="Ej. Tecnología"
                     autoComplete="off"
                     required
                   />
@@ -1677,7 +1677,7 @@ export function UsuariosPage() {
               <div className="usuarios-form-note">
 
                 <strong>
-                  InformaciÃ³n
+                  Información
                 </strong>
 
                 <span>
@@ -1760,7 +1760,7 @@ export function UsuariosPage() {
                 <div>
 
                   <span>
-                    GESTIÃ“N DE ACCESO
+                    GESTIÓN DE ACCESO
                   </span>
 
                   <h2 id="usuarios-role-title">
@@ -1791,7 +1791,7 @@ export function UsuariosPage() {
                   }
                   aria-label="Cerrar"
                 >
-                  Ã—
+                  ×
                 </button>
 
               </div>
@@ -1928,7 +1928,7 @@ export function UsuariosPage() {
 
 
       {/* =====================================================
-          MODAL CONFIRMACIÃ“N ACTIVAR / DESACTIVAR
+          MODAL CONFIRMACIÓN ACTIVAR / DESACTIVAR
           ===================================================== */}
 
       {confirmacionAbierta &&
@@ -1953,7 +1953,7 @@ export function UsuariosPage() {
 
                 {accionConfirmacion ===
                 "activar"
-                  ? "âœ“"
+                  ? "✓"
                   : "!"}
 
               </div>
@@ -1976,7 +1976,7 @@ export function UsuariosPage() {
 
                 <p className="usuarios-confirmation-description">
 
-                  Â¿Deseas{" "}
+                  ¿Deseas{" "}
 
                   {accionConfirmacion ===
                   "activar"
@@ -2004,8 +2004,8 @@ export function UsuariosPage() {
 
                     {accionConfirmacion ===
                     "activar"
-                      ? "El usuario volverÃ¡ a tener acceso habilitado a la plataforma."
-                      : "El usuario perderÃ¡ su acceso activo a la plataforma, pero su informaciÃ³n permanecerÃ¡ registrada."}
+                      ? "El usuario volverá a tener acceso habilitado a la plataforma."
+                      : "El usuario perderá su acceso activo a la plataforma, pero su información permanecerá registrada."}
 
                   </span>
 

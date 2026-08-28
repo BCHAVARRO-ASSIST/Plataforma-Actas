@@ -47,10 +47,10 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   },
   {
     id: "mensajero-actas",
-    label: "Mis actas",
+    label: "Mensajero / Entregas",
     view: "mensajero",
     section: "principal",
-    icon: "▣",
+    icon: "🛵",
     permission: PERMISSIONS.MENSAJERO_ACTAS_CONSULTAR,
   },
   {

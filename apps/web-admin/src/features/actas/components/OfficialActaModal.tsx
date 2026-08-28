@@ -95,7 +95,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
         hour: "2-digit",
         minute: "2-digit",
       })
-    : "â€”";
+    : "—";
 
   const fechaFirmaFmt = acta.fechaFirma
     ? new Date(acta.fechaFirma).toLocaleDateString("es-CO", {
@@ -173,10 +173,10 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
             <span style={{ fontSize: "22px" }}>ðŸ“„</span>
             <div>
               <div style={{ fontSize: "14px", fontWeight: 700 }}>
-                Documento Oficial TI-FOR-ACTA-001 â€” {acta.numeroActa}
+                Documento Oficial TI-FOR-ACTA-001 — {acta.numeroActa}
               </div>
               <div style={{ fontSize: "12px", color: "#94a3b8" }}>
-                {acta.tipoActa} de Hardware Â· CertificaciÃ³n digital y trazabilidad
+                {acta.tipoActa} de Hardware · Certificación digital y trazabilidad
               </div>
             </div>
           </div>
@@ -226,7 +226,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
               </button>
             </div>
 
-            {/* BOTÃ“N DESCARGA DIRECTA */}
+            {/* BOTÓN DESCARGA DIRECTA */}
             <button
               type="button"
               onClick={handleDownloadPdf}
@@ -249,7 +249,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
               <span>ðŸ“¥</span> {downloading ? "Descargando..." : "Descargar PDF"}
             </button>
 
-            {/* BOTÃ“N IMPRIMIR */}
+            {/* BOTÓN IMPRIMIR */}
             {viewMode === "html" && (
               <button
                 type="button"
@@ -285,7 +285,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                 cursor: "pointer",
               }}
             >
-              âœ• Cerrar
+              ✕ Cerrar
             </button>
           </div>
         </div>
@@ -309,7 +309,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     onClick={() => setViewMode("html")}
                     style={{ background: "#0284c7", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "6px", cursor: "pointer", marginTop: "8px" }}
                   >
-                    Ver versiÃ³n HTML institucional
+                    Ver versión HTML institucional
                   </button>
                 </div>
               )}
@@ -346,21 +346,21 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
               >
                 <div>
                   <div style={{ fontSize: "18px", fontWeight: 900, color: "#0f172a", letterSpacing: "0.5px" }}>
-                    PLATAFORMA DE GESTIÃ“N Y CONTROL DE ACTIVOS TECNOLÃ“GICOS
+                    PLATAFORMA DE GESTIÓN Y CONTROL DE ACTIVOS TECNOLÓGICOS
                   </div>
                   <div style={{ fontSize: "12px", color: "#475569", fontWeight: 600, marginTop: "2px" }}>
-                    DEPARTAMENTO DE TECNOLOGÃA E INFRAESTRUCTURA (TI)
+                    DEPARTAMENTO DE TECNOLOGÍA E INFRAESTRUCTURA (TI)
                   </div>
                 </div>
 
                 <div style={{ textAlign: "right", fontSize: "11px", color: "#64748b" }}>
-                  <div><strong>CÃ“DIGO:</strong> TI-FOR-ACTA-001</div>
-                  <div><strong>VERSIÃ“N:</strong> 3.2 Â· ISO 27001</div>
-                  <div><strong>PÃGINA:</strong> 1 de 1</div>
+                  <div><strong>CÓDIGO:</strong> TI-FOR-ACTA-001</div>
+                  <div><strong>VERSIÓN:</strong> 3.2 · ISO 27001</div>
+                  <div><strong>PÁGINA:</strong> 1 de 1</div>
                 </div>
               </div>
 
-              {/* TÃTULO PRINCIPAL */}
+              {/* TÍTULO PRINCIPAL */}
               <div
                 style={{
                   background: "#f1f5f9",
@@ -372,10 +372,10 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                 }}
               >
                 <h1 style={{ margin: 0, fontSize: "16px", fontWeight: 900, color: "#0f172a", textTransform: "uppercase" }}>
-                  ACTA OFICIAL DE {acta.tipoActa === "Devolución" ? "DEVOLUCIÃ“N Y RECEPCIÃ“N" : "ENTREGA Y ASIGNACIÃ“N"} DE EQUIPO TECNOLÃ“GICO
+                  ACTA OFICIAL DE {acta.tipoActa === "Devolución" ? "DEVOLUCIÓN Y RECEPCIÓN" : "ENTREGA Y ASIGNACIÓN"} DE EQUIPO TECNOLÓGICO
                 </h1>
                 <div style={{ fontSize: "12px", color: "#475569", marginTop: "4px" }}>
-                  NÂ° DE CONTROL: <strong style={{ color: "#0f172a" }}>{acta.numeroActa}</strong>
+                  N° DE CONTROL: <strong style={{ color: "#0f172a" }}>{acta.numeroActa}</strong>
                   {acta.actaOrigenNumero && (
                     <span style={{ marginLeft: "14px" }}>
                       (Acta de Entrega de Origen: <strong>{acta.actaOrigenNumero}</strong>)
@@ -387,13 +387,13 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
               {/* CUADRO DE DATOS GENERALES */}
               <div style={{ marginBottom: "20px" }}>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase", marginBottom: "8px", borderBottom: "1px solid #e2e8f0", paddingBottom: "4px" }}>
-                  1. INFORMACIÃ“N DE LA OPERACIÃ“N Y PARTICIPANTES
+                  1. INFORMACIÓN DE LA OPERACIÓN Y PARTICIPANTES
                 </div>
 
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                   <tbody>
                     <tr>
-                      <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700, width: "22%" }}>Fecha de EmisiÃ³n:</td>
+                      <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700, width: "22%" }}>Fecha de Emisión:</td>
                       <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1", width: "28%" }}>{fechaCreacionFmt}</td>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700, width: "22%" }}>Estado del Acta:</td>
                       <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1", width: "28%" }}>
@@ -407,13 +407,13 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                       </td>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Correo / Cargo:</td>
                       <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>
-                        {acta.destinatarioCorreo || "â€”"} ({acta.destinatarioCargo || equipo.departamento || "TecnologÃ­a"})
+                        {acta.destinatarioCorreo || "—"} ({acta.destinatarioCargo || equipo.departamento || "Tecnología"})
                       </td>
                     </tr>
                     <tr>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Responsable Entrega / Mensajero:</td>
                       <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>
-                        {acta.mensajeroNombre || "Personal de LogÃ­stica TI"}
+                        {acta.mensajeroNombre || "Personal de Logística TI"}
                       </td>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Empresa / Sede:</td>
                       <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>
@@ -424,16 +424,16 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                 </table>
               </div>
 
-              {/* CUADRO TÃ‰CNICO DEL EQUIPO */}
+              {/* CUADRO TÉCNICO DEL EQUIPO */}
               <div style={{ marginBottom: "20px" }}>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase", marginBottom: "8px", borderBottom: "1px solid #e2e8f0", paddingBottom: "4px" }}>
-                  2. ESPECIFICACIONES TÃ‰CNICAS DEL HARDWARE Y ACCESORIOS
+                  2. ESPECIFICACIONES TÉCNICAS DEL HARDWARE Y ACCESORIOS
                 </div>
 
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                   <tbody>
                     <tr>
-                      <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700, width: "22%" }}>CÃ³digo Inventario / Serie:</td>
+                      <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700, width: "22%" }}>Código Inventario / Serie:</td>
                       <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1", width: "28%" }}>
                         <strong style={{ color: "#0284c7" }}>{equipo.inventoryKey}</strong>
                       </td>
@@ -444,19 +444,19 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     </tr>
                     <tr>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Marca:</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.marca || "â€”"}</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.marca || "—"}</td>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Procesador:</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.procesador || "â€”"}</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.procesador || "—"}</td>
                     </tr>
                     <tr>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Memoria RAM:</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.memoriaRam || "â€”"}</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.memoriaRam || "—"}</td>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Almacenamiento:</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.discoDuro || "â€”"}</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.discoDuro || "—"}</td>
                     </tr>
                     <tr>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Departamento:</td>
-                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.departamento || "TecnologÃ­a"}</td>
+                      <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>{equipo.departamento || "Tecnología"}</td>
                       <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Estado Operativo:</td>
                       <td style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>
                         <span style={{ fontWeight: 700, color: "#166534" }}>{equipo.estatusEquipo || "Activo"}</span>
@@ -466,7 +466,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                       <tr>
                         <td style={{ padding: "6px 8px", background: "#f8fafc", border: "1px solid #cbd5e1", fontWeight: 700 }}>Accesorios Entregados:</td>
                         <td colSpan={3} style={{ padding: "6px 8px", border: "1px solid #cbd5e1" }}>
-                          {accesorios.join(" Â· ")}
+                          {accesorios.join(" · ")}
                         </td>
                       </tr>
                     )}
@@ -477,7 +477,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
               {/* OBSERVACIONES REGISTRADAS */}
               <div style={{ marginBottom: "20px" }}>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase", marginBottom: "8px", borderBottom: "1px solid #e2e8f0", paddingBottom: "4px" }}>
-                  3. OBSERVACIONES DE ENTREGA / CONDICIÃ“N FÃSICA
+                  3. OBSERVACIONES DE ENTREGA / CONDICIÓN FÍSICA
                 </div>
                 <div
                   style={{
@@ -494,10 +494,10 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                 </div>
               </div>
 
-              {/* CLÃUSULAS OFICIALES Y COMPROMISO DE DEVOLUCIÃ“N */}
+              {/* CLÁUSULAS OFICIALES Y COMPROMISO DE DEVOLUCIÓN */}
               <div style={{ marginBottom: "24px" }}>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase", marginBottom: "8px", borderBottom: "1px solid #e2e8f0", paddingBottom: "4px" }}>
-                  4. TÃ‰RMINOS, CONDICIONES Y COMPROMISO DE DEVOLUCIÃ“N
+                  4. TÉRMINOS, CONDICIONES Y COMPROMISO DE DEVOLUCIÓN
                 </div>
                 <div
                   style={{
@@ -512,18 +512,18 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                   }}
                 >
                   <p style={{ margin: "0 0 6px 0" }}>
-                    <strong>A. CUSTODIA Y BUEN USO:</strong> El colaborador / consultor declara haber recibido el equipo anteriormente descrito en perfecto estado tÃ©cnico y funcional, asumiendo su custodia, cuidado y utilizaciÃ³n estricta conforme a las polÃ­ticas de seguridad de la informaciÃ³n corporativas.
+                    <strong>A. CUSTODIA Y BUEN USO:</strong> El colaborador / consultor declara haber recibido el equipo anteriormente descrito en perfecto estado técnico y funcional, asumiendo su custodia, cuidado y utilización estricta conforme a las políticas de seguridad de la información corporativas.
                   </p>
                   <p style={{ margin: "0 0 6px 0" }}>
-                    <strong>B. COMPROMISO FORMAL DE DEVOLUCIÃ“N:</strong> De esta misma acta se derivarÃ¡ el proceso de Devolución. El colaborador se compromete expresamente a <strong>restituir el mismo activo tecnolÃ³gico y sus accesorios</strong> a la organizaciÃ³n cuando finalice su relaciÃ³n contractual, cuando se realice un cambio o cuando el Ã¡rea de TI lo requiera.
+                    <strong>B. COMPROMISO FORMAL DE DEVOLUCIÓN:</strong> De esta misma acta se derivará el proceso de Devolución. El colaborador se compromete expresamente a <strong>restituir el mismo activo tecnológico y sus accesorios</strong> a la organización cuando finalice su relación contractual, cuando se realice un cambio o cuando el área de TI lo requiera.
                   </p>
                   <p style={{ margin: 0 }}>
-                    <strong>C. VALIDEZ JURÃDICA Y DIGITAL:</strong> La firma manuscrita digitalizada estampada en este documento y su hash SHA-256 constituyen plena prueba de recepciÃ³n y aceptaciÃ³n de los tÃ©rminos establecidos.
+                    <strong>C. VALIDEZ JURÍDICA Y DIGITAL:</strong> La firma manuscrita digitalizada estampada en este documento y su hash SHA-256 constituyen plena prueba de recepción y aceptación de los términos establecidos.
                   </p>
                 </div>
               </div>
 
-              {/* SECCIÃ“N DE FIRMA Y CERTIFICACIÃ“N */}
+              {/* SECCIÓN DE FIRMA Y CERTIFICACIÓN */}
               <div style={{ marginBottom: "22px" }}>
                 <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a", textTransform: "uppercase", marginBottom: "12px", borderBottom: "1px solid #e2e8f0", paddingBottom: "4px" }}>
                   5. FIRMA DE CONFORMIDAD Y REGISTRO DIGITAL
@@ -576,7 +576,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     </div>
                   </div>
 
-                  {/* RESPONSABLE DE ENTREGA Y CERTIFICACIÃ“N */}
+                  {/* RESPONSABLE DE ENTREGA Y CERTIFICACIÓN */}
                   <div
                     style={{
                       border: "1px solid #cbd5e1",
@@ -587,7 +587,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     }}
                   >
                     <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", marginBottom: "8px" }}>
-                      RESPONSABLE DE ENTREGA / LOGÃSTICA TI
+                      RESPONSABLE DE ENTREGA / LOGÍSTICA TI
                     </div>
 
                     <div
@@ -609,16 +609,16 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     </div>
 
                     <div style={{ fontSize: "12px", fontWeight: 800, color: "#0f172a" }}>
-                      {acta.mensajeroNombre || "Operador de LogÃ­stica TI"}
+                      {acta.mensajeroNombre || "Operador de Logística TI"}
                     </div>
                     <div style={{ fontSize: "11px", color: "#64748b" }}>
-                      EmisiÃ³n: {fechaCreacionFmt}
+                      Emisión: {fechaCreacionFmt}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* SECCIÃ“N DE DEVOLUCIÃ“N CUANDO LLEGUE EL DÃA */}
+              {/* SECCIÓN DE DEVOLUCIÓN CUANDO LLEGUE EL DÍA */}
               {acta.tipoActa === "Entrega" && (
                 <div
                   style={{
@@ -630,17 +630,17 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                   }}
                 >
                   <div style={{ fontSize: "11px", fontWeight: 800, color: "#475569", textTransform: "uppercase", marginBottom: "6px" }}>
-                    6. DILIGENCIAMIENTO AL MOMENTO DE LA DEVOLUCIÃ“N FÃSICA FUTURA
+                    6. DILIGENCIAMIENTO AL MOMENTO DE LA DEVOLUCIÓN FÍSICA FUTURA
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", fontSize: "11px", color: "#64748b" }}>
                     <div>Fecha Devolución: ____________________</div>
-                    <div>Estado de Retorno: [ ] Ã“ptimo  [ ] AverÃ­a</div>
+                    <div>Estado de Retorno: [ ] Óptimo  [ ] Avería</div>
                     <div>Recibido por (Firma TI): ____________________</div>
                   </div>
                 </div>
               )}
 
-              {/* PIE DE PÃGINA CON HASH SHA-256 */}
+              {/* PIE DE PÁGINA CON HASH SHA-256 */}
               {acta.hashSha256 && (
                 <div
                   style={{
@@ -655,7 +655,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                   }}
                 >
                   <div>
-                    <strong>INTEGRIDAD CRIPTOGRÃFICA (SHA-256):</strong>
+                    <strong>INTEGRIDAD CRIPTOGRÁFICA (SHA-256):</strong>
                     <div style={{ fontFamily: "monospace", fontSize: "9px", color: "#0f172a", wordBreak: "break-all" }}>
                       {acta.hashSha256}
                     </div>

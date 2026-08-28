@@ -174,7 +174,7 @@ export function MensajeroActaTable({
 
         <div className="mensajero-header-accion">
           <span className="mensajero-acta-info-label">
-            AcciÃ³n
+            Acción
           </span>
         </div>
 
@@ -341,7 +341,7 @@ export function MensajeroActaTable({
 
 
               {/* =========================================
-                  ACCIÃ“N
+                  ACCIÓN
               ========================================= */}
 
               <div className="mensajero-acta-action">
