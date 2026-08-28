@@ -130,10 +130,11 @@ app.MapUsuarioModule();
 app.MapRolModule();
 app.MapAuthModule();
 
-// Sincronización de base de datos en inicio si aplica
+// Sincronización automática de esquema y datos semilla en inicio
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<PlataformaActasDbContext>();
+    await dbContext.Database.MigrateAsync();
     await DatabaseSeeder.SeedAsync(dbContext);
 }
 

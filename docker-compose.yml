@@ -1,11 +1,9 @@
 name: plataforma-actas
 
 services:
-  # 1. Base de datos PostgreSQL 17
+  # 1. Base de datos PostgreSQL 17 (Imagen oficial sin Dockerfile extra)
   db:
-    build:
-      context: ../..
-      dockerfile: database/Dockerfile
+    image: postgres:17-alpine
     container_name: plataforma-actas-db
     restart: unless-stopped
     environment:
@@ -23,22 +21,10 @@ services:
       retries: 5
       start_period: 10s
 
-  # 2. Migrador de esquema (EF Core Bundle)
-  migrator:
-    build:
-      context: ../..
-      dockerfile: tools/migrator/Dockerfile
-    container_name: plataforma-actas-migrator
-    environment:
-      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=${POSTGRES_DB:-plataforma_actas};Username=${POSTGRES_USER:-plataforma_user};Password=${POSTGRES_PASSWORD:-plataforma_dev_2026}"
-    depends_on:
-      db:
-        condition: service_healthy
-
-  # 3. Backend API ASP.NET Core 10
+  # 2. Backend API ASP.NET Core 10 (Aplica migraciones y seed automáticamente al arrancar)
   api:
     build:
-      context: ../..
+      context: .
       dockerfile: apps/api/Dockerfile
     container_name: plataforma-actas-api
     restart: unless-stopped
@@ -54,10 +40,8 @@ services:
     ports:
       - "${API_PORT:-8080}:8080"
     volumes:
-      - storage_documentos:/app/Storage/Documentos
+      - storage_documentos:/app/storage/documentos
     depends_on:
-      migrator:
-        condition: service_completed_successfully
       db:
         condition: service_healthy
     healthcheck:
@@ -67,10 +51,10 @@ services:
       retries: 3
       start_period: 15s
 
-  # 4. Frontend SPA (React + Vite + Nginx)
+  # 3. Frontend SPA (React 19 + Vite + Nginx)
   web:
     build:
-      context: ../..
+      context: .
       dockerfile: apps/web-admin/Dockerfile
     container_name: plataforma-actas-web
     restart: unless-stopped
