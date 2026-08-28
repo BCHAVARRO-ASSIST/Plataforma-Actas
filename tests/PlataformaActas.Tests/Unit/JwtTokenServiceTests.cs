@@ -5,7 +5,7 @@ using PlataformaActas.Api.Modules.Auth.Models.Dto;
 using PlataformaActas.Api.Modules.Auth.Services;
 using Xunit;
 
-namespace PlataformaActas.Api.UnitTests.Auth;
+namespace PlataformaActas.Tests.Unit;
 
 public class JwtTokenServiceTests
 {

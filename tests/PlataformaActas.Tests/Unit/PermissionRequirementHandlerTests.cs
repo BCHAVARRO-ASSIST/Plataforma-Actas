@@ -2,7 +2,7 @@ using System.Security.Claims;
 using PlataformaActas.Api.Authorization;
 using Xunit;
 
-namespace PlataformaActas.Api.UnitTests.Authorization;
+namespace PlataformaActas.Tests.Unit;
 
 public class PermissionRequirementHandlerTests
 {

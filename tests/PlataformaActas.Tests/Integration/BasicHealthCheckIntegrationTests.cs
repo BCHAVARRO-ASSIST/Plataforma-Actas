@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace PlataformaActas.Api.IntegrationTests;
+namespace PlataformaActas.Tests.Integration;
 
 public class BasicHealthCheckIntegrationTests
 {

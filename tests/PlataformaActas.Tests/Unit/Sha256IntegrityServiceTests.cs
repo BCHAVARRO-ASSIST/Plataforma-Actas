@@ -2,7 +2,7 @@ using System.Text;
 using PlataformaActas.Api.Infrastructure.Security;
 using Xunit;
 
-namespace PlataformaActas.Api.UnitTests.Integrity;
+namespace PlataformaActas.Tests.Unit;
 
 public class Sha256IntegrityServiceTests
 {
