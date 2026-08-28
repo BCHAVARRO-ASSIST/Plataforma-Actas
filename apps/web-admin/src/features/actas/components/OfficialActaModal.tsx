@@ -296,7 +296,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
             <div style={{ flex: 1, width: "100%", height: "100%", background: "#525659", display: "flex", flexDirection: "column" }}>
               {loadingPdf && (
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#ffffff", gap: "12px" }}>
-                  <div style={{ fontSize: "28px" }}>â³</div>
+                  <div style={{ fontSize: "28px" }}>³</div>
                   <div style={{ fontSize: "14px", fontWeight: 600 }}>Generando documento oficial PDF...</div>
                 </div>
               )}

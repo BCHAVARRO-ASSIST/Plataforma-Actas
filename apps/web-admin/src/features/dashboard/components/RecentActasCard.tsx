@@ -65,7 +65,7 @@ export function RecentActasCard({ items, onNavigateToActas }: RecentActasCardPro
             gap: "4px",
           }}
         >
-          Ver todas las actas â†’
+          Ver todas las actas →
         </button>
       </div>
 

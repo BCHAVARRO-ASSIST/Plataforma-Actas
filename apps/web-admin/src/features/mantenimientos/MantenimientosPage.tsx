@@ -158,7 +158,7 @@ export function MantenimientosPage() {
             onClick={loadData}
             style={{ display: "flex", alignItems: "center", gap: "6px" }}
           >
-            â†» Actualizar
+            ↻ Actualizar
           </button>
         </div>
       </header>
@@ -185,7 +185,7 @@ export function MantenimientosPage() {
         <article className="inventory-metric inventory-metric-dark">
           <div className="inventory-metric-top">
             <span>TOTAL EQUIPOS</span>
-            <span>âš™</span>
+            <span>⚙</span>
           </div>
           <strong>{stats.total}</strong>
           <p>Equipos bajo supervisión técnica</p>
@@ -194,7 +194,7 @@ export function MantenimientosPage() {
         <article className="inventory-metric">
           <div className="inventory-metric-top">
             <span>PREVENTIVOS</span>
-            <span style={{ color: "#6366f1" }}>â—</span>
+            <span style={{ color: "#6366f1" }}>● </span>
           </div>
           <strong style={{ color: "#6366f1" }}>{stats.preventivos}</strong>
           <p>Revisiones periódicas registradas</p>
@@ -203,7 +203,7 @@ export function MantenimientosPage() {
         <article className="inventory-metric">
           <div className="inventory-metric-top">
             <span>CORRECTIVOS</span>
-            <span style={{ color: "#f59e0b" }}>â—</span>
+            <span style={{ color: "#f59e0b" }}>● </span>
           </div>
           <strong style={{ color: "#f59e0b" }}>{stats.correctivos}</strong>
           <p>Reparaciones y soporte puntual</p>
@@ -368,7 +368,7 @@ export function MantenimientosPage() {
                         className="usuario-edit-button"
                         style={{ padding: "5px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "4px" }}
                       >
-                        âš™ Registrar
+                        ⚙ Registrar
                       </button>
                     </td>
                   </tr>
@@ -387,7 +387,7 @@ export function MantenimientosPage() {
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
           >
-            â† Anterior
+            ←  Anterior
           </button>
           <span className="pagination-info">
             {currentPage} / {totalPages}
@@ -397,7 +397,7 @@ export function MantenimientosPage() {
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
           >
-            Siguiente â†’
+            Siguiente →
           </button>
         </div>
       )}

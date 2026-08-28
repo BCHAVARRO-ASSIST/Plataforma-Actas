@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PlataformaActas.Api.Modules.Actas.Data.Entities;
 using PlataformaActas.Api.Modules.Equipment.Data.Entities;
 using PlataformaActas.Api.Modules.Usuarios.Data.Entities;
 
@@ -274,7 +275,77 @@ public static class DatabaseSeeder
                 await context.SaveChangesAsync();
             }
 
-            Console.WriteLine("[DatabaseSeeder] Permisos, roles, usuarios y catálogo de equipos sincronizados con éxito.");
+            // 7. Asegurar Actas de ejemplo para Mensajería y Operaciones
+            if (!await context.Actas.AnyAsync())
+            {
+                var adminUser = await context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioRed == "admin");
+                var mensajeroUser = await context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioRed == "mensajero");
+                var juanUser = await context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioRed == "juan.perez");
+                var mariaUser = await context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioRed == "maria.rodriguez");
+
+                var eqLenovo = await context.Equipment.FirstOrDefaultAsync(e => e.InventoryKey == "EQ-LEN-001");
+                var eqDell = await context.Equipment.FirstOrDefaultAsync(e => e.InventoryKey == "EQ-DEL-002");
+                var eqMac = await context.Equipment.FirstOrDefaultAsync(e => e.InventoryKey == "EQ-APL-004");
+
+                if (adminUser != null && eqLenovo != null && eqDell != null)
+                {
+                    var actas = new List<Acta>
+                    {
+                        new()
+                        {
+                            Id = Guid.NewGuid(),
+                            NumeroActa = "ACT-2026-0001",
+                            EquipmentId = eqLenovo.Id,
+                            UsuarioId = adminUser.Id,
+                            DestinatarioUsuarioId = juanUser?.Id,
+                            MensajeroUsuarioId = mensajeroUser?.Id ?? adminUser.Id,
+                            TipoActa = "Entrega",
+                            Estado = "Borrador",
+                            ActaEntregada = false,
+                            FechaCreacion = DateTimeOffset.UtcNow.AddDays(-1),
+                            FormDataJson = "{\"proposito\":\"Asignación para proyecto de desarrollo\",\"observaciones\":\"Equipo entregado con cargador original y funda.\"}"
+                        },
+                        new()
+                        {
+                            Id = Guid.NewGuid(),
+                            NumeroActa = "ACT-2026-0002",
+                            EquipmentId = eqDell.Id,
+                            UsuarioId = adminUser.Id,
+                            DestinatarioUsuarioId = mariaUser?.Id,
+                            MensajeroUsuarioId = mensajeroUser?.Id ?? adminUser.Id,
+                            TipoActa = "Entrega",
+                            Estado = "Firmada",
+                            ActaEntregada = true,
+                            FechaCreacion = DateTimeOffset.UtcNow.AddDays(-3),
+                            FechaFirma = DateTimeOffset.UtcNow.AddDays(-2),
+                            FormDataJson = "{\"proposito\":\"Renovación de activo TI\",\"observaciones\":\"Verificado y firmado en conformidad.\"}"
+                        }
+                    };
+
+                    if (eqMac != null)
+                    {
+                        actas.Add(new()
+                        {
+                            Id = Guid.NewGuid(),
+                            NumeroActa = "ACT-2026-0003",
+                            EquipmentId = eqMac.Id,
+                            UsuarioId = adminUser.Id,
+                            DestinatarioUsuarioId = adminUser.Id,
+                            MensajeroUsuarioId = mensajeroUser?.Id ?? adminUser.Id,
+                            TipoActa = "Devolución",
+                            Estado = "Borrador",
+                            ActaEntregada = false,
+                            FechaCreacion = DateTimeOffset.UtcNow.AddHours(-4),
+                            FormDataJson = "{\"proposito\":\"Devolución por fin de asignación\",\"observaciones\":\"Pendiente inspección física en laboratorio.\"}"
+                        });
+                    }
+
+                    context.Actas.AddRange(actas);
+                    await context.SaveChangesAsync();
+                }
+            }
+
+            Console.WriteLine("[DatabaseSeeder] Permisos, roles, usuarios, catálogo de equipos y actas sincronizados con éxito.");
         }
         catch (Exception ex)
         {

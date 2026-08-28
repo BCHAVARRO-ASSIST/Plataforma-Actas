@@ -113,7 +113,7 @@ export function DashboardPage({ onNavigate = () => {} }: DashboardPageProps) {
             disabled={refreshing}
             style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", padding: "8px 14px" }}
           >
-            <span>{refreshing ? "âŸ³" : "â†»"}</span>
+            <span>{refreshing ? "⟳" : "↻"}</span>
             {refreshing ? "Actualizando..." : "Actualizar"}
           </button>
         </div>

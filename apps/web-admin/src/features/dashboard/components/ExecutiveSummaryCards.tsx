@@ -53,7 +53,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
           <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
             Equipos en Inventario
           </span>
-          <span style={{ fontSize: "12px", color: "#3b82f6", fontWeight: 600 }}>Ver catálogo â†’</span>
+          <span style={{ fontSize: "12px", color: "#3b82f6", fontWeight: 600 }}>Ver catálogo →</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "baseline", gap: "8px", margin: "4px 0 10px" }}>
@@ -101,7 +101,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
           <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
             Gestión de Actas
           </span>
-          <span style={{ fontSize: "12px", color: "#10b981", fontWeight: 600 }}>Supervisar â†’</span>
+          <span style={{ fontSize: "12px", color: "#10b981", fontWeight: 600 }}>Supervisar →</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "baseline", gap: "8px", margin: "4px 0 10px" }}>
@@ -151,7 +151,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
           <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
             Operación y Logística
           </span>
-          <span style={{ fontSize: "12px", color: "#6366f1", fontWeight: 600 }}>Ver informes â†’</span>
+          <span style={{ fontSize: "12px", color: "#6366f1", fontWeight: 600 }}>Ver informes →</span>
         </div>
 
         <div style={{ display: "flex", alignItems: "baseline", gap: "8px", margin: "4px 0 10px" }}>
@@ -167,7 +167,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
           </span>
           <span style={{ color: "#94a3b8" }}>•</span>
           <span style={{ color: "#6366f1", fontWeight: 600 }}>
-            â†© {kpis.devolucionesPendientes} devoluciones
+            ↩ {kpis.devolucionesPendientes} devoluciones
           </span>
         </div>
       </div>

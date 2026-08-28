@@ -195,7 +195,7 @@ export function ActaPage() {
 
           <div className="actas-metric-top">
             <span>TOTAL DE ACTAS</span>
-            <span>â–¤</span>
+            <span>▤</span>
           </div>
 
           <strong>{actas.length}</strong>
@@ -234,7 +234,7 @@ export function ActaPage() {
 
           <div className="actas-metric-top">
             <span>FINALIZADAS</span>
-            <span>â—‰</span>
+            <span>◉</span>
           </div>
 
           <strong>{finalizedCount}</strong>
@@ -283,7 +283,7 @@ export function ActaPage() {
 
           <div className="actas-search">
 
-            <span>âŒ•</span>
+            <span>🔍</span>
 
             <input
               type="text"
@@ -348,7 +348,7 @@ export function ActaPage() {
 
         {filteredActas.length === 0 ? (
           <div className="actas-empty">
-            <div>â–¤</div>
+            <div>▤</div>
 
             <strong>
               No encontramos actas

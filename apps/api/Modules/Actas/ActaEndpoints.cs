@@ -18,42 +18,67 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
         {
             var group = endpoints.MapGroup("/api/actas");
 
-            // 1. Listar actas (con filtro por mensajero si aplica)
+            // 1. Listar todas las actas
             group.MapGet("/", async (
                 HttpContext context,
                 IActaService actaService,
                 CancellationToken cancellationToken) =>
             {
-                var user = context.User;
-                var isMensajero = user.IsInRole("Mensajero") || user.IsInRole("Repartidor");
-
-                if (isMensajero)
-                {
-                    var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    if (int.TryParse(userIdStr, out var mensajeroId))
-                    {
-                        var mensajeroActas = await actaService.GetByMensajeroAsync(mensajeroId, cancellationToken);
-                        return Results.Ok(mensajeroActas);
-                    }
-                }
-
                 var actas = await actaService.GetAllAsync(cancellationToken);
                 return Results.Ok(actas);
             })
             .RequirePermission(Permissions.ActasConsultar);
 
-            // 2. Obtener detalle de acta
+            // 2. Listar mis actas (para vista de mensajero)
+            group.MapGet("/mis-actas", async (
+                HttpContext httpContext,
+                IActaService actaService,
+                CancellationToken cancellationToken) =>
+            {
+                var userIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!int.TryParse(userIdStr, out var userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var user = httpContext.User;
+                var hasAdminAccess = user.Claims.Any(c => c.Type == "permiso" && c.Value == Permissions.ActasConsultar);
+
+                if (hasAdminAccess)
+                {
+                    var allActas = await actaService.GetAllAsync(cancellationToken);
+                    return Results.Ok(allActas);
+                }
+
+                var actas = await actaService.GetByMensajeroAsync(userId, cancellationToken);
+                return Results.Ok(actas);
+            })
+            .RequirePermission(Permissions.MensajeroActasConsultar);
+
+            // 3. Obtener detalle de acta
             group.MapGet("/{id:guid}", async (
                 Guid id,
+                HttpContext context,
                 IActaService actaService,
                 CancellationToken cancellationToken) =>
             {
                 var acta = await actaService.GetDetailByIdAsync(id, cancellationToken);
-                return acta is null ? Results.NotFound() : Results.Ok(acta);
-            })
-            .RequirePermission(Permissions.ActasConsultar);
+                if (acta is null) return Results.NotFound();
 
-            // 3. Crear acta
+                var canAccess = PermissionRequirementHandler.CanAccessMensajeroResource(
+                    context.User,
+                    acta.MensajeroUsuarioId);
+
+                if (!canAccess)
+                {
+                    return Results.Forbid();
+                }
+
+                return Results.Ok(acta);
+            })
+            .RequireAuthorization();
+
+            // 4. Crear acta
             group.MapPost("/", async (
                 CreateActaRequest request,
                 IActaService actaService,
@@ -75,13 +100,25 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             })
             .RequirePermission(Permissions.ActasRegistrar);
 
-            // 4. Firmar acta
+            // 5. Firmar acta (permite administrador o mensajero asignado)
             group.MapPost("/{id:guid}/firmar", async (
                 Guid id,
                 FirmarActaRequest request,
+                HttpContext context,
                 IActaService actaService,
                 CancellationToken cancellationToken) =>
             {
+                var acta = await actaService.GetDetailByIdAsync(id, cancellationToken);
+                if (acta is null) return Results.NotFound();
+
+                var canAccess = PermissionRequirementHandler.CanAccessMensajeroResource(
+                    context.User,
+                    acta.MensajeroUsuarioId,
+                    adminPermission: Permissions.ActasFirmar,
+                    mensajeroPermission: Permissions.MensajeroActasFirmar);
+
+                if (!canAccess) return Results.Forbid();
+
                 try
                 {
                     var updated = await actaService.SignAsync(id, request, cancellationToken);
@@ -92,9 +129,73 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
                     return Results.BadRequest(new { message = ex.Message });
                 }
             })
-            .RequirePermission(Permissions.ActasFirmar);
+            .RequireAuthorization();
 
-            // 5. Finalizar acta
+            // 6. Entregar acta (para mensajero)
+            group.MapPost("/{id:guid}/entregar", async (
+                Guid id,
+                HttpContext context,
+                IActaService actaService,
+                CancellationToken cancellationToken) =>
+            {
+                var acta = await actaService.GetDetailByIdAsync(id, cancellationToken);
+                if (acta is null) return Results.NotFound();
+
+                var canAccess = PermissionRequirementHandler.CanAccessMensajeroResource(
+                    context.User,
+                    acta.MensajeroUsuarioId,
+                    adminPermission: Permissions.ActasEditar,
+                    mensajeroPermission: Permissions.MensajeroActasEntregar);
+
+                if (!canAccess) return Results.Forbid();
+
+                try
+                {
+                    var updated = await actaService.FinalizeAsync(id, cancellationToken);
+                    return updated is null ? Results.NotFound() : Results.Ok(updated);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(new { message = ex.Message });
+                }
+            })
+            .RequireAuthorization();
+
+            // 7. Devolver acta (para mensajero)
+            group.MapPost("/{id:guid}/devolver", async (
+                Guid id,
+                AnularActaRequest request,
+                HttpContext context,
+                IActaService actaService,
+                CancellationToken cancellationToken) =>
+            {
+                var acta = await actaService.GetDetailByIdAsync(id, cancellationToken);
+                if (acta is null) return Results.NotFound();
+
+                var canAccess = PermissionRequirementHandler.CanAccessMensajeroResource(
+                    context.User,
+                    acta.MensajeroUsuarioId,
+                    adminPermission: Permissions.ActasEditar,
+                    mensajeroPermission: Permissions.MensajeroActasDevolver);
+
+                if (!canAccess) return Results.Forbid();
+
+                try
+                {
+                    var userIdStr = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    int? usuarioId = int.TryParse(userIdStr, out var parsed) ? parsed : null;
+
+                    var updated = await actaService.AnularAsync(id, request, usuarioId, cancellationToken);
+                    return updated is null ? Results.NotFound() : Results.Ok(updated);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.BadRequest(new { message = ex.Message });
+                }
+            })
+            .RequireAuthorization();
+
+            // 8. Finalizar acta (admin)
             group.MapPost("/{id:guid}/finalizar", async (
                 Guid id,
                 IActaService actaService,
@@ -112,7 +213,7 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             })
             .RequirePermission(Permissions.ActasEditar);
 
-            // 6. Anular acta
+            // 9. Anular acta (admin)
             group.MapPost("/{id:guid}/anular", async (
                 Guid id,
                 AnularActaRequest request,
@@ -135,7 +236,7 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             })
             .RequirePermission(Permissions.ActasEditar);
 
-            // 7. Visualizar PDF inline
+            // 10. Visualizar PDF inline
             group.MapGet("/{id:guid}/pdf", async (
                 Guid id,
                 IDocumentoActaService documentoService,
@@ -153,7 +254,7 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             })
             .RequirePermission(Permissions.ActasConsultar);
 
-            // 8. Descargar archivo PDF
+            // 11. Descargar archivo PDF
             group.MapGet("/{id:guid}/descargar-pdf", async (
                 Guid id,
                 IDocumentoActaService documentoService,
@@ -171,7 +272,7 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             })
             .RequirePermission(Permissions.ActasConsultar);
 
-            // 9. Regenerar PDF
+            // 12. Regenerar PDF
             group.MapPost("/{id:guid}/generar-pdf", async (
                 Guid id,
                 IDocumentoActaService documentoService,

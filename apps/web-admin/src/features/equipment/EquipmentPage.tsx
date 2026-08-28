@@ -299,7 +299,7 @@ export function EquipmentPage() {
         <article className="inventory-metric inventory-metric-dark">
           <div className="inventory-metric-top">
             <span>TOTAL EQUIPOS</span>
-            <span>â–¦</span>
+            <span>▦</span>
           </div>
           <strong>{equipment.length}</strong>
           <p>Activos totales registrados</p>
@@ -321,7 +321,7 @@ export function EquipmentPage() {
         <article className="inventory-metric">
           <div className="inventory-metric-top">
             <span>INACTIVOS / BODEGA</span>
-            <span>â—‹</span>
+            <span>○</span>
           </div>
           <strong>{inactiveEquipment}</strong>
           <p>Equipos disponibles o en baja</p>
@@ -330,7 +330,7 @@ export function EquipmentPage() {
         <article className="inventory-metric">
           <div className="inventory-metric-top">
             <span>FILTRADOS</span>
-            <span>âŒ•</span>
+            <span>🔍</span>
           </div>
           <strong>{filteredEquipment.length}</strong>
           <p>Coincidencias en búsqueda</p>
@@ -388,7 +388,7 @@ export function EquipmentPage() {
             onClick={() => goToPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            â† Anterior
+            ←  Anterior
           </button>
 
           <span className="pagination-info">
@@ -400,7 +400,7 @@ export function EquipmentPage() {
             onClick={() => goToPage(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            Siguiente â†’
+            Siguiente →
           </button>
         </div>
       )}

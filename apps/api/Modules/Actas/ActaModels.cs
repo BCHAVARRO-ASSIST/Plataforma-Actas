@@ -96,10 +96,10 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Acta> builder)
         {
-            builder.ToTable("actas");
+            builder.ToTable("actas_v2");
 
             builder.HasKey(a => a.Id)
-                .HasName("actas_pkey");
+                .HasName("actas_v2_pkey");
 
             builder.Property(a => a.Id)
                 .HasColumnName("id")
@@ -111,33 +111,33 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
 
             builder.HasIndex(a => a.NumeroActa)
                 .IsUnique()
-                .HasDatabaseName("actas_numero_acta_key");
+                .HasDatabaseName("ix_actas_v2_numero_acta");
 
             builder.Property(a => a.EquipmentId)
                 .HasColumnName("equipment_id")
                 .IsRequired();
 
             builder.HasIndex(a => a.EquipmentId)
-                .HasDatabaseName("ix_actas_equipment_id");
+                .HasDatabaseName("ix_actas_v2_equipment_id");
 
             builder.Property(a => a.UsuarioId)
                 .HasColumnName("usuario_id")
                 .IsRequired();
 
             builder.HasIndex(a => a.UsuarioId)
-                .HasDatabaseName("ix_actas_usuario_id");
+                .HasDatabaseName("ix_actas_v2_usuario_id");
 
             builder.Property(a => a.DestinatarioUsuarioId)
                 .HasColumnName("destinatario_usuario_id");
 
             builder.HasIndex(a => a.DestinatarioUsuarioId)
-                .HasDatabaseName("ix_actas_destinatario_usuario_id");
+                .HasDatabaseName("ix_actas_v2_destinatario_usuario_id");
 
             builder.Property(a => a.MensajeroUsuarioId)
                 .HasColumnName("mensajero_usuario_id");
 
             builder.HasIndex(a => a.MensajeroUsuarioId)
-                .HasDatabaseName("ix_actas_mensajero_usuario_id");
+                .HasDatabaseName("ix_actas_v2_mensajero_usuario_id");
 
             builder.Property(a => a.ActaEntregada)
                 .HasColumnName("acta_entregada")
@@ -150,7 +150,7 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
                 .IsRequired();
 
             builder.HasIndex(a => a.Estado)
-                .HasDatabaseName("ix_actas_estado");
+                .HasDatabaseName("ix_actas_v2_estado");
 
             builder.Property(a => a.TipoActa)
                 .HasColumnName("tipo_acta")
@@ -196,36 +196,37 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
                 .HasColumnName("motivo_anulacion");
 
             builder.Property(a => a.SignatureDataJson)
-                .HasColumnName("signature_data_json");
+                .HasColumnName("signature_data_json")
+                .HasColumnType("jsonb");
 
             builder.HasOne(a => a.Equipment)
                 .WithMany()
                 .HasForeignKey(a => a.EquipmentId)
-                .HasConstraintName("fk_actas_equipment")
+                .HasConstraintName("fk_actas_v2_equipment")
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(a => a.Usuario)
                 .WithMany()
                 .HasForeignKey(a => a.UsuarioId)
-                .HasConstraintName("fk_actas_usuario")
+                .HasConstraintName("fk_actas_v2_usuario")
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(a => a.DestinatarioUsuario)
                 .WithMany()
                 .HasForeignKey(a => a.DestinatarioUsuarioId)
-                .HasConstraintName("fk_actas_destinatario")
+                .HasConstraintName("fk_actas_v2_destinatario")
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(a => a.MensajeroUsuario)
                 .WithMany()
                 .HasForeignKey(a => a.MensajeroUsuarioId)
-                .HasConstraintName("fk_actas_mensajero")
+                .HasConstraintName("fk_actas_v2_mensajero")
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(a => a.ActaOrigen)
                 .WithMany()
                 .HasForeignKey(a => a.ActaOrigenId)
-                .HasConstraintName("fk_actas_acta_origen")
+                .HasConstraintName("fk_actas_v2_acta_origen")
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
@@ -234,10 +235,10 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ActaObservation> builder)
         {
-            builder.ToTable("acta_observations");
+            builder.ToTable("acta_observations_v2");
 
             builder.HasKey(o => o.Id)
-                .HasName("acta_observations_pkey");
+                .HasName("acta_observations_v2_pkey");
 
             builder.Property(o => o.Id)
                 .HasColumnName("id")
@@ -248,7 +249,7 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
                 .IsRequired();
 
             builder.HasIndex(o => o.ActaId)
-                .HasDatabaseName("ix_acta_observations_acta_id");
+                .HasDatabaseName("ix_acta_observations_v2_acta_id");
 
             builder.Property(o => o.Categoria)
                 .HasColumnName("categoria")
@@ -262,7 +263,7 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
                 .HasColumnName("usuario_id");
 
             builder.HasIndex(o => o.UsuarioId)
-                .HasDatabaseName("ix_acta_observations_usuario_id");
+                .HasDatabaseName("ix_acta_observations_v2_usuario_id");
 
             builder.Property(o => o.FechaCreacion)
                 .HasColumnName("fecha_creacion")
@@ -272,13 +273,13 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
             builder.HasOne(o => o.Acta)
                 .WithMany(a => a.Observations)
                 .HasForeignKey(o => o.ActaId)
-                .HasConstraintName("fk_acta_observations_acta")
+                .HasConstraintName("fk_acta_observations_v2_acta")
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(o => o.Usuario)
                 .WithMany()
                 .HasForeignKey(o => o.UsuarioId)
-                .HasConstraintName("fk_acta_observations_usuario")
+                .HasConstraintName("fk_acta_observations_v2_usuario")
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
@@ -287,10 +288,10 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ActaSignature> builder)
         {
-            builder.ToTable("acta_signatures");
+            builder.ToTable("acta_signatures_v2");
 
             builder.HasKey(s => s.Id)
-                .HasName("acta_signatures_pkey");
+                .HasName("acta_signatures_v2_pkey");
 
             builder.Property(s => s.Id)
                 .HasColumnName("id")
@@ -301,7 +302,7 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
                 .IsRequired();
 
             builder.HasIndex(s => s.ActaId)
-                .HasDatabaseName("ix_acta_signatures_acta_id");
+                .HasDatabaseName("ix_acta_signatures_v2_acta_id");
 
             builder.Property(s => s.SignatureBase64)
                 .HasColumnName("signature_base64")
@@ -328,7 +329,7 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
             builder.HasOne(s => s.Acta)
                 .WithMany(a => a.Signatures)
                 .HasForeignKey(s => s.ActaId)
-                .HasConstraintName("fk_acta_signatures_acta")
+                .HasConstraintName("fk_acta_signatures_v2_acta")
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
@@ -337,10 +338,10 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ActaStatusHistory> builder)
         {
-            builder.ToTable("acta_status_history");
+            builder.ToTable("acta_status_history_v2");
 
             builder.HasKey(h => h.Id)
-                .HasName("acta_status_history_pkey");
+                .HasName("acta_status_history_v2_pkey");
 
             builder.Property(h => h.Id)
                 .HasColumnName("id")

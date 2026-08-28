@@ -181,7 +181,7 @@ export function ActaDetail({
           className="acta-back-button"
           onClick={onBack}
         >
-          â† Volver a Actas
+          ←  Volver a Actas
         </button>
       </div>
 

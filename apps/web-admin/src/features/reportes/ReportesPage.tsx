@@ -268,7 +268,7 @@ export function ReportesPage() {
           { id: "equipos", label: "ðŸ’» Catálogo de Equipos", count: equiposData.length },
           { id: "actas", label: "ðŸ“‹ Todas las Actas", count: actasData.length },
           { id: "entregas", label: "ðŸ“¦ Reporte de Entregas", count: entregasData.length },
-          { id: "devoluciones", label: "â†© Reporte de Devoluciones", count: devolucionesData.length },
+          { id: "devoluciones", label: "↩ Reporte de Devoluciones", count: devolucionesData.length },
         ].map((tab) => (
           <button
             key={tab.id}

@@ -170,7 +170,7 @@ export function ActaTable({
                   Ver detalle
 
                   <span>
-                    â†’
+                    →
                   </span>
                 </button>
               </td>

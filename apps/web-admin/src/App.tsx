@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 
 import { EquipmentPage } from "./features/equipment/EquipmentPage";
@@ -41,6 +41,23 @@ function AppContent() {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   // =======================================================
+  // ADAPTAR VISTA INICIAL SEGÚN ROL OPERATIVO
+  // =======================================================
+
+  useEffect(() => {
+    if (user) {
+      const isMensajeroOnly =
+        user.rol === "Mensajero" ||
+        (!hasPermission(token, PERMISSIONS.DASHBOARD_CONSULTAR) &&
+          hasPermission(token, PERMISSIONS.MENSAJERO_ACTAS_CONSULTAR));
+
+      if (isMensajeroOnly) {
+        setView("mensajero");
+      }
+    }
+  }, [user, token]);
+
+  // =======================================================
   // FILTRAR ÍTEMS DE NAVEGACIÓN POR PERMISOS
   // =======================================================
 
@@ -60,7 +77,6 @@ function AppContent() {
 
     try {
       await login({ usuario: username, password });
-      setView("dashboard");
     } catch (err) {
       setLoginError(
         err instanceof Error ? err.message : "Error al iniciar sesión."
@@ -162,7 +178,15 @@ function AppContent() {
       return <RolesPage />;
     }
 
-    // Default: Dashboard
+    // Default: Dashboard si tiene permiso, sino Mensajero o primera permitida
+    if (hasPermission(token, PERMISSIONS.DASHBOARD_CONSULTAR)) {
+      return <DashboardPage onNavigate={(nextView) => setView(nextView)} />;
+    }
+
+    if (hasPermission(token, PERMISSIONS.MENSAJERO_ACTAS_CONSULTAR)) {
+      return <MensajeroPage onSelectActa={(id) => setSelectedMensajeroActaId(id)} />;
+    }
+
     return <DashboardPage onNavigate={(nextView) => setView(nextView)} />;
   }
 

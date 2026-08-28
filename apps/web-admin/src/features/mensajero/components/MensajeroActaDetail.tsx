@@ -341,7 +341,7 @@ export function MensajeroActaDetail({
           className="mensajero-back-button"
           onClick={onBack}
         >
-          â† Volver a mis actas
+          ←  Volver a mis actas
         </button>
 
 
@@ -385,7 +385,7 @@ export function MensajeroActaDetail({
           className="mensajero-back-button"
           onClick={onBack}
         >
-          â† Volver a mis actas
+          ←  Volver a mis actas
         </button>
 
 
@@ -456,7 +456,7 @@ export function MensajeroActaDetail({
                 className="mensajero-secondary-button"
                 onClick={onBack}
               >
-                â† Volver a mis actas
+                ←  Volver a mis actas
               </button>
 
             </div>
@@ -502,7 +502,7 @@ export function MensajeroActaDetail({
           onClick={onBack}
         >
           <span>
-            â†
+            ← 
           </span>
 
           Volver a mis actas

@@ -39,7 +39,7 @@ export function UnifiedAnalyticsHub({
     { id: "actas", label: "Estado de Actas", icon: "ðŸ“‹" },
     { id: "tendencia", label: "Evolución Temporal", icon: "ðŸ“ˆ" },
     { id: "logistica", label: "Rendimiento Logístico", icon: "ðŸšš" },
-    { id: "mantenimiento", label: "Soporte y Mantenimiento", icon: "âš™" },
+    { id: "mantenimiento", label: "Soporte y Mantenimiento", icon: "⚙" },
   ];
 
   return (

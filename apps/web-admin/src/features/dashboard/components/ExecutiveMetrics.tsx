@@ -58,7 +58,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12px" }}>
           <span style={{ color: "#059669", fontWeight: 600 }}>
-            â— {kpis.equiposActivos} activos ({equiposOperativosPct}%)
+            ●  {kpis.equiposActivos} activos ({equiposOperativosPct}%)
           </span>
           <span style={{ color: "#64748b" }}>
             {kpis.equiposInactivos} inactivos
@@ -145,7 +145,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
             ðŸ“¦ {kpis.entregasPendientes} entregas
           </span>
           <span style={{ color: "#6366f1" }}>
-            â†© {kpis.devolucionesPendientes} devoluciones
+            ↩ {kpis.devolucionesPendientes} devoluciones
           </span>
         </div>
       </article>
@@ -169,7 +169,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
             Salud de Equipos
           </span>
           <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#d97706" }}>
-            âš™
+            ⚙
           </span>
         </div>
 

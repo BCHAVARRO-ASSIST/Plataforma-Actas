@@ -246,7 +246,7 @@ export function MensajeroPage({
                   : "mensajero-refresh-icon"
               }
             >
-              â†»
+              ↻
             </span>
 
             {loading

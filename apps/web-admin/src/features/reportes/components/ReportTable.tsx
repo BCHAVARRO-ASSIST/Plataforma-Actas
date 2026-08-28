@@ -165,7 +165,7 @@ export function ReportTable({ tab, data }: ReportTableProps) {
                 <td>{formatDate(item.fechaFirma)}</td>
                 <td>
                   <span style={{ color: item.firmado ? "#059669" : "#d97706", fontWeight: 700 }}>
-                    {item.firmado ? "✓ Firmada" : "â³ Pendiente"}
+                    {item.firmado ? "✓ Firmada" : "³ Pendiente"}
                   </span>
                 </td>
                 <td>
@@ -202,13 +202,13 @@ export function ReportTable({ tab, data }: ReportTableProps) {
         </div>
         <div className="inventory-pagination-controls">
           <button type="button" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
-            â†
+            ← 
           </button>
           <span>
             {currentPage} <small>/ {totalPages}</small>
           </span>
           <button type="button" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-            â†’
+            →
           </button>
         </div>
       </footer>

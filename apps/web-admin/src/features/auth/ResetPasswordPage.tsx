@@ -265,7 +265,7 @@ export default function ResetPasswordPage({
             onClick={onBackToLogin}
             disabled={loading}
           >
-            â† Volver al inicio
+            ←  Volver al inicio
           </button>
 
 
@@ -608,7 +608,7 @@ export default function ResetPasswordPage({
 
               {!loading && (
                 <span className="reset-submit-arrow">
-                  â†’
+                  →
                 </span>
               )}
 
@@ -620,7 +620,7 @@ export default function ResetPasswordPage({
           <div className="reset-footer-note">
 
             <span className="reset-lock">
-              â—ˆ
+              ◈
             </span>
 
             Tu contraseña se almacena de forma

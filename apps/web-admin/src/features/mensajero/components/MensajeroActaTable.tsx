@@ -363,7 +363,7 @@ export function MensajeroActaTable({
                     className="mensajero-detail-arrow"
                     aria-hidden="true"
                   >
-                    â†’
+                    →
                   </span>
 
                 </button>

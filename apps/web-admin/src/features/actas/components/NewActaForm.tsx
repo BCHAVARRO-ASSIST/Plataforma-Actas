@@ -184,7 +184,7 @@ export function NewActaForm({
           onClick={onCancel}
           disabled={saving}
         >
-          â† Volver a actas
+          ←  Volver a actas
         </button>
       </div>
 
@@ -655,7 +655,7 @@ export function NewActaForm({
           >
             {saving
               ? "Guardando..."
-              : "Guardar borrador â†’"}
+              : "Guardar borrador →"}
           </button>
         </div>
       </form>

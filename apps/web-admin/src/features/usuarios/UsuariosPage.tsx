@@ -848,7 +848,7 @@ export function UsuariosPage() {
             </span>
 
             <span className="usuarios-stat-icon">
-              â—‰
+              ◉
             </span>
 
           </div>
@@ -875,7 +875,7 @@ export function UsuariosPage() {
             </span>
 
             <span className="usuarios-stat-icon">
-              â—
+              ● 
             </span>
 
           </div>
@@ -978,7 +978,7 @@ export function UsuariosPage() {
             <div className="usuarios-search">
 
               <span className="usuarios-search-icon">
-                âŒ•
+                🔍
               </span>
 
               <input
@@ -1143,7 +1143,7 @@ export function UsuariosPage() {
                     >
 
                       <div className="usuarios-empty-icon">
-                        â—‰
+                        ◉
                       </div>
 
                       <strong>

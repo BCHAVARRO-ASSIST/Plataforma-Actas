@@ -87,7 +87,7 @@ export default function ForgotPasswordPage({
             onClick={onBackToLogin}
             disabled={loading}
           >
-            <span aria-hidden="true">â†</span> Volver al inicio de sesión
+            <span aria-hidden="true">← </span> Volver al inicio de sesión
           </button>
 
           <div className="recovery-form-header">
@@ -132,7 +132,7 @@ export default function ForgotPasswordPage({
               disabled={loading}
             >
               <span>{loading ? "Enviando..." : "Enviar enlace de recuperación"}</span>
-              {!loading && <span aria-hidden="true">â†’</span>}
+              {!loading && <span aria-hidden="true">→</span>}
             </button>
           </form>
 
