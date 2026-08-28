@@ -158,6 +158,14 @@ namespace PlataformaActas.Api.Modules.Roles.Data.Configurations
 
 namespace PlataformaActas.Api.Modules.Roles.Models.Dto
 {
+    public enum EliminarRolResultado
+    {
+        Eliminado,
+        NoEncontrado,
+        TieneUsuarios,
+        AdministradorProtegido
+    }
+
     public record RolResponse(int Id, string Nombre, string? Descripcion, bool Activo, DateTime FechaCreacion);
     public record RolDetalleResponse(int Id, string Nombre, string? Descripcion, bool Activo, DateTime FechaCreacion, IReadOnlyList<PermisoResponse> Permisos);
     public record PermisoResponse(int Id, string Codigo, string Nombre, string? Descripcion, string Modulo);

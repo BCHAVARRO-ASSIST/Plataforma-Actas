@@ -1,243 +1,121 @@
-using Microsoft.EntityFrameworkCore;
-using PlataformaActas.Api.Infrastructure.Persistence;
-using PlataformaActas.Api.Modules.Roles.Data.Entities;
+using PlataformaActas.Api.Modules.Usuarios.Data;
 using PlataformaActas.Api.Modules.Usuarios.Data.Entities;
 using PlataformaActas.Api.Modules.Usuarios.Models.Dto;
 using PlataformaActas.Api.Modules.Usuarios.Models.Mappers;
 
-namespace PlataformaActas.Api.Modules.Usuarios.Data
+namespace PlataformaActas.Api.Modules.Usuarios.Services;
+
+public sealed class UsuarioService : IUsuarioService
 {
-    public interface IUsuarioRepository
+    private readonly IUsuarioRepository _repository;
+
+    public UsuarioService(IUsuarioRepository repository)
     {
-        Task<IReadOnlyList<Usuario>> GetAllAsync(CancellationToken cancellationToken = default);
-        Task<Usuario?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-        Task<Usuario?> GetByUsuarioRedAsync(string usuarioRed, CancellationToken cancellationToken = default);
-        Task<Usuario?> GetByCorreoAsync(string correo, CancellationToken cancellationToken = default);
-        Task<Usuario> AddAsync(Usuario usuario, CancellationToken cancellationToken = default);
-        Task UpdateAsync(Usuario usuario, CancellationToken cancellationToken = default);
-        Task<bool> SetActiveAsync(int id, bool activo, CancellationToken cancellationToken = default);
-        Task<bool> AssignRoleAsync(int usuarioId, int rolId, CancellationToken cancellationToken = default);
+        _repository = repository;
     }
 
-    public class UsuarioRepository : IUsuarioRepository
+    public async Task<IReadOnlyList<UsuarioResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        private readonly PlataformaActasDbContext _dbContext;
-
-        public UsuarioRepository(PlataformaActasDbContext dbContext)
-        {
-            _dbContext = dbContext;
-        }
-
-        public async Task<IReadOnlyList<Usuario>> GetAllAsync(CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.Usuarios
-                .AsNoTracking()
-                .Include(u => u.UsuarioRoles)
-                .ThenInclude(ur => ur.Rol)
-                .OrderBy(u => u.Nombre)
-                .ThenBy(u => u.Apellido)
-                .ToListAsync(cancellationToken);
-        }
-
-        public async Task<Usuario?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.Usuarios
-                .Include(u => u.UsuarioRoles)
-                .ThenInclude(ur => ur.Rol)
-                .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-        }
-
-        public async Task<Usuario?> GetByUsuarioRedAsync(string usuarioRed, CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.Usuarios
-                .Include(u => u.UsuarioRoles)
-                .ThenInclude(ur => ur.Rol)
-                .FirstOrDefaultAsync(u => u.UsuarioRed.ToLower() == usuarioRed.ToLower(), cancellationToken);
-        }
-
-        public async Task<Usuario?> GetByCorreoAsync(string correo, CancellationToken cancellationToken = default)
-        {
-            return await _dbContext.Usuarios
-                .Include(u => u.UsuarioRoles)
-                .ThenInclude(ur => ur.Rol)
-                .FirstOrDefaultAsync(u => u.Correo.ToLower() == correo.ToLower(), cancellationToken);
-        }
-
-        public async Task<Usuario> AddAsync(Usuario usuario, CancellationToken cancellationToken = default)
-        {
-            _dbContext.Usuarios.Add(usuario);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return usuario;
-        }
-
-        public async Task UpdateAsync(Usuario usuario, CancellationToken cancellationToken = default)
-        {
-            _dbContext.Usuarios.Update(usuario);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        public async Task<bool> SetActiveAsync(int id, bool activo, CancellationToken cancellationToken = default)
-        {
-            var usuario = await _dbContext.Usuarios.FindAsync(new object[] { id }, cancellationToken);
-            if (usuario is null)
-            {
-                return false;
-            }
-
-            usuario.Activo = activo;
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-
-        public async Task<bool> AssignRoleAsync(int usuarioId, int rolId, CancellationToken cancellationToken = default)
-        {
-            var usuario = await _dbContext.Usuarios
-                .Include(u => u.UsuarioRoles)
-                .FirstOrDefaultAsync(u => u.Id == usuarioId, cancellationToken);
-
-            if (usuario is null)
-            {
-                return false;
-            }
-
-            var rolExiste = await _dbContext.Roles
-                .AnyAsync(r => r.Id == rolId && r.Activo, cancellationToken);
-
-            if (!rolExiste)
-            {
-                throw new InvalidOperationException($"El rol con ID '{rolId}' no existe o se encuentra inactivo.");
-            }
-
-            _dbContext.UsuarioRoles.RemoveRange(usuario.UsuarioRoles);
-
-            usuario.UsuarioRoles.Add(new UsuarioRol
-            {
-                UsuarioId = usuarioId,
-                RolId = rolId,
-                FechaAsignacion = DateTime.UtcNow
-            });
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-    }
-}
-
-namespace PlataformaActas.Api.Modules.Usuarios.Services
-{
-    using PlataformaActas.Api.Modules.Usuarios.Data;
-
-    public interface IUsuarioService
-    {
-        Task<IReadOnlyList<UsuarioResponse>> GetAllAsync(CancellationToken cancellationToken = default);
-        Task<UsuarioResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
-        Task<UsuarioResponse> CreateAsync(UsuarioCreateRequest request, CancellationToken cancellationToken = default);
-        Task<UsuarioResponse?> UpdateAsync(int id, UsuarioUpdateRequest request, CancellationToken cancellationToken = default);
-        Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
-        Task<UsuarioResponse?> AssignRoleAsync(int usuarioId, int rolId, CancellationToken cancellationToken = default);
+        var usuarios = await _repository.GetAllAsync(cancellationToken);
+        return usuarios.Select(u => u.ToResponse()).ToList();
     }
 
-    public class UsuarioService : IUsuarioService
+    public async Task<UsuarioResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        private readonly IUsuarioRepository _usuarioRepository;
+        var usuario = await _repository.GetByIdAsync(id, cancellationToken);
+        return usuario?.ToResponse();
+    }
 
-        public UsuarioService(IUsuarioRepository usuarioRepository)
+    public async Task<UsuarioResponse> CreateAsync(UsuarioCreateRequest request, CancellationToken cancellationToken = default)
+    {
+        var trimmedUserRed = request.UsuarioRed.Trim();
+        var trimmedEmail = request.Correo.Trim();
+
+        var existingUser = await _repository.GetByUsuarioRedAsync(trimmedUserRed, cancellationToken);
+        if (existingUser != null)
         {
-            _usuarioRepository = usuarioRepository;
+            throw new InvalidOperationException($"Ya existe un usuario con el identificador '{trimmedUserRed}'.");
         }
 
-        public async Task<IReadOnlyList<UsuarioResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+        var existingEmail = await _repository.GetByCorreoAsync(trimmedEmail, cancellationToken);
+        if (existingEmail != null)
         {
-            var usuarios = await _usuarioRepository.GetAllAsync(cancellationToken);
-            return usuarios.Select(u => u.ToResponse()).ToList();
+            throw new InvalidOperationException($"Ya existe un usuario con el correo '{trimmedEmail}'.");
         }
 
-        public async Task<UsuarioResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        var defaultPassword = BCrypt.Net.BCrypt.HashPassword("Actas2026*");
+
+        var usuario = new Usuario
         {
-            var usuario = await _usuarioRepository.GetByIdAsync(id, cancellationToken);
-            return usuario?.ToResponse();
+            Nombre = request.Nombre.Trim(),
+            Apellido = request.Apellido.Trim(),
+            UsuarioRed = trimmedUserRed,
+            Correo = trimmedEmail,
+            PasswordHash = defaultPassword,
+            Proceso = request.Proceso.Trim(),
+            Activo = true
+        };
+
+        var created = await _repository.AddAsync(usuario, cancellationToken);
+        var reloaded = await _repository.GetByIdAsync(created.Id, cancellationToken);
+        return (reloaded ?? created).ToResponse();
+    }
+
+    public async Task<UsuarioResponse?> UpdateAsync(int id, UsuarioUpdateRequest request, CancellationToken cancellationToken = default)
+    {
+        var usuario = await _repository.GetByIdAsync(id, cancellationToken);
+        if (usuario == null)
+        {
+            return null;
         }
 
-        public async Task<UsuarioResponse> CreateAsync(UsuarioCreateRequest request, CancellationToken cancellationToken = default)
+        var trimmedUserRed = request.UsuarioRed.Trim();
+        var trimmedEmail = request.Correo.Trim();
+
+        var existingUser = await _repository.GetByUsuarioRedAsync(trimmedUserRed, cancellationToken);
+        if (existingUser != null && existingUser.Id != id)
         {
-            var usuarioRed = request.UsuarioRed.Trim();
-            var correo = request.Correo.Trim();
-
-            var existingByRed = await _usuarioRepository.GetByUsuarioRedAsync(usuarioRed, cancellationToken);
-            if (existingByRed is not null)
-            {
-                throw new InvalidOperationException($"Ya existe un usuario con el usuario de red '{usuarioRed}'.");
-            }
-
-            var existingByCorreo = await _usuarioRepository.GetByCorreoAsync(correo, cancellationToken);
-            if (existingByCorreo is not null)
-            {
-                throw new InvalidOperationException($"Ya existe un usuario con el correo '{correo}'.");
-            }
-
-            var usuario = new Usuario
-            {
-                Nombre = request.Nombre.Trim(),
-                Apellido = request.Apellido.Trim(),
-                UsuarioRed = usuarioRed,
-                Correo = correo,
-                Proceso = request.Proceso.Trim(),
-                Activo = true,
-                FechaCreacion = DateTime.UtcNow
-            };
-
-            var created = await _usuarioRepository.AddAsync(usuario, cancellationToken);
-            return created.ToResponse();
+            throw new InvalidOperationException($"Ya existe otro usuario con el identificador '{trimmedUserRed}'.");
         }
 
-        public async Task<UsuarioResponse?> UpdateAsync(int id, UsuarioUpdateRequest request, CancellationToken cancellationToken = default)
+        var existingEmail = await _repository.GetByCorreoAsync(trimmedEmail, cancellationToken);
+        if (existingEmail != null && existingEmail.Id != id)
         {
-            var usuario = await _usuarioRepository.GetByIdAsync(id, cancellationToken);
-            if (usuario is null)
-            {
-                return null;
-            }
-
-            var usuarioRed = request.UsuarioRed.Trim();
-            var correo = request.Correo.Trim();
-
-            var existingByRed = await _usuarioRepository.GetByUsuarioRedAsync(usuarioRed, cancellationToken);
-            if (existingByRed is not null && existingByRed.Id != id)
-            {
-                throw new InvalidOperationException($"Ya existe otro usuario con el usuario de red '{usuarioRed}'.");
-            }
-
-            var existingByCorreo = await _usuarioRepository.GetByCorreoAsync(correo, cancellationToken);
-            if (existingByCorreo is not null && existingByCorreo.Id != id)
-            {
-                throw new InvalidOperationException($"Ya existe otro usuario con el correo '{correo}'.");
-            }
-
-            usuario.Nombre = request.Nombre.Trim();
-            usuario.Apellido = request.Apellido.Trim();
-            usuario.UsuarioRed = usuarioRed;
-            usuario.Correo = correo;
-            usuario.Proceso = request.Proceso.Trim();
-            usuario.Activo = request.Activo;
-
-            await _usuarioRepository.UpdateAsync(usuario, cancellationToken);
-            return usuario.ToResponse();
+            throw new InvalidOperationException($"Ya existe otro usuario con el correo '{trimmedEmail}'.");
         }
 
-        public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
+        usuario.Nombre = request.Nombre.Trim();
+        usuario.Apellido = request.Apellido.Trim();
+        usuario.UsuarioRed = trimmedUserRed;
+        usuario.Correo = trimmedEmail;
+        usuario.Proceso = request.Proceso.Trim();
+        usuario.Activo = request.Activo;
+
+        await _repository.UpdateAsync(usuario, cancellationToken);
+
+        var reloaded = await _repository.GetByIdAsync(usuario.Id, cancellationToken);
+        return (reloaded ?? usuario).ToResponse();
+    }
+
+    public async Task<bool> SetActivoAsync(int id, bool activo, CancellationToken cancellationToken = default)
+    {
+        return await _repository.SetActiveAsync(id, activo, cancellationToken);
+    }
+
+    public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _repository.SetActiveAsync(id, false, cancellationToken);
+    }
+
+    public async Task<UsuarioResponse?> AssignRoleAsync(int id, int rolId, CancellationToken cancellationToken = default)
+    {
+        var ok = await _repository.AssignRoleAsync(id, rolId, cancellationToken);
+        if (!ok)
         {
-            return await _usuarioRepository.SetActiveAsync(id, false, cancellationToken);
+            return null;
         }
 
-        public async Task<UsuarioResponse?> AssignRoleAsync(int usuarioId, int rolId, CancellationToken cancellationToken = default)
-        {
-            var ok = await _usuarioRepository.AssignRoleAsync(usuarioId, rolId, cancellationToken);
-            if (!ok)
-            {
-                return null;
-            }
-
-            return await GetByIdAsync(usuarioId, cancellationToken);
-        }
+        var reloaded = await _repository.GetByIdAsync(id, cancellationToken);
+        return reloaded?.ToResponse();
     }
 }

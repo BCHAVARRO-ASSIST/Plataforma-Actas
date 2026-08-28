@@ -11,6 +11,13 @@ using QuestPDF.Infrastructure;
 
 namespace PlataformaActas.Api.Modules.Actas.Services;
 
+public interface IDocumentoActaService
+{
+    byte[] GenerarPdfBytes(ActaDetailResponse acta);
+    Task<GenerarDocumentoResponse> GenerarYGuardarPdfAsync(Guid actaId, CancellationToken cancellationToken = default);
+    Task<DocumentoActaResult> ObtenerOVisualizarPdfAsync(Guid actaId, CancellationToken cancellationToken = default);
+}
+
 public sealed class DocumentoActaService : IDocumentoActaService
 {
     private readonly PlataformaActasDbContext _context;
