@@ -1,10 +1,10 @@
-import type {
+﻿import type {
   ReportTab,
   EquiposReportItem,
   ActasReportItem,
   EntregasReportItem,
   DevolucionesReportItem,
-} from "../types/reportes";
+} from "../reportesService";
 
 interface ReportKpiProps {
   tab: ReportTab;
@@ -122,3 +122,4 @@ export function ReportKpi({ tab, data }: ReportKpiProps) {
     </div>
   );
 }
+

@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import type {
   ReportTab,
   EquiposReportItem,
   ActasReportItem,
   EntregasReportItem,
   DevolucionesReportItem,
-} from "../types/reportes";
+} from "../reportesService";
 
 interface ReportTableProps {
   tab: ReportTab;
@@ -15,7 +15,7 @@ interface ReportTableProps {
 const ITEMS_PER_PAGE = 20;
 
 function formatDate(val: string | null): string {
-  if (!val) return "—";
+  if (!val) return "â€”";
   try {
     return new Date(val).toLocaleDateString("es-CO", {
       year: "numeric",
@@ -41,7 +41,7 @@ export function ReportTable({ tab, data }: ReportTableProps) {
     return (
       <div className="table-container" style={{ padding: "40px 20px", textAlign: "center", color: "#64748b" }}>
         <p style={{ margin: "0 0 6px", fontWeight: 600 }}>No se encontraron registros con los filtros seleccionados.</p>
-        <small>Modifica las fechas o términos de búsqueda para ver más información.</small>
+        <small>Modifica las fechas o tÃ©rminos de bÃºsqueda para ver mÃ¡s informaciÃ³n.</small>
       </div>
     );
   }
@@ -53,7 +53,7 @@ export function ReportTable({ tab, data }: ReportTableProps) {
     <div className="table-container">
       <table>
         {/* =====================================================
-            HEADER POR PESTAÑA
+            HEADER POR PESTAÃ‘A
         ====================================================== */}
         {tab === "equipos" && (
           <thead>
@@ -73,12 +73,12 @@ export function ReportTable({ tab, data }: ReportTableProps) {
         {tab === "actas" && (
           <thead>
             <tr>
-              <th>N° Acta</th>
+              <th>NÂ° Acta</th>
               <th>Tipo</th>
               <th>Equipo</th>
               <th>Destinatario</th>
               <th>Mensajero</th>
-              <th>Fecha Creación</th>
+              <th>Fecha CreaciÃ³n</th>
               <th>Fecha Firma</th>
               <th>Estado</th>
             </tr>
@@ -88,11 +88,11 @@ export function ReportTable({ tab, data }: ReportTableProps) {
         {tab === "entregas" && (
           <thead>
             <tr>
-              <th>N° Acta</th>
+              <th>NÂ° Acta</th>
               <th>Equipo</th>
               <th>Mensajero</th>
               <th>Destinatario</th>
-              <th>Fecha Creación</th>
+              <th>Fecha CreaciÃ³n</th>
               <th>Fecha Firma</th>
               <th>Firma Certificada</th>
               <th>Estado</th>
@@ -103,11 +103,11 @@ export function ReportTable({ tab, data }: ReportTableProps) {
         {tab === "devoluciones" && (
           <thead>
             <tr>
-              <th>N° Acta Devolución</th>
+              <th>NÂ° Acta DevoluciÃ³n</th>
               <th>Acta Origen</th>
               <th>Equipo</th>
               <th>Responsable</th>
-              <th>Fecha Creación</th>
+              <th>Fecha CreaciÃ³n</th>
               <th>Fecha Firma</th>
               <th>Estado</th>
             </tr>
@@ -115,7 +115,7 @@ export function ReportTable({ tab, data }: ReportTableProps) {
         )}
 
         {/* =====================================================
-            BODY POR PESTAÑA
+            BODY POR PESTAÃ‘A
         ====================================================== */}
         <tbody>
           {tab === "equipos" &&
@@ -123,11 +123,11 @@ export function ReportTable({ tab, data }: ReportTableProps) {
               <tr key={item.id}>
                 <td><strong className="equipment-key">{item.inventoryKey}</strong></td>
                 <td>{item.nombreEquipo}</td>
-                <td>{item.marca || "—"}</td>
-                <td>{item.asignadoA || "—"}</td>
-                <td>{item.departamento || "—"}</td>
-                <td>{item.empresa || "—"}</td>
-                <td>{item.proveedor || "—"}</td>
+                <td>{item.marca || "â€”"}</td>
+                <td>{item.asignadoA || "â€”"}</td>
+                <td>{item.departamento || "â€”"}</td>
+                <td>{item.empresa || "â€”"}</td>
+                <td>{item.proveedor || "â€”"}</td>
                 <td>
                   <span className={item.estatusEquipo?.toLowerCase() === "activo" ? "status-badge status-active" : item.estatusEquipo?.toLowerCase() === "asignado" ? "status-badge status-warning" : "status-badge status-inactive"}>
                     {item.estatusEquipo || "Sin estado"}
@@ -141,8 +141,8 @@ export function ReportTable({ tab, data }: ReportTableProps) {
               <tr key={item.id}>
                 <td><strong>{item.numeroActa}</strong></td>
                 <td><span className="badge-tipo">{item.tipoActa}</span></td>
-                <td>{item.equipmentNombre || item.equipmentInventoryKey || "—"}</td>
-                <td>{item.destinatarioNombre || "—"}</td>
+                <td>{item.equipmentNombre || item.equipmentInventoryKey || "â€”"}</td>
+                <td>{item.destinatarioNombre || "â€”"}</td>
                 <td>{item.mensajeroNombre || "Sin asignar"}</td>
                 <td>{formatDate(item.fechaCreacion)}</td>
                 <td>{formatDate(item.fechaFirma)}</td>
@@ -160,12 +160,12 @@ export function ReportTable({ tab, data }: ReportTableProps) {
                 <td><strong>{item.numeroActa}</strong></td>
                 <td>{item.equipmentNombre} ({item.equipmentInventoryKey})</td>
                 <td>{item.mensajeroNombre || "Sin asignar"}</td>
-                <td>{item.destinatarioNombre || "—"}</td>
+                <td>{item.destinatarioNombre || "â€”"}</td>
                 <td>{formatDate(item.fechaCreacion)}</td>
                 <td>{formatDate(item.fechaFirma)}</td>
                 <td>
                   <span style={{ color: item.firmado ? "#059669" : "#d97706", fontWeight: 700 }}>
-                    {item.firmado ? "✓ Firmada" : "⏳ Pendiente"}
+                    {item.firmado ? "âœ“ Firmada" : "â³ Pendiente"}
                   </span>
                 </td>
                 <td>
@@ -180,7 +180,7 @@ export function ReportTable({ tab, data }: ReportTableProps) {
             (paginatedData as DevolucionesReportItem[]).map((item) => (
               <tr key={item.id}>
                 <td><strong>{item.numeroActa}</strong></td>
-                <td>{item.actaOrigenNumero || (item.actaOrigenId ? "Acta vinculada" : "—")}</td>
+                <td>{item.actaOrigenNumero || (item.actaOrigenId ? "Acta vinculada" : "â€”")}</td>
                 <td>{item.equipmentNombre} ({item.equipmentInventoryKey})</td>
                 <td>{item.responsableEntrega || "Bodega / Custodia"}</td>
                 <td>{formatDate(item.fechaCreacion)}</td>
@@ -195,23 +195,24 @@ export function ReportTable({ tab, data }: ReportTableProps) {
         </tbody>
       </table>
 
-      {/* PAGINACIÓN */}
+      {/* PAGINACIÃ“N */}
       <footer className="inventory-pagination" style={{ padding: "12px 16px" }}>
         <div>
           Mostrando <strong>{firstItem}-{lastItem}</strong> de <strong>{data.length}</strong> registros
         </div>
         <div className="inventory-pagination-controls">
           <button type="button" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>
-            ←
+            â†
           </button>
           <span>
             {currentPage} <small>/ {totalPages}</small>
           </span>
           <button type="button" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-            →
+            â†’
           </button>
         </div>
       </footer>
     </div>
   );
 }
+

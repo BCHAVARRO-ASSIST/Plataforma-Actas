@@ -1,4 +1,4 @@
-import type { MessengerDeliveryItem } from "../types/dashboard";
+﻿import type { MessengerDeliveryItem } from "../dashboardService";
 
 interface DeliveriesChartProps {
   data: MessengerDeliveryItem[];
@@ -10,7 +10,7 @@ export function DeliveriesChart({ data }: DeliveriesChartProps) {
       <div className="dashboard-block" style={{ padding: "20px" }}>
         <div className="dashboard-block-top">
           <div>
-            <span className="block-kicker">CAMPO Y LOGÍSTICA</span>
+            <span className="block-kicker">CAMPO Y LOGÃSTICA</span>
             <h3>Entregas por Mensajero</h3>
           </div>
         </div>
@@ -27,7 +27,7 @@ export function DeliveriesChart({ data }: DeliveriesChartProps) {
     <div className="dashboard-block" style={{ padding: "20px" }}>
       <div className="dashboard-block-top" style={{ marginBottom: "16px" }}>
         <div>
-          <span className="block-kicker">CAMPO Y LOGÍSTICA</span>
+          <span className="block-kicker">CAMPO Y LOGÃSTICA</span>
           <h3 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
             Rendimiento y Entregas por Mensajero
           </h3>
@@ -51,7 +51,7 @@ export function DeliveriesChart({ data }: DeliveriesChartProps) {
             <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "13px" }}>
                 <span style={{ fontWeight: 600, color: "#1e293b" }}>
-                  👤 {item.mensajeroNombre}
+                  ðŸ‘¤ {item.mensajeroNombre}
                 </span>
                 <span style={{ fontSize: "12px", color: "#475569" }}>
                   <strong>{item.totalEntregadas}</strong> firmadas de <strong>{item.totalAsignadas}</strong> asignadas
@@ -95,3 +95,4 @@ export function DeliveriesChart({ data }: DeliveriesChartProps) {
     </div>
   );
 }
+

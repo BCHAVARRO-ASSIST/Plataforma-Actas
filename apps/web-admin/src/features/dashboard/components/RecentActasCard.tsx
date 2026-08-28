@@ -1,4 +1,4 @@
-import type { RecentActivityItem } from "../types/dashboard";
+﻿import type { RecentActivityItem } from "../dashboardService";
 
 interface RecentActasCardProps {
   items: RecentActivityItem[];
@@ -46,7 +46,7 @@ export function RecentActasCard({ items, onNavigateToActas }: RecentActasCardPro
             TRAZABILIDAD Y REGISTRO
           </span>
           <h2 style={{ margin: "2px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-            Últimas Actas Emitidas
+            Ãšltimas Actas Emitidas
           </h2>
         </div>
 
@@ -65,7 +65,7 @@ export function RecentActasCard({ items, onNavigateToActas }: RecentActasCardPro
             gap: "4px",
           }}
         >
-          Ver todas las actas →
+          Ver todas las actas â†’
         </button>
       </div>
 
@@ -122,7 +122,7 @@ export function RecentActasCard({ items, onNavigateToActas }: RecentActasCardPro
                     </td>
 
                     <td style={{ padding: "12px 14px", color: "#334155", fontWeight: 500 }}>
-                      👤 {item.responsable || "Sistema"}
+                      ðŸ‘¤ {item.responsable || "Sistema"}
                     </td>
 
                     <td style={{ padding: "12px 14px", color: "#64748b", fontSize: "12px", whiteSpace: "nowrap" }}>
@@ -154,3 +154,4 @@ export function RecentActasCard({ items, onNavigateToActas }: RecentActasCardPro
     </div>
   );
 }
+

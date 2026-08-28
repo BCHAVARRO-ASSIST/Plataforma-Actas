@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import type { StatusCountItem } from "../types/dashboard";
+﻿import { useState, useMemo } from "react";
+import type { StatusCountItem } from "../dashboardService";
 
 interface EquipmentStatusChartProps {
   data: StatusCountItem[];
@@ -34,7 +34,7 @@ export function EquipmentStatusChart({ data }: EquipmentStatusChartProps) {
         <div className="dashboard-block-top">
           <div>
             <span className="block-kicker">INVENTARIO</span>
-            <h3>Distribución de Equipos</h3>
+            <h3>DistribuciÃ³n de Equipos</h3>
           </div>
         </div>
         <div style={{ padding: "40px 20px", textAlign: "center", color: "#64748b" }}>
@@ -50,7 +50,7 @@ export function EquipmentStatusChart({ data }: EquipmentStatusChartProps) {
         <div>
           <span className="block-kicker">INVENTARIO DE HARDWARE</span>
           <h3 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-            Distribución por Estado
+            DistribuciÃ³n por Estado
           </h3>
         </div>
         <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
@@ -155,3 +155,4 @@ export function EquipmentStatusChart({ data }: EquipmentStatusChartProps) {
     </div>
   );
 }
+

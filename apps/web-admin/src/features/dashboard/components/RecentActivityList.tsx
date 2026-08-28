@@ -1,4 +1,4 @@
-import type { RecentActivityItem } from "../types/dashboard";
+﻿import type { RecentActivityItem } from "../dashboardService";
 
 interface RecentActivityListProps {
   items: RecentActivityItem[];
@@ -23,7 +23,7 @@ export function RecentActivityList({ items }: RecentActivityListProps) {
       <div className="dashboard-block" style={{ padding: "20px" }}>
         <div className="dashboard-block-top">
           <div>
-            <span className="block-kicker">AUDITORÍA Y TRAZABILIDAD</span>
+            <span className="block-kicker">AUDITORÃA Y TRAZABILIDAD</span>
             <h3 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
               Actividad Reciente del Sistema
             </h3>
@@ -40,13 +40,13 @@ export function RecentActivityList({ items }: RecentActivityListProps) {
     <div className="dashboard-block" style={{ padding: "20px" }}>
       <div className="dashboard-block-top" style={{ marginBottom: "16px" }}>
         <div>
-          <span className="block-kicker">AUDITORÍA Y TRAZABILIDAD</span>
+          <span className="block-kicker">AUDITORÃA Y TRAZABILIDAD</span>
           <h3 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
             Actividad Reciente del Sistema
           </h3>
         </div>
         <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>
-          Últimos eventos
+          Ãšltimos eventos
         </span>
       </div>
 
@@ -89,7 +89,7 @@ export function RecentActivityList({ items }: RecentActivityListProps) {
                   </span>
                 </div>
                 <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#475569" }}>
-                  {item.descripcion} · Responsable: <strong>{item.responsable || "Sistema"}</strong>
+                  {item.descripcion} Â· Responsable: <strong>{item.responsable || "Sistema"}</strong>
                 </p>
               </div>
 
@@ -103,3 +103,4 @@ export function RecentActivityList({ items }: RecentActivityListProps) {
     </div>
   );
 }
+

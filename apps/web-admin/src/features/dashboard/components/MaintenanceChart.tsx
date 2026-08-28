@@ -1,4 +1,4 @@
-import type { MaintenanceStats } from "../types/dashboard";
+﻿import type { MaintenanceStats } from "../dashboardService";
 
 interface MaintenanceChartProps {
   stats: MaintenanceStats | null;
@@ -19,7 +19,7 @@ export function MaintenanceChart({ stats }: MaintenanceChartProps) {
         <div style={{ padding: "30px 20px", textAlign: "center", color: "#64748b" }}>
           <p style={{ margin: "0 0 6px", fontWeight: 600 }}>Sin mantenimientos programados</p>
           <small style={{ color: "#94a3b8" }}>
-            Los datos se actualizarán automáticamente cuando se registren mantenimientos en los equipos.
+            Los datos se actualizarÃ¡n automÃ¡ticamente cuando se registren mantenimientos en los equipos.
           </small>
         </div>
       </div>
@@ -75,7 +75,7 @@ export function MaintenanceChart({ stats }: MaintenanceChartProps) {
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {stats.mantenimientosPorTipo.map((item, idx) => (
           <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
-            <span style={{ color: "#334155", fontWeight: 600 }}>• {item.estado}</span>
+            <span style={{ color: "#334155", fontWeight: 600 }}>â€¢ {item.estado}</span>
             <span style={{ color: "#64748b" }}>
               <strong>{item.cantidad}</strong> ({item.porcentaje}%)
             </span>
@@ -85,3 +85,4 @@ export function MaintenanceChart({ stats }: MaintenanceChartProps) {
     </div>
   );
 }
+

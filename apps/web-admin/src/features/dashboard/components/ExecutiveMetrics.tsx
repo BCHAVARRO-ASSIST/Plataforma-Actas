@@ -1,4 +1,4 @@
-import type { DashboardKpis } from "../types/dashboard";
+﻿import type { DashboardKpis } from "../dashboardService";
 
 interface ExecutiveMetricsProps {
   kpis: DashboardKpis;
@@ -43,7 +43,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
             Total Inventario
           </span>
           <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>
-            💻
+            ðŸ’»
           </span>
         </div>
 
@@ -58,7 +58,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12px" }}>
           <span style={{ color: "#059669", fontWeight: 600 }}>
-            ● {kpis.equiposActivos} activos ({equiposOperativosPct}%)
+            â— {kpis.equiposActivos} activos ({equiposOperativosPct}%)
           </span>
           <span style={{ color: "#64748b" }}>
             {kpis.equiposInactivos} inactivos
@@ -85,7 +85,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
             Actas Procesadas
           </span>
           <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#059669" }}>
-            ✓
+            âœ“
           </span>
         </div>
 
@@ -108,7 +108,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
         </div>
       </article>
 
-      {/* 3. LOGÍSTICA DE CAMPO */}
+      {/* 3. LOGÃSTICA DE CAMPO */}
       <article
         style={{
           background: "#ffffff",
@@ -124,10 +124,10 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: "12px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            Operación de Campo
+            OperaciÃ³n de Campo
           </span>
           <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#2563eb" }}>
-            📦
+            ðŸ“¦
           </span>
         </div>
 
@@ -136,16 +136,16 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
             {kpis.entregasPendientes + kpis.devolucionesPendientes}
           </strong>
           <span style={{ fontSize: "13px", color: "#64748b", marginLeft: "6px" }}>
-            trámites pendientes
+            trÃ¡mites pendientes
           </span>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12px" }}>
           <span style={{ color: "#2563eb" }}>
-            📦 {kpis.entregasPendientes} entregas
+            ðŸ“¦ {kpis.entregasPendientes} entregas
           </span>
           <span style={{ color: "#6366f1" }}>
-            ↩ {kpis.devolucionesPendientes} devoluciones
+            â†© {kpis.devolucionesPendientes} devoluciones
           </span>
         </div>
       </article>
@@ -169,7 +169,7 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
             Salud de Equipos
           </span>
           <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", color: "#d97706" }}>
-            ⚙
+            âš™
           </span>
         </div>
 
@@ -184,13 +184,14 @@ export function ExecutiveMetrics({ kpis }: ExecutiveMetricsProps) {
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "10px", borderTop: "1px solid #f1f5f9", fontSize: "12px" }}>
           <span style={{ color: "#059669", fontWeight: 600 }}>
-            ✓ Mantenimientos al día
+            âœ“ Mantenimientos al dÃ­a
           </span>
           <span style={{ color: "#64748b" }}>
-            {kpis.equiposMantenimiento} en revisión
+            {kpis.equiposMantenimiento} en revisiÃ³n
           </span>
         </div>
       </article>
     </section>
   );
 }
+

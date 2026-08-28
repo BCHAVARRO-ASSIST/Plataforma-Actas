@@ -1,4 +1,4 @@
-import type { Acta } from "../types/acta";
+﻿import type { Acta } from "../actaService";
 
 interface ActaTableProps {
   actas: Acta[];
@@ -56,7 +56,7 @@ export function ActaTable({
             <th>Estado</th>
             <th>Entrega</th>
             <th>Fecha</th>
-            <th>Acción</th>
+            <th>AcciÃ³n</th>
           </tr>
         </thead>
 
@@ -157,7 +157,7 @@ export function ActaTable({
                 </div>
               </td>
 
-              {/* ACCIÓN */}
+              {/* ACCIÃ“N */}
 
               <td>
                 <button
@@ -170,7 +170,7 @@ export function ActaTable({
                   Ver detalle
 
                   <span>
-                    →
+                    â†’
                   </span>
                 </button>
               </td>

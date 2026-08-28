@@ -1,4 +1,4 @@
-import { PERMISSIONS } from "../../features/auth/utils/permissions";
+import { PERMISSIONS } from "../../features/auth/permissions";
 import type { NavigationItem } from "./navigationTypes";
 
 // =========================================================

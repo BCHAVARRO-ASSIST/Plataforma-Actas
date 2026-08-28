@@ -1,4 +1,4 @@
-import type { Permission } from "../../features/auth/utils/permissions";
+import type { Permission } from "../../features/auth/permissions";
 
 
 // =========================================================

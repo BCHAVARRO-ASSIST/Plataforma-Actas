@@ -1,4 +1,4 @@
-import type { DashboardKpis } from "../types/dashboard";
+﻿import type { DashboardKpis } from "../dashboardService";
 
 interface DashboardKpiProps {
   kpis: DashboardKpis;
@@ -11,7 +11,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric inventory-metric-dark">
         <div className="inventory-metric-top">
           <span>TOTAL EQUIPOS</span>
-          <span>▦</span>
+          <span>â–¦</span>
         </div>
         <strong>{kpis.totalEquipos}</strong>
         <p>Activos de hardware registrados</p>
@@ -35,7 +35,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric">
         <div className="inventory-metric-top">
           <span>EN CUSTODIA / ASIGNADOS</span>
-          <span>👤</span>
+          <span>ðŸ‘¤</span>
         </div>
         <strong style={{ color: "#2563eb" }}>{kpis.equiposAsignados}</strong>
         <p>Entregados a colaboradores</p>
@@ -45,17 +45,17 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric">
         <div className="inventory-metric-top">
           <span>MANTENIMIENTO</span>
-          <span>⚙</span>
+          <span>âš™</span>
         </div>
         <strong style={{ color: "#d97706" }}>{kpis.equiposMantenimiento}</strong>
-        <p>En revisión o soporte</p>
+        <p>En revisiÃ³n o soporte</p>
       </article>
 
       {/* TOTAL ACTAS */}
       <article className="inventory-metric inventory-metric-dark">
         <div className="inventory-metric-top">
           <span>TOTAL ACTAS</span>
-          <span>▤</span>
+          <span>â–¤</span>
         </div>
         <strong>{kpis.totalActas}</strong>
         <p>Procesos documentales</p>
@@ -65,7 +65,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric">
         <div className="inventory-metric-top">
           <span>ACTAS PENDIENTES</span>
-          <span>⏳</span>
+          <span>â³</span>
         </div>
         <strong style={{ color: "#e11d48" }}>{kpis.actasBorrador}</strong>
         <p>En espera de firma en campo</p>
@@ -75,7 +75,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric">
         <div className="inventory-metric-top">
           <span>ACTAS FIRMADAS</span>
-          <span>✓</span>
+          <span>âœ“</span>
         </div>
         <strong style={{ color: "#059669" }}>{kpis.actasFirmadas}</strong>
         <p>Certificadas y con firma</p>
@@ -85,7 +85,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric">
         <div className="inventory-metric-top">
           <span>ACTAS FINALIZADAS</span>
-          <span>🔒</span>
+          <span>ðŸ”’</span>
         </div>
         <strong style={{ color: "#4f46e5" }}>{kpis.actasFinalizadas}</strong>
         <p>Procesos cerrados formalmente</p>
@@ -95,7 +95,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric">
         <div className="inventory-metric-top">
           <span>ENTREGAS PENDIENTES</span>
-          <span>📦</span>
+          <span>ðŸ“¦</span>
         </div>
         <strong style={{ color: "#d97706" }}>{kpis.entregasPendientes}</strong>
         <p>Equipos por entregar</p>
@@ -105,7 +105,7 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
       <article className="inventory-metric">
         <div className="inventory-metric-top">
           <span>DEVOLUCIONES PENDIENTES</span>
-          <span>↩</span>
+          <span>â†©</span>
         </div>
         <strong style={{ color: "#6366f1" }}>{kpis.devolucionesPendientes}</strong>
         <p>Equipos en retorno</p>
@@ -113,3 +113,4 @@ export function DashboardKpi({ kpis }: DashboardKpiProps) {
     </section>
   );
 }
+

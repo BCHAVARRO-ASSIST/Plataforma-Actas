@@ -1,10 +1,10 @@
-import type {
+﻿import type {
   ReportTab,
   EquiposReportItem,
   ActasReportItem,
   EntregasReportItem,
   DevolucionesReportItem,
-} from "../types/reportes";
+} from "../reportesService";
 
 interface ReportChartsProps {
   tab: ReportTab;
@@ -27,7 +27,7 @@ export function ReportCharts({ tab, data }: ReportChartsProps) {
     return (
       <div className="dashboard-block" style={{ padding: "16px 20px", marginBottom: "20px" }}>
         <h4 style={{ margin: "0 0 12px", fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
-          Distribución de Estados en Resultados
+          DistribuciÃ³n de Estados en Resultados
         </h4>
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {Object.entries(counts).map(([estado, cant]) => {
@@ -113,3 +113,4 @@ export function ReportCharts({ tab, data }: ReportChartsProps) {
 
   return null;
 }
+

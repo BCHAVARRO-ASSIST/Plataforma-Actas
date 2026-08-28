@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { EquipmentStatusChart } from "./EquipmentStatusChart";
 import { ActasStatusChart } from "./ActasStatusChart";
 import { ActasTimelineChart } from "./ActasTimelineChart";
@@ -9,7 +9,7 @@ import type {
   MessengerDeliveryItem,
   TimelinePointItem,
   MaintenanceStats,
-} from "../types/dashboard";
+} from "../dashboardService";
 
 interface UnifiedAnalyticsHubProps {
   equipmentStatus: StatusCountItem[];
@@ -35,11 +35,11 @@ export function UnifiedAnalyticsHub({
   const [activeTab, setActiveTab] = useState<TabType>("inventario");
 
   const tabs: { id: TabType; label: string; icon: string }[] = [
-    { id: "inventario", label: "Inventario de Equipos", icon: "💻" },
-    { id: "actas", label: "Estado de Actas", icon: "📋" },
-    { id: "tendencia", label: "Evolución Temporal", icon: "📈" },
-    { id: "logistica", label: "Rendimiento Logístico", icon: "🚚" },
-    { id: "mantenimiento", label: "Soporte y Mantenimiento", icon: "⚙" },
+    { id: "inventario", label: "Inventario de Equipos", icon: "ðŸ’»" },
+    { id: "actas", label: "Estado de Actas", icon: "ðŸ“‹" },
+    { id: "tendencia", label: "EvoluciÃ³n Temporal", icon: "ðŸ“ˆ" },
+    { id: "logistica", label: "Rendimiento LogÃ­stico", icon: "ðŸšš" },
+    { id: "mantenimiento", label: "Soporte y Mantenimiento", icon: "âš™" },
   ];
 
   return (
@@ -54,7 +54,7 @@ export function UnifiedAnalyticsHub({
         flexDirection: "column",
       }}
     >
-      {/* HEADER DE PESTAÑAS UNIFICADO */}
+      {/* HEADER DE PESTAÃ‘AS UNIFICADO */}
       <div
         style={{
           display: "flex",
@@ -96,7 +96,7 @@ export function UnifiedAnalyticsHub({
         })}
       </div>
 
-      {/* CONTENIDO DEL MÓDULO UNIFICADO */}
+      {/* CONTENIDO DEL MÃ“DULO UNIFICADO */}
       <div style={{ padding: "16px" }}>
         {activeTab === "inventario" && <EquipmentStatusChart data={equipmentStatus} />}
         {activeTab === "actas" && <ActasStatusChart data={actasStatus} />}
@@ -113,3 +113,4 @@ export function UnifiedAnalyticsHub({
     </div>
   );
 }
+

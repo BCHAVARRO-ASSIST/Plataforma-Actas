@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 
-import { createActa, getActas } from "../services/actaService";
-import type { Acta } from "../types/acta";
+import { createActa, getActas } from "../actaService";
+import type { Acta } from "../actaService";
 
-import { getEquipment } from "../../equipment/services/equipmentService";
-import type { Equipment } from "../../equipment/types/equipment";
+import { getEquipment, type Equipment } from "../../equipment/equipmentService";
 
-import { getUsuarios } from "../../usuarios/services/usuarioService";
-import type { Usuario } from "../../usuarios/types/usuario";
+
+import { getUsuarios, type Usuario } from "../../usuarios/usuarioService";
+
 
 interface NewActaFormProps {
   onCreated: () => void;
@@ -60,7 +60,7 @@ export function NewActaForm({
         setUsuarios(usuariosData);
         setActasEntrega(
           actasData.filter(
-            (a) => a.tipoActa === "Entrega" && a.estado === "Firmada"
+            (a: Acta) => a.tipoActa === "Entrega" && a.estado === "Firmada"
           )
         );
       } catch (err) {
@@ -86,7 +86,7 @@ export function NewActaForm({
       return;
     }
 
-    const origen = actasEntrega.find((a) => a.id === selectedId);
+    const origen = actasEntrega.find((a: Acta) => a.id === selectedId);
     if (origen) {
       setEquipmentId(origen.equipmentId);
       if (origen.destinatarioUsuarioId) {
@@ -105,7 +105,7 @@ export function NewActaForm({
 
     if (actaType === "Devolución" && !actaOrigenId) {
       setError(
-        "Seleccione el acta de entrega de origen para registrar la devolución."
+        "Seleccione el acta de entrega de origen para registrar la Devolución."
       );
       return;
     }
@@ -184,21 +184,21 @@ export function NewActaForm({
           onClick={onCancel}
           disabled={saving}
         >
-          ← Volver a actas
+          â† Volver a actas
         </button>
       </div>
 
       <header className="new-acta-hero">
         <div>
           <span className="actas-kicker">
-            Gestión documental
+            GestiÃ³n documental
           </span>
 
           <h1>Nueva acta</h1>
 
           <p>
             Crea un nuevo documento de entrega
-            o devolución de equipo.
+            o Devolución de equipo.
           </p>
         </div>
 
@@ -207,7 +207,7 @@ export function NewActaForm({
 
           <div>
             <strong>
-              Información inicial
+              información inicial
             </strong>
 
             <small>
@@ -235,7 +235,7 @@ export function NewActaForm({
         onSubmit={handleSubmit}
       >
         <div className="new-acta-main">
-          {/* INFORMACIÓN DEL DOCUMENTO */}
+          {/* INFORMACIÃ“N DEL DOCUMENTO */}
 
           <section className="new-acta-card">
             <div className="new-acta-card-heading">
@@ -245,7 +245,7 @@ export function NewActaForm({
 
               <div>
                 <h2>
-                  Información del documento
+                  información del documento
                 </h2>
 
                 <p>
@@ -287,7 +287,7 @@ export function NewActaForm({
                 </small>
               </div>
 
-              {/* ACTA ORIGEN (SI ES DEVOLUCIÓN) */}
+              {/* ACTA ORIGEN (SI ES DEVOLUCIÃ“N) */}
 
               {actaType === "Devolución" && (
                 <div className="new-acta-field new-acta-field-wide">
@@ -308,15 +308,15 @@ export function NewActaForm({
                         ? "No hay actas de entrega firmadas disponibles"
                         : "Seleccione el acta de entrega previa"}
                     </option>
-                    {actasEntrega.map((a) => (
+                    {actasEntrega.map((a: Acta) => (
                       <option key={a.id} value={a.id}>
-                        {a.numeroActa} — {a.inventoryKey ?? a.equipmentId} ({a.nombreEquipo ?? "Equipo"})
+                        {a.numeroActa} â€” {a.inventoryKey ?? a.equipmentId} ({a.nombreEquipo ?? "Equipo"})
                       </option>
                     ))}
                   </select>
 
                   <small>
-                    El equipo y destinatario se asociarán automáticamente según el acta seleccionada.
+                    El equipo y destinatario se asociarÃ¡n automÃ¡ticamente segÃºn el acta seleccionada.
                   </small>
                 </div>
               )}
@@ -356,18 +356,18 @@ export function NewActaForm({
                       value={item.id}
                     >
                       {item.inventoryKey}
-                      {" — "}
+                      {" â€” "}
                       {item.nombreEquipo}
 
                       {item.marca
-                        ? ` — ${item.marca}`
+                        ? ` â€” ${item.marca}`
                         : ""}
                     </option>
                   ))}
                 </select>
 
                 <small>
-                  Selecciona el equipo que quedará
+                  Selecciona el equipo que quedarÃ¡
                   asociado al documento.
                 </small>
               </div>
@@ -385,7 +385,7 @@ export function NewActaForm({
                 </div>
 
                 <small>
-                  El documento podrá continuar su
+                  El documento podrÃ¡ continuar su
                   proceso posteriormente.
                 </small>
               </div>
@@ -431,14 +431,14 @@ export function NewActaForm({
                     >
                       {usuario.nombre}{" "}
                       {usuario.apellido}
-                      {" — "}
+                      {" â€” "}
                       {usuario.usuarioRed}
                     </option>
                   ))}
                 </select>
 
                 <small>
-                  Persona que recibirá o devolverá
+                  Persona que recibirÃ¡ o devolverÃ¡
                   el equipo.
                 </small>
               </div>
@@ -483,7 +483,7 @@ export function NewActaForm({
                     >
                       {usuario.nombre}{" "}
                       {usuario.apellido}
-                      {" — "}
+                      {" â€” "}
                       {usuario.usuarioRed}
                     </option>
                   ))}
@@ -511,7 +511,7 @@ export function NewActaForm({
                 </h2>
 
                 <p>
-                  Añade información adicional al
+                  AÃ±ade información adicional al
                   documento.
                 </p>
               </div>
@@ -519,7 +519,7 @@ export function NewActaForm({
 
             <div className="new-acta-field">
               <label htmlFor="acta-observacion">
-                Observación
+                ObservaciÃ³n
                 <span>Opcional</span>
               </label>
 
@@ -537,7 +537,7 @@ export function NewActaForm({
               />
 
               <small>
-                Esta información quedará almacenada
+                Esta información quedarÃ¡ almacenada
                 dentro del documento.
               </small>
             </div>
@@ -587,7 +587,7 @@ export function NewActaForm({
 
                 <strong>
                   {selectedEquipment?.marca ??
-                    "—"}
+                    "â€”"}
                 </strong>
               </div>
 
@@ -623,7 +623,7 @@ export function NewActaForm({
             </span>
 
             <p>
-              Al guardar se creará un borrador
+              Al guardar se crearÃ¡ un borrador
               asociado al equipo y usuarios
               seleccionados.
             </p>
@@ -655,10 +655,11 @@ export function NewActaForm({
           >
             {saving
               ? "Guardando..."
-              : "Guardar borrador →"}
+              : "Guardar borrador â†’"}
           </button>
         </div>
       </form>
     </section>
   );
 }
+

@@ -1,23 +1,22 @@
 import { useState } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 
-import { EquipmentPage } from "./features/equipment/pages/EquipmentPage";
-import { ActaPage } from "./features/actas/pages/ActaPage";
-import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
-import { ReportesPage } from "./features/reportes/pages/ReportesPage";
-import { MantenimientosPage } from "./features/mantenimientos/pages/MantenimientosPage";
-import { UsuariosPage } from "./features/usuarios/pages/UsuariosPage";
-import { RolesPage } from "./features/roles/pages/RolesPage";
-import { MensajeroPage } from "./features/mensajero/pages/MensajeroPage";
+import { EquipmentPage } from "./features/equipment/EquipmentPage";
+import { ActaPage } from "./features/actas/ActaPage";
+import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { ReportesPage } from "./features/reportes/ReportesPage";
+import { MantenimientosPage } from "./features/mantenimientos/MantenimientosPage";
+import { UsuariosPage } from "./features/usuarios/UsuariosPage";
+import { RolesPage } from "./features/roles/RolesPage";
+import { MensajeroPage } from "./features/mensajero/MensajeroPage";
 import { MensajeroActaDetail } from "./features/mensajero/components/MensajeroActaDetail";
 
-import ForgotPasswordPage from "./features/auth/pages/ForgotPasswordPage";
-import ResetPasswordPage from "./features/auth/pages/ResetPasswordPage";
-import LoginPage from "./features/auth/pages/LoginPage";
+import ForgotPasswordPage from "./features/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./features/auth/ResetPasswordPage";
+import LoginPage from "./features/auth/LoginPage";
 
-import { hasPermission, PERMISSIONS } from "./features/auth/utils/permissions";
-import { AuthProvider } from "./features/auth/context/AuthContext";
-import { useAuth } from "./features/auth/hooks/useAuth";
+import { hasPermission, PERMISSIONS } from "./features/auth/permissions";
+import { AuthProvider, useAuth } from "./features/auth/AuthContext";
 
 import { AppShell } from "./app/layout/AppShell";
 import { Sidebar } from "./app/layout/Sidebar";

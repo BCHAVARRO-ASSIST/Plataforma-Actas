@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Equipment, CreateEquipmentRequest, UpdateEquipmentRequest } from "../types/equipment";
+import type { Equipment, CreateEquipmentRequest, UpdateEquipmentRequest } from "../equipmentService";
 
 interface EquipmentFormModalProps {
   isOpen: boolean;

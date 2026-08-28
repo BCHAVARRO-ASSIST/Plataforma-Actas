@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import type { StatusCountItem } from "../types/dashboard";
+﻿import { useState, useMemo } from "react";
+import type { StatusCountItem } from "../dashboardService";
 
 interface ActasStatusChartProps {
   data: StatusCountItem[];
@@ -48,7 +48,7 @@ export function ActasStatusChart({ data }: ActasStatusChartProps) {
     <div className="dashboard-block" style={{ padding: "20px" }}>
       <div className="dashboard-block-top" style={{ marginBottom: "16px" }}>
         <div>
-          <span className="block-kicker">GESTIÓN DOCUMENTAL</span>
+          <span className="block-kicker">GESTIÃ“N DOCUMENTAL</span>
           <h3 style={{ margin: "4px 0 0", fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
             Estado de Actas Emitidas
           </h3>
@@ -155,3 +155,4 @@ export function ActasStatusChart({ data }: ActasStatusChartProps) {
     </div>
   );
 }
+

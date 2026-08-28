@@ -1,6 +1,6 @@
-import type {
+﻿import type {
   MensajeroActa,
-} from "../types/mensajero";
+} from "../mensajeroService";
 
 
 // =====================================================
@@ -174,7 +174,7 @@ export function MensajeroActaTable({
 
         <div className="mensajero-header-accion">
           <span className="mensajero-acta-info-label">
-            Acción
+            AcciÃ³n
           </span>
         </div>
 
@@ -341,7 +341,7 @@ export function MensajeroActaTable({
 
 
               {/* =========================================
-                  ACCIÓN
+                  ACCIÃ“N
               ========================================= */}
 
               <div className="mensajero-acta-action">
@@ -363,7 +363,7 @@ export function MensajeroActaTable({
                     className="mensajero-detail-arrow"
                     aria-hidden="true"
                   >
-                    →
+                    â†’
                   </span>
 
                 </button>

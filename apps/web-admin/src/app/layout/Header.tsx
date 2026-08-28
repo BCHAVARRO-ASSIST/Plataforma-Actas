@@ -1,4 +1,4 @@
-import type { AuthenticatedUser } from "../../features/auth/types/auth";
+import type { AuthenticatedUser } from "../../features/auth/authService";
 
 interface HeaderProps {
   user: AuthenticatedUser | null;
