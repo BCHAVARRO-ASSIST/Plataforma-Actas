@@ -50,6 +50,16 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
                     return Results.BadRequest(new { message = "Todos los campos obligatorios deben ser diligenciados." });
                 }
 
+                if (!System.Net.Mail.MailAddress.TryCreate(request.Correo.Trim(), out var parsedMail) || parsedMail.Address != request.Correo.Trim())
+                {
+                    return Results.BadRequest(new { message = "El formato del correo electrónico es inválido." });
+                }
+
+                if (request.Nombre.Length > 100 || request.Apellido.Length > 100 || request.UsuarioRed.Length > 50 || request.Correo.Length > 150)
+                {
+                    return Results.BadRequest(new { message = "Uno o más campos exceden la longitud máxima permitida." });
+                }
+
                 try
                 {
                     var usuario = await service.CreateAsync(request, cancellationToken);
@@ -76,6 +86,16 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
                     string.IsNullOrWhiteSpace(request.Proceso))
                 {
                     return Results.BadRequest(new { message = "Todos los campos obligatorios deben ser diligenciados." });
+                }
+
+                if (!System.Net.Mail.MailAddress.TryCreate(request.Correo.Trim(), out var parsedMail) || parsedMail.Address != request.Correo.Trim())
+                {
+                    return Results.BadRequest(new { message = "El formato del correo electrónico es inválido." });
+                }
+
+                if (request.Nombre.Length > 100 || request.Apellido.Length > 100 || request.UsuarioRed.Length > 50 || request.Correo.Length > 150)
+                {
+                    return Results.BadRequest(new { message = "Uno o más campos exceden la longitud máxima permitida." });
                 }
 
                 try

@@ -44,7 +44,8 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
                     Rol: login.Rol,
                     Permisos: login.Permisos
                 ));
-            });
+            })
+            .RequireRateLimiting("auth-limit");
 
             // 2. Usuario autenticado (me)
             group.MapGet("/me", async (
@@ -139,7 +140,8 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
                 {
                     message = "Si la cuenta existe, recibirás un enlace para restablecer tu contraseña."
                 });
-            });
+            })
+            .RequireRateLimiting("auth-limit");
 
             // 4. Restablecer contraseña
             group.MapPost("/reset-password", async (
@@ -152,9 +154,13 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
                     return Results.BadRequest(new { message = "El token y la nueva contraseña son obligatorios." });
                 }
 
-                if (request.NewPassword.Length < 8)
+                if (request.NewPassword.Length < 10 ||
+                    !request.NewPassword.Any(char.IsUpper) ||
+                    !request.NewPassword.Any(char.IsLower) ||
+                    !request.NewPassword.Any(char.IsDigit) ||
+                    !request.NewPassword.Any(c => !char.IsLetterOrDigit(c)))
                 {
-                    return Results.BadRequest(new { message = "La contraseña debe tener al menos 8 caracteres." });
+                    return Results.BadRequest(new { message = "La contraseña debe tener al menos 10 caracteres, incluir mayúsculas, minúsculas, números y un carácter especial." });
                 }
 
                 if (request.NewPassword != request.ConfirmPassword)
@@ -175,7 +181,8 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
                 }
 
                 return Results.Ok(new { message = "La contraseña fue restablecida correctamente." });
-            });
+            })
+            .RequireRateLimiting("auth-limit");
 
             return app;
         }

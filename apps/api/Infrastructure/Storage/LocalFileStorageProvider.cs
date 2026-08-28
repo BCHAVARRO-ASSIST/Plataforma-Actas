@@ -64,6 +64,11 @@ public sealed class LocalFileStorageProvider : IFileStorageProvider
 
     private string ResolveFullPath(string relativePath)
     {
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            throw new ArgumentException("La ruta relativa no puede ser nula o vacía.", nameof(relativePath));
+        }
+
         var normalized = relativePath.Replace('\\', '/').TrimStart('/');
         if (normalized.StartsWith("storage/documentos/", StringComparison.OrdinalIgnoreCase))
         {
@@ -74,7 +79,15 @@ public sealed class LocalFileStorageProvider : IFileStorageProvider
             normalized = normalized["Storage/Documentos/".Length..];
         }
 
-        return Path.Combine(_storageRoot, normalized);
+        var fullPath = Path.GetFullPath(Path.Combine(_storageRoot, normalized));
+        var rootCanonical = Path.GetFullPath(_storageRoot);
+
+        if (!fullPath.StartsWith(rootCanonical, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedAccessException("Acceso denegado: intento de escape de directorio de almacenamiento.");
+        }
+
+        return fullPath;
     }
 
     private static string SanitizeFileName(string fileName)

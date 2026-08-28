@@ -60,11 +60,13 @@ export default function ResetPasswordPage({
   // VALIDACIÓN
   // =====================================================
 
-  const passwordLength =
-    password.length;
-
-  const hasMinimumLength =
-    passwordLength >= 8;
+  const passwordLength = password.length;
+  const hasMinLength = passwordLength >= 10;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasDigit = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const isComplex = hasMinLength && hasUpper && hasLower && hasDigit && hasSpecial;
 
   const passwordsMatch =
     password.length > 0 &&
@@ -86,31 +88,23 @@ export default function ResetPasswordPage({
 
 
     if (!token) {
-
       setError(
         "El enlace de recuperación no contiene un token válido."
       );
-
       return;
     }
 
-
-    if (!hasMinimumLength) {
-
+    if (!isComplex) {
       setError(
-        "La contraseña debe tener al menos 8 caracteres."
+        "La contraseña debe tener al menos 10 caracteres, incluir mayúsculas, minúsculas, números y un carácter especial."
       );
-
       return;
     }
-
 
     if (!passwordsMatch) {
-
       setError(
         "Las contraseñas no coinciden."
       );
-
       return;
     }
 
@@ -272,7 +266,7 @@ export default function ResetPasswordPage({
           <div className="reset-form-header">
 
             <div className="reset-form-icon">
-              ðŸ”
+              🔑
             </div>
 
 
@@ -506,17 +500,17 @@ export default function ResetPasswordPage({
 
                 <span
                   className={
-                    hasMinimumLength
+                    hasMinLength
                       ? "requirement-check active"
                       : "requirement-check"
                   }
                 >
-                  {hasMinimumLength
+                  {hasMinLength
                     ? "✓"
                     : "•"}
                 </span>
 
-                Mínimo 8 caracteres
+                Mínimo 10 caracteres (Mayús., minús., número y símbolo)
 
               </div>
 

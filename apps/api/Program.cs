@@ -11,11 +11,30 @@ using PlataformaActas.Api.Modules.Reportes;
 using PlataformaActas.Api.Modules.Roles;
 using PlataformaActas.Api.Modules.Usuarios;
 
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks();
+
+// =========================================================
+// RATE LIMITING (BRUTE FORCE PROTECTION)
+// =========================================================
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("auth-limit", opt =>
+    {
+        opt.PermitLimit = 10;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit = 0;
+    });
+});
 
 
 // =========================================================
@@ -106,6 +125,8 @@ var app = builder.Build();
 app.UseExceptionHandler();
 
 app.UseCors("WebAdmin");
+
+app.UseRateLimiter();
 
 app.UseAuthentication();
 
