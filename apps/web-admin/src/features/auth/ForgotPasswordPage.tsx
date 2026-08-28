@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 
 import { forgotPassword } from "./authService";
-import "../../styles/10-forgot-password.css";
+import "../../styles/12-forgot-password.css";
 
 interface ForgotPasswordPageProps {
   onBackToLogin: () => void;

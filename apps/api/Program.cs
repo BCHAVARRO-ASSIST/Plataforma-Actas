@@ -7,7 +7,6 @@ using PlataformaActas.Api.Modules.Actas;
 using PlataformaActas.Api.Modules.Auth;
 using PlataformaActas.Api.Modules.Dashboard;
 using PlataformaActas.Api.Modules.Equipment;
-using PlataformaActas.Api.Modules.Health;
 using PlataformaActas.Api.Modules.Reportes;
 using PlataformaActas.Api.Modules.Roles;
 using PlataformaActas.Api.Modules.Usuarios;
@@ -16,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
+builder.Services.AddHealthChecks();
 
 
 // =========================================================
@@ -121,7 +121,7 @@ if (app.Environment.IsDevelopment())
 // ENDPOINTS
 // =========================================================
 
-app.MapHealthEndpoints();
+app.MapHealthChecks("/api/health");
 app.MapDashboardModule();
 app.MapReportesModule();
 app.MapEquipmentModule();
