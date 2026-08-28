@@ -34,7 +34,7 @@ services:
       Jwt__Key: ${JWT_KEY:-super-secret-key-32-chars-long-actas-2026-prod}
       Jwt__Issuer: ${JWT_ISSUER:-PlataformaActas.Api}
       Jwt__Audience: ${JWT_AUDIENCE:-PlataformaActas.Web}
-      Jwt__ExpiresMinutes: ${JWT_EXPIRES_MINUTES:-60}
+      Jwt__ExpiresMinutes: ${JWT_EXPIRES_MINUTES:-30}
       Cors__AllowedOrigins__0: ${CORS_ORIGIN:-http://localhost}
       Frontend__BaseUrl: ${FRONTEND_BASE_URL:-http://localhost}
     ports:
