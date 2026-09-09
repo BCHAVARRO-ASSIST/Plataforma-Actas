@@ -59,24 +59,6 @@ interface AuthenticatedUserResponse {
   permisos?: string[];
 }
 
-export interface ForgotPasswordRequest {
-  identifier: string;
-}
-
-export interface ForgotPasswordResponse {
-  message: string;
-}
-
-export interface ResetPasswordRequest {
-  token: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
-export interface ResetPasswordResponse {
-  message: string;
-}
-
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
@@ -141,39 +123,35 @@ export async function getAuthenticatedUser(token: string): Promise<Authenticated
   };
 }
 
-export async function forgotPassword(identifier: string): Promise<ForgotPasswordResponse> {
-  const response = await fetch(`${API_URL}/auth/forgot-password`, {
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
+}
+
+export async function changePassword(request: ChangePasswordRequest): Promise<ChangePasswordResponse> {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  const response = await fetch(`${API_URL}/auth/change-password`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({
-      identifier: identifier.trim(),
+      CurrentPassword: request.currentPassword,
+      NewPassword: request.newPassword,
+      ConfirmPassword: request.confirmPassword,
     }),
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(data?.message ?? "No fue posible solicitar la recuperación.");
-  }
-
-  return data;
-}
-
-export async function resetPassword(request: ResetPasswordRequest): Promise<ResetPasswordResponse> {
-  const response = await fetch(`${API_URL}/auth/reset-password`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data?.message ?? "No fue posible restablecer la contraseña.");
+    throw new Error(data?.message ?? "No fue posible actualizar la contraseña.");
   }
 
   return data;

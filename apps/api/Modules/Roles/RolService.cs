@@ -5,31 +5,25 @@ using PlataformaActas.Api.Modules.Roles.Models.Mappers;
 
 namespace PlataformaActas.Api.Modules.Roles.Services;
 
-public sealed class RolService : IRolService
+public sealed class RolService(IRolRepository repository) : IRolService
 {
-    private readonly IRolRepository _repository;
-
-    public RolService(IRolRepository repository)
-    {
-        _repository = repository;
-    }
 
     public async Task<IReadOnlyList<RolResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var roles = await _repository.GetAllAsync(cancellationToken);
+        var roles = await repository.GetAllAsync(cancellationToken);
         return roles.Select(r => r.ToResponse()).ToList();
     }
 
     public async Task<RolDetalleResponse?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var rol = await _repository.GetByIdAsync(id, cancellationToken);
+        var rol = await repository.GetByIdAsync(id, cancellationToken);
         return rol?.ToDetalleResponse();
     }
 
     public async Task<RolResponse> CreateAsync(CrearRolRequest request, CancellationToken cancellationToken = default)
     {
         var trimmedName = request.Nombre.Trim();
-        if (await _repository.ExistsByNameAsync(trimmedName, cancellationToken: cancellationToken))
+        if (await repository.ExistsByNameAsync(trimmedName, cancellationToken: cancellationToken))
         {
             throw new InvalidOperationException($"Ya existe un rol con el nombre '{trimmedName}'.");
         }
@@ -41,20 +35,20 @@ public sealed class RolService : IRolService
             Activo = true
         };
 
-        var created = await _repository.CreateAsync(rol, cancellationToken);
+        var created = await repository.CreateAsync(rol, cancellationToken);
         return created.ToResponse();
     }
 
     public async Task<RolResponse?> UpdateAsync(int id, ActualizarRolRequest request, CancellationToken cancellationToken = default)
     {
-        var rol = await _repository.GetByIdAsync(id, cancellationToken);
+        var rol = await repository.GetByIdAsync(id, cancellationToken);
         if (rol == null)
         {
             return null;
         }
 
         var trimmedName = request.Nombre.Trim();
-        if (await _repository.ExistsByNameAsync(trimmedName, id, cancellationToken))
+        if (await repository.ExistsByNameAsync(trimmedName, id, cancellationToken))
         {
             throw new InvalidOperationException($"Ya existe otro rol con el nombre '{trimmedName}'.");
         }
@@ -62,26 +56,31 @@ public sealed class RolService : IRolService
         rol.Nombre = trimmedName;
         rol.Descripcion = request.Descripcion?.Trim() ?? string.Empty;
 
-        var updated = await _repository.UpdateAsync(rol, cancellationToken);
+        var updated = await repository.UpdateAsync(rol, cancellationToken);
         return updated.ToResponse();
     }
 
     public async Task<bool> SetActiveAsync(int id, bool activo, CancellationToken cancellationToken = default)
     {
-        var rol = await _repository.GetByIdAsync(id, cancellationToken);
+        var rol = await repository.GetByIdAsync(id, cancellationToken);
         if (rol == null)
         {
             return false;
         }
 
+        if (rol.Nombre.Equals("Administrador", StringComparison.OrdinalIgnoreCase) && !activo)
+        {
+            throw new InvalidOperationException("El rol 'Administrador' no puede ser desactivado por ser el rol raíz del sistema.");
+        }
+
         rol.Activo = activo;
-        await _repository.UpdateAsync(rol, cancellationToken);
+        await repository.UpdateAsync(rol, cancellationToken);
         return true;
     }
 
     public async Task<EliminarRolResultado> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var rol = await _repository.GetByIdAsync(id, cancellationToken);
+        var rol = await repository.GetByIdAsync(id, cancellationToken);
         if (rol == null)
         {
             return EliminarRolResultado.NoEncontrado;
@@ -92,23 +91,54 @@ public sealed class RolService : IRolService
             return EliminarRolResultado.AdministradorProtegido;
         }
 
-        if (await _repository.HasAssignedUsersAsync(id, cancellationToken))
+        if (await repository.HasAssignedUsersAsync(id, cancellationToken))
         {
             return EliminarRolResultado.TieneUsuarios;
         }
 
-        var deleted = await _repository.DeleteAsync(id, cancellationToken);
+        var deleted = await repository.DeleteAsync(id, cancellationToken);
         return deleted ? EliminarRolResultado.Eliminado : EliminarRolResultado.NoEncontrado;
     }
 
     public async Task<IReadOnlyList<PermisoResponse>> GetPermisosAsync(CancellationToken cancellationToken = default)
     {
-        var permisos = await _repository.GetAllPermisosAsync(cancellationToken);
+        var permisos = await repository.GetAllPermisosAsync(cancellationToken);
         return permisos.Select(p => p.ToResponse()).ToList();
     }
 
     public async Task<bool> SetPermisosAsync(int id, IReadOnlyList<int> permisoIds, CancellationToken cancellationToken = default)
     {
-        return await _repository.SetPermisosAsync(id, permisoIds, cancellationToken);
+        var rol = await repository.GetByIdAsync(id, cancellationToken);
+        if (rol == null)
+        {
+            return false;
+        }
+
+        if (rol.Nombre.Equals("Administrador", StringComparison.OrdinalIgnoreCase))
+        {
+            if (permisoIds == null || permisoIds.Count == 0)
+            {
+                throw new InvalidOperationException("No es posible revocar todos los permisos del rol 'Administrador' para evitar el bloqueo del sistema.");
+            }
+
+            var allPermisos = await repository.GetAllPermisosAsync(cancellationToken);
+            var criticalNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "ROLES_CONSULTAR",
+                "ROLES_EDITAR",
+                "USUARIOS_CONSULTAR",
+                "DASHBOARD_CONSULTAR"
+            };
+
+            var criticalIds = allPermisos.Where(p => criticalNames.Contains(p.Nombre)).Select(p => p.Id).ToList();
+            var missingCritical = criticalIds.Where(cId => !permisoIds.Contains(cId)).ToList();
+
+            if (missingCritical.Count > 0)
+            {
+                throw new InvalidOperationException("El rol 'Administrador' debe conservar obligatoriamente los permisos esenciales de acceso y gestión (Dashboard, Roles y Usuarios).");
+            }
+        }
+
+        return await repository.SetPermisosAsync(id, permisoIds, cancellationToken);
     }
 }

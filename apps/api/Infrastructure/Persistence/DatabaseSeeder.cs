@@ -80,6 +80,34 @@ public static class DatabaseSeeder
                   );
                 """);
 
+            // 4.1 Asociar permisos a Gestor
+            await context.Database.ExecuteSqlRawAsync("""
+                INSERT INTO rol_permisos ("RolId", "PermisoId")
+                SELECT r."Id", p."Id"
+                FROM roles r
+                CROSS JOIN permisos p
+                WHERE r."Nombre" = 'Gestor'
+                  AND p."Nombre" IN ('DASHBOARD_CONSULTAR', 'EQUIPOS_CONSULTAR', 'EQUIPOS_REGISTRAR', 'EQUIPOS_EDITAR', 'ACTAS_CONSULTAR', 'ACTAS_REGISTRAR', 'ACTAS_EDITAR', 'ACTAS_FIRMAR', 'ACTAS_EXPORTAR', 'REPORTES_CONSULTAR', 'REPORTES_EXPORTAR')
+                  AND NOT EXISTS (
+                      SELECT 1 FROM rol_permisos rp 
+                      WHERE rp."RolId" = r."Id" AND rp."PermisoId" = p."Id"
+                  );
+                """);
+
+            // 4.2 Asociar permisos a Auditor
+            await context.Database.ExecuteSqlRawAsync("""
+                INSERT INTO rol_permisos ("RolId", "PermisoId")
+                SELECT r."Id", p."Id"
+                FROM roles r
+                CROSS JOIN permisos p
+                WHERE r."Nombre" = 'Auditor'
+                  AND p."Nombre" IN ('DASHBOARD_CONSULTAR', 'EQUIPOS_CONSULTAR', 'ACTAS_CONSULTAR', 'REPORTES_CONSULTAR', 'REPORTES_EXPORTAR', 'USUARIOS_CONSULTAR', 'ROLES_CONSULTAR')
+                  AND NOT EXISTS (
+                      SELECT 1 FROM rol_permisos rp 
+                      WHERE rp."RolId" = r."Id" AND rp."PermisoId" = p."Id"
+                  );
+                """);
+
             // 5. Asegurar usuarios iniciales con contraseña "Admin123*"
             var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123*");
 
@@ -87,7 +115,7 @@ public static class DatabaseSeeder
             {
                 new { Nombre = "Administrador", Apellido = "Sistema", UsuarioRed = "admin", Correo = "admin@plataformaactas.local", Proceso = "Tecnología", Rol = "Administrador" },
                 new { Nombre = "Carlos", Apellido = "Gómez", UsuarioRed = "gestor", Correo = "gestor@plataformaactas.local", Proceso = "Operaciones TI", Rol = "Gestor" },
-                new { Nombre = "Pedro", Apellido = "Ramírez", UsuarioRed = "mensajero", Correo = "mensajero@plataformaactas.local", Proceso = "Mensajería y Logística", Rol = "Mensajero" },
+                new { Nombre = "Andrés", Apellido = "Trujillo", UsuarioRed = "mensajero", Correo = "andres.trujillo@plataformaactas.local", Proceso = "Mesa de ayuda TI", Rol = "Mensajero" },
                 new { Nombre = "Juan", Apellido = "Pérez", UsuarioRed = "juan.perez", Correo = "juan.perez@plataformaactas.local", Proceso = "Desarrollo", Rol = "Gestor" },
                 new { Nombre = "María", Apellido = "Rodríguez", UsuarioRed = "maria.rodriguez", Correo = "maria.rodriguez@plataformaactas.local", Proceso = "Talento Humano", Rol = "Auditor" }
             };

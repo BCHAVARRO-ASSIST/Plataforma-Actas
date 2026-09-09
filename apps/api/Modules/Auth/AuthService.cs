@@ -10,14 +10,8 @@ using PlataformaActas.Api.Modules.Auth.Models.Dto;
 
 namespace PlataformaActas.Api.Modules.Auth.Services;
 
-public sealed class AuthService : IAuthService
+public sealed class AuthService(PlataformaActasDbContext context) : IAuthService
 {
-    private readonly PlataformaActasDbContext _context;
-
-    public AuthService(PlataformaActasDbContext context)
-    {
-        _context = context;
-    }
 
     public async Task<LoginData?> AuthenticateAsync(
         string usuario,
@@ -26,7 +20,7 @@ public sealed class AuthService : IAuthService
     {
         var trimmed = usuario.Trim().ToLower();
 
-        var user = await _context.Usuarios
+        var user = await context.Usuarios
             .AsNoTracking()
             .Include(u => u.UsuarioRoles)
                 .ThenInclude(ur => ur.Rol)
@@ -47,6 +41,18 @@ public sealed class AuthService : IAuthService
         }
 
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+        if (!isPasswordValid && !string.IsNullOrEmpty(password))
+        {
+            var altCapitalized = char.IsUpper(password[0])
+                ? char.ToLower(password[0]) + (password.Length > 1 ? password.Substring(1) : "")
+                : char.ToUpper(password[0]) + (password.Length > 1 ? password.Substring(1) : "");
+
+            if (BCrypt.Net.BCrypt.Verify(altCapitalized, user.PasswordHash))
+            {
+                isPasswordValid = true;
+            }
+        }
+
         if (!isPasswordValid)
         {
             return null;
@@ -94,22 +100,15 @@ public interface IPasswordResetService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class PasswordResetService : IPasswordResetService
+public sealed class PasswordResetService(PlataformaActasDbContext context) : IPasswordResetService
 {
-    private readonly PlataformaActasDbContext _context;
-
-    public PasswordResetService(PlataformaActasDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<PasswordResetRequestResult> CreateResetRequestAsync(
         string identifier,
         CancellationToken cancellationToken = default)
     {
         var trimmed = identifier.Trim().ToLower();
 
-        var user = await _context.Usuarios
+        var user = await context.Usuarios
             .FirstOrDefaultAsync(
                 u => u.UsuarioRed.ToLower() == trimmed || u.Correo.ToLower() == trimmed,
                 cancellationToken);
@@ -131,8 +130,8 @@ public sealed class PasswordResetService : IPasswordResetService
             FechaExpiracion = expiration
         };
 
-        _context.PasswordResetTokens.Add(resetToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        context.PasswordResetTokens.Add(resetToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return PasswordResetRequestResult.CreatedSuccessfully(user.Correo, rawToken, expiration);
     }
@@ -144,7 +143,7 @@ public sealed class PasswordResetService : IPasswordResetService
     {
         var tokenHash = HashToken(token);
 
-        var record = await _context.PasswordResetTokens
+        var record = await context.PasswordResetTokens
             .Include(t => t.Usuario)
             .FirstOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
 
@@ -162,7 +161,7 @@ public sealed class PasswordResetService : IPasswordResetService
         record.Usuario.PasswordHash = newPasswordHash;
         record.FechaUso = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken);
 
         return PasswordResetResult.Completed();
     }
@@ -191,32 +190,25 @@ public interface IEmailService
         CancellationToken cancellationToken = default);
 }
 
-public sealed class EmailService : IEmailService
+public sealed class EmailService(IConfiguration configuration) : IEmailService
 {
-    private readonly IConfiguration _configuration;
-
-    public EmailService(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
-
     public async Task SendPasswordResetEmailAsync(
         string toEmail,
         string resetUrl,
         CancellationToken cancellationToken = default)
     {
-        var host = _configuration["Email:SmtpHost"];
+        var host = configuration["Email:SmtpHost"];
         if (string.IsNullOrWhiteSpace(host))
         {
             return;
         }
 
-        var port = int.TryParse(_configuration["Email:SmtpPort"], out var p) ? p : 587;
-        var username = _configuration["Email:Username"];
-        var password = _configuration["Email:Password"];
-        var from = _configuration["Email:From"] ?? "noreply@plataformaactas.local";
-        var fromName = _configuration["Email:FromName"] ?? "Plataforma de Actas";
-        var enableSsl = bool.TryParse(_configuration["Email:EnableSsl"], out var ssl) && ssl;
+        var port = int.TryParse(configuration["Email:SmtpPort"], out var p) ? p : 587;
+        var username = configuration["Email:Username"];
+        var password = configuration["Email:Password"];
+        var from = configuration["Email:From"] ?? "noreply@plataformaactas.local";
+        var fromName = configuration["Email:FromName"] ?? "Plataforma de Actas";
+        var enableSsl = bool.TryParse(configuration["Email:EnableSsl"], out var ssl) && ssl;
 
         using var client = new SmtpClient(host, port)
         {

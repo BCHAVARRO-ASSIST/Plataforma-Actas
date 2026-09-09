@@ -14,11 +14,9 @@ export function AppShell({
   return (
     <div className="app-shell">
       {sidebar}
-
       <main className="app-main">
         {header}
-
-        <div className="app-content">
+        <div className="page-container">
           {children}
         </div>
       </main>

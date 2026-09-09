@@ -35,3 +35,4 @@ public class PlataformaActasDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PlataformaActasDbContext).Assembly);
     }
 }
+

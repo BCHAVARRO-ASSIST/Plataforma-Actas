@@ -148,3 +148,16 @@ export async function deleteUsuario(id: number): Promise<void> {
     throw new Error(await getErrorMessage(response, "No fue posible eliminar el usuario."));
   }
 }
+
+export async function resetUsuarioPassword(id: number, newPassword: string, confirmPassword: string): Promise<{ message: string }> {
+  const response = await fetch(`${API_URL}/usuarios/${id}/password`, {
+    method: "PUT",
+    headers: getAuthHeaders(true),
+    body: JSON.stringify({ newPassword, confirmPassword }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await getErrorMessage(response, "No fue posible restablecer la contraseña del usuario."));
+  }
+  return response.json();
+}

@@ -31,353 +31,411 @@ public sealed class DocumentoActaService : IDocumentoActaService
         _fileStorageProvider = fileStorageProvider;
     }
 
+    private sealed record AssistActaData(
+        string ObservacionEntrega,
+        string ObservacionDevolucion,
+        string DocumentoIdentidad,
+        string Ciudad,
+        string ProyectoProceso,
+        string SerialMonitor,
+        string SerialCargador,
+        string MarcaMonitor,
+        string DireccionMac,
+        string SistemaOperativo,
+        string ValorElementos,
+        HashSet<string> AccesoriosEntregados,
+        HashSet<string> AccesoriosDevueltos
+    );
+
     public byte[] GenerarPdfBytes(ActaDetailResponse acta)
     {
-        var (observaciones, accesorios) = ParseFormData(acta.FormDataJson);
+        var data = ParseAssistData(acta.FormDataJson, acta);
         var signatureImageBytes = ParseSignature(acta.SignatureDataJson);
 
         var isDevolucion = string.Equals(acta.TipoActa, "Devolución", StringComparison.OrdinalIgnoreCase) ||
                            string.Equals(acta.TipoActa, "Devolucion", StringComparison.OrdinalIgnoreCase);
 
-        var tituloActa = isDevolucion
-            ? "ACTA OFICIAL DE DEVOLUCIÓN Y RECEPCIÓN DE EQUIPO TECNOLÓGICO"
-            : "ACTA OFICIAL DE ENTREGA Y ASIGNACIÓN DE EQUIPO TECNOLÓGICO";
+        var fechaEmisionStr = acta.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy");
+        var fechaDevolucionStr = isDevolucion
+            ? (acta.FechaFinalizacion?.ToLocalTime().ToString("dd/MM/yyyy") ?? DateTime.Now.ToString("dd/MM/yyyy"))
+            : "—";
 
-        var fechaEmision = acta.FechaCreacion.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt");
-        var fechaFirmaStr = acta.FechaFirma.HasValue
-            ? acta.FechaFirma.Value.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt")
-            : "Pendiente de firma";
+        var nombreDestinatario = acta.DestinatarioNombre ?? acta.Equipo.AsignadoA ?? "Colaborador Asignado";
+        var documentoCc = !string.IsNullOrWhiteSpace(data.DocumentoIdentidad) ? data.DocumentoIdentidad : "—";
+        var ciudad = !string.IsNullOrWhiteSpace(data.Ciudad) ? data.Ciudad : (acta.Equipo.Empresa ?? "Bogotá D.C.");
+        var proyectoProceso = !string.IsNullOrWhiteSpace(data.ProyectoProceso)
+            ? data.ProyectoProceso
+            : (acta.DestinatarioCargo ?? acta.Equipo.Departamento ?? "Tecnología");
+
+        var marcaEquipo = !string.IsNullOrWhiteSpace(acta.Equipo.Marca) ? acta.Equipo.Marca : acta.Equipo.NombreEquipo;
+        var cpuSerial = !string.IsNullOrWhiteSpace(acta.Equipo.InventoryKey) ? acta.Equipo.InventoryKey : "—";
+
+        var assistBlue = Color.FromHex("#4B88BE");
+        var assistBlueLight = Color.FromHex("#EDF5FB");
+        var assistGreyBorder = Color.FromHex("#CBD5E1");
+
+        byte[]? assistLogoBytes = null;
+        var logoPath = Path.Combine(AppContext.BaseDirectory, "Resources", "assist-logo.png");
+        if (File.Exists(logoPath))
+        {
+            try
+            {
+                assistLogoBytes = File.ReadAllBytes(logoPath);
+            }
+            catch { /* fallback */ }
+        }
 
         var document = Document.Create(container =>
         {
             container.Page(page =>
             {
                 page.Size(PageSizes.Letter);
-                page.Margin(30);
-                page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial").FontColor(Colors.Grey.Darken3));
+                page.MarginHorizontal(32);
+                page.MarginVertical(24);
+                page.DefaultTextStyle(x => x.FontSize(8).FontFamily("Arial").FontColor(Colors.Grey.Darken4));
 
-                // ENCABEZADO INSTITUCIONAL
                 page.Header().Element(header =>
                 {
-                    header.Column(col =>
+                    header.PaddingBottom(10).Border(1).BorderColor(Colors.Black).Column(col =>
                     {
-                        col.Item().Row(row =>
+                        col.Item().Row(r =>
                         {
-                            row.RelativeItem(3).Column(c =>
+                            r.ConstantItem(170).BorderRight(1).BorderColor(Colors.Black).Padding(4).AlignCenter().AlignMiddle().Element(el =>
                             {
-                                c.Item().Text("PLATAFORMA DE GESTIÓN Y CONTROL DE ACTIVOS TECNOLÓGICOS")
-                                    .FontSize(11)
-                                    .Bold()
-                                    .FontColor(Colors.BlueGrey.Darken4);
-
-                                c.Item().Text("DEPARTAMENTO DE TECNOLOGÍA E INFRAESTRUCTURA (TI)")
-                                    .FontSize(8.5f)
-                                    .Bold()
-                                    .FontColor(Colors.Grey.Darken2);
-                            });
-
-                            row.RelativeItem(1.5f).AlignRight().Column(c =>
-                            {
-                                c.Item().Text("CÓDIGO: TI-FOR-ACTA-001").FontSize(7.5f).Bold();
-                                c.Item().Text("VERSIÓN: 3.2 · ISO 27001").FontSize(7.5f);
-                                c.Item().Text(x =>
+                                if (assistLogoBytes is { Length: > 0 })
                                 {
-                                    x.Span("PÁGINA: ").FontSize(7.5f);
-                                    x.CurrentPageNumber().FontSize(7.5f);
-                                    x.Span(" de ").FontSize(7.5f);
-                                    x.TotalPages().FontSize(7.5f);
-                                });
-                            });
-                        });
-
-                        col.Item().PaddingTop(6).PaddingBottom(8).LineHorizontal(1.5f).LineColor(Colors.BlueGrey.Darken4);
-                    });
-                });
-
-                // CONTENIDO PRINCIPAL
-                page.Content().Column(col =>
-                {
-                    // BLOQUE TÍTULO
-                    col.Item().Background(Colors.Grey.Lighten4)
-                        .Border(1)
-                        .BorderColor(Colors.Grey.Lighten2)
-                        .Padding(8)
-                        .Column(c =>
-                        {
-                            c.Item().AlignCenter().Text(tituloActa)
-                                .FontSize(11)
-                                .Bold()
-                                .FontColor(Colors.BlueGrey.Darken4);
-
-                            c.Item().AlignCenter().Row(r =>
-                            {
-                                r.AutoItem().Text("N° DE CONTROL: ").FontSize(8.5f).Bold();
-                                r.AutoItem().Text(acta.NumeroActa ?? "PENDIENTE").FontSize(8.5f).Bold().FontColor(Colors.Blue.Darken3);
-
-                                if (!string.IsNullOrWhiteSpace(acta.ActaOrigenNumero))
-                                {
-                                    r.AutoItem().PaddingLeft(12).Text($"(Acta de Entrega de Origen: {acta.ActaOrigenNumero})")
-                                        .FontSize(8.5f).Bold().FontColor(Colors.Grey.Darken2);
-                                }
-                            });
-                        });
-
-                    col.Item().PaddingTop(10);
-
-                    // SECCIÓN 1: INFORMACIÓN DE LA OPERACIÓN
-                    col.Item().Text("1. INFORMACIÓN DE LA OPERACIÓN Y PARTICIPANTES")
-                        .FontSize(9)
-                        .Bold()
-                        .FontColor(Colors.BlueGrey.Darken4);
-
-                    col.Item().PaddingTop(3).Table(table =>
-                    {
-                        table.ColumnsDefinition(columns =>
-                        {
-                            columns.ConstantColumn(130);
-                            columns.RelativeColumn();
-                            columns.ConstantColumn(130);
-                            columns.RelativeColumn();
-                        });
-
-                        // Fila 1
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Fecha de Emisión:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(fechaEmision).FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Estado del Acta:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Estado.ToUpperInvariant()).Bold().FontSize(8).FontColor(Colors.Blue.Darken2);
-
-                        // Fila 2
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Receptor / Consultor:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.DestinatarioNombre ?? acta.Equipo.AsignadoA ?? "Consultor Asignado").Bold().FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Correo / Cargo:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text($"{acta.DestinatarioCorreo ?? "—"} ({acta.DestinatarioCargo ?? acta.Equipo.Departamento ?? "Tecnología"})").FontSize(8);
-
-                        // Fila 3
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Responsable Entrega / Mensajero:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.MensajeroNombre ?? "Personal de Logística TI").FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Empresa / Sede:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.Empresa ?? "Sede Principal").FontSize(8);
-                    });
-
-                    col.Item().PaddingTop(10);
-
-                    // SECCIÓN 2: ESPECIFICACIONES TÉCNICAS DEL HARDWARE
-                    col.Item().Text("2. ESPECIFICACIONES TÉCNICAS DEL HARDWARE Y ACCESORIOS")
-                        .FontSize(9)
-                        .Bold()
-                        .FontColor(Colors.BlueGrey.Darken4);
-
-                    col.Item().PaddingTop(3).Table(table =>
-                    {
-                        table.ColumnsDefinition(columns =>
-                        {
-                            columns.ConstantColumn(130);
-                            columns.RelativeColumn();
-                            columns.ConstantColumn(130);
-                            columns.RelativeColumn();
-                        });
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Código Inventario / Serie:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.InventoryKey).Bold().FontSize(8).FontColor(Colors.Blue.Darken3);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Nombre / Modelo:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.NombreEquipo).Bold().FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Marca:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.Marca ?? "—").FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Procesador:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.Procesador ?? "—").FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Memoria RAM:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.MemoriaRam ?? "—").FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Almacenamiento:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.DiscoDuro ?? "—").FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Departamento:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.Departamento ?? "Tecnología").FontSize(8);
-
-                        table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text("Estado Operativo:").Bold().FontSize(8);
-                        table.Cell().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                            .Text(acta.Equipo.EstatusEquipo ?? "Activo").Bold().FontSize(8).FontColor(Colors.Green.Darken3);
-
-                        if (accesorios.Count > 0)
-                        {
-                            table.Cell().Background(Colors.Grey.Lighten4).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                                .Text("Accesorios Entregados:").Bold().FontSize(8);
-                            table.Cell().ColumnSpan(3).Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(4)
-                                .Text(string.Join(" · ", accesorios)).FontSize(8);
-                        }
-                    });
-
-                    col.Item().PaddingTop(10);
-
-                    // SECCIÓN 3: OBSERVACIONES
-                    col.Item().Text("3. OBSERVACIONES DE ENTREGA / CONDICIÓN FÍSICA")
-                        .FontSize(9)
-                        .Bold()
-                        .FontColor(Colors.BlueGrey.Darken4);
-
-                    col.Item().PaddingTop(3)
-                        .Background(Colors.Grey.Lighten4)
-                        .Border(0.5f)
-                        .BorderColor(Colors.Grey.Lighten2)
-                        .Padding(6)
-                        .Text(observaciones)
-                        .FontSize(8);
-
-                    col.Item().PaddingTop(10);
-
-                    // SECCIÓN 4: TÉRMINOS Y COMPROMISOS
-                    col.Item().Text("4. TÉRMINOS, CONDICIONES Y COMPROMISO DE DEVOLUCIÓN")
-                        .FontSize(9)
-                        .Bold()
-                        .FontColor(Colors.BlueGrey.Darken4);
-
-                    col.Item().PaddingTop(3)
-                        .Border(0.5f)
-                        .BorderColor(Colors.Grey.Lighten2)
-                        .Padding(6)
-                        .Column(c =>
-                        {
-                            c.Item().Text("A. CUSTODIA Y BUEN USO: El colaborador / consultor declara haber recibido el equipo anteriormente descrito en perfecto estado técnico y funcional, asumiendo su custodia, cuidado y utilización estricta conforme a las políticas de seguridad de la información corporativas.")
-                                .FontSize(7.5f);
-
-                            c.Item().PaddingTop(3).Text("B. COMPROMISO FORMAL DE DEVOLUCIÓN: De esta misma acta se derivará el proceso de devolución. El colaborador se compromete expresamente a restituir el mismo activo tecnológico y sus accesorios a la organización cuando finalice su relación contractual, cuando se realice un cambio o cuando el área de TI lo requiera.")
-                                .FontSize(7.5f);
-
-                            c.Item().PaddingTop(3).Text("C. VALIDEZ JURÍDICA Y DIGITAL: La firma manuscrita digitalizada estampada en este documento y su hash SHA-256 constituyen plena prueba de recepción y aceptación de los términos establecidos.")
-                                .FontSize(7.5f);
-                        });
-
-                    col.Item().PaddingTop(10);
-
-                    // SECCIÓN 5: FIRMAS Y CERTIFICACIÓN
-                    col.Item().Text("5. FIRMA DE CONFORMIDAD Y REGISTRO DIGITAL")
-                        .FontSize(9)
-                        .Bold()
-                        .FontColor(Colors.BlueGrey.Darken4);
-
-                    col.Item().PaddingTop(4).Row(row =>
-                    {
-                        // FIRMA CONSULTOR / RECEPTOR
-                        row.RelativeItem().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(6).Column(c =>
-                        {
-                            c.Item().AlignCenter().Text("FIRMA DEL RECEPTOR / CONSULTOR")
-                                .FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-
-                            c.Item().Height(55).AlignCenter().AlignMiddle().Element(el =>
-                            {
-                                if (signatureImageBytes is { Length: > 0 })
-                                {
-                                    el.Image(signatureImageBytes).FitArea();
+                                    el.MaxHeight(34).Image(assistLogoBytes).FitArea();
                                 }
                                 else
                                 {
-                                    el.Text("Firma pendiente por recolectar")
-                                        .FontSize(8).Italic().FontColor(Colors.Grey.Medium);
+                                    el.Row(logoRow =>
+                                    {
+                                        logoRow.AutoItem().Width(24).Height(24).Background(Colors.Red.Medium)
+                                            .AlignCenter().AlignMiddle().Text("A").Bold().FontColor(Colors.White).FontSize(13);
+
+                                        logoRow.AutoItem().PaddingLeft(6).AlignMiddle().Text("ASSIST")
+                                            .FontSize(15).Bold().FontColor(Colors.BlueGrey.Darken4);
+                                    });
                                 }
                             });
 
-                            c.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                            c.Item().PaddingTop(3).AlignCenter().Text(acta.DestinatarioNombre ?? acta.Equipo.AsignadoA ?? "Consultor / Usuario")
-                                .FontSize(8).Bold();
-                            c.Item().AlignCenter().Text($"Fecha y Hora de Firma: {fechaFirmaStr}")
-                                .FontSize(7.5f).FontColor(Colors.Grey.Darken2);
+                            r.RelativeItem().Padding(6).AlignCenter().AlignMiddle().Text("ACTA DE ENTREGA Y DEVOLUCIÓN")
+                                .FontSize(11).Bold().FontColor(Colors.Black);
                         });
 
-                        row.ConstantItem(12);
-
-                        // FIRMA / SELLO RESPONSABLE TI
-                        row.RelativeItem().Border(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(6).Column(c =>
+                        col.Item().BorderTop(1).BorderColor(Colors.Black).Row(subRow =>
                         {
-                            c.Item().AlignCenter().Text("RESPONSABLE DE ENTREGA / LOGÍSTICA TI")
-                                .FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                            subRow.RelativeItem().BorderRight(1).BorderColor(Colors.Black).Padding(3).AlignCenter()
+                                .Text("Código: P8-FR-003").FontSize(7.5f).Bold();
 
-                            c.Item().Height(55).AlignCenter().AlignMiddle().Column(sc =>
+                            subRow.RelativeItem().BorderRight(1).BorderColor(Colors.Black).Padding(3).AlignCenter()
+                                .Text("Versión: 2").FontSize(7.5f);
+
+                            subRow.RelativeItem(1.4f).BorderRight(1).BorderColor(Colors.Black).Padding(3).AlignCenter()
+                                .Text("Fecha de actualización: 04/09/2024").FontSize(7.5f);
+
+                            subRow.RelativeItem().Padding(3).AlignCenter().Text(t =>
                             {
-                                sc.Item().AlignCenter().Text("🛡️").FontSize(14);
-                                sc.Item().AlignCenter().Text("DOCUMENTO AUTORIZADO Y VALIDADO")
-                                    .FontSize(7.5f).Bold().FontColor(Colors.Green.Darken3);
+                                t.Span("Página ").FontSize(7.5f);
+                                t.CurrentPageNumber().FontSize(7.5f);
+                                t.Span(" de ").FontSize(7.5f);
+                                t.TotalPages().FontSize(7.5f);
+                            });
+                        });
+                    });
+                });
+
+                page.Content().Column(col =>
+                {
+                    col.Item().PaddingBottom(8).Text(txt =>
+                    {
+                        txt.Span("El área de soporte de Assist Consultores de Sistemas S.A.: ");
+                        txt.Span("Entrega ").Bold();
+                        txt.Span(isDevolucion ? "[   ]  " : "[ X ]  ").Bold().FontColor(isDevolucion ? Colors.Grey.Darken1 : Colors.Blue.Darken3);
+                        txt.Span("Recibe ").Bold();
+                        txt.Span(isDevolucion ? "[ X ]  " : "[   ]  ").Bold().FontColor(isDevolucion ? Colors.Blue.Darken3 : Colors.Grey.Darken1);
+                        txt.Span("el equipo de cómputo y/o accesorios con los siguientes datos anexos:");
+                    });
+
+                    col.Item().Row(mainGrid =>
+                    {
+                        mainGrid.RelativeItem(1.05f).PaddingRight(6).Table(hwTable =>
+                        {
+                            hwTable.ColumnsDefinition(cd =>
+                            {
+                                cd.ConstantColumn(95);
+                                cd.RelativeColumn();
                             });
 
-                            c.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                            c.Item().PaddingTop(3).AlignCenter().Text(acta.MensajeroNombre ?? "Operador de Logística TI")
-                                .FontSize(8).Bold();
-                            c.Item().AlignCenter().Text($"Emisión: {fechaEmision}")
-                                .FontSize(7.5f).FontColor(Colors.Grey.Darken2);
+                            hwTable.Cell().ColumnSpan(2).Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(4)
+                                .AlignCenter().Text("ESPECIFICACIONES DEL HARDWARE").Bold().FontColor(Colors.White).FontSize(7.5f);
+
+                            void RenderHwRow(string label, string? value, bool isEven)
+                            {
+                                var bg = isEven ? assistBlueLight : Colors.White;
+                                hwTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                    .Text(label).Bold().FontSize(7.5f);
+                                hwTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                    .Text(value ?? "—").FontSize(7.5f);
+                            }
+
+                            RenderHwRow("CPU Serial:", cpuSerial, false);
+                            RenderHwRow("Monitor Serial:", data.SerialMonitor, true);
+                            RenderHwRow("Cargador Serial:", data.SerialCargador, false);
+                            RenderHwRow("Marca equipo:", marcaEquipo, true);
+                            RenderHwRow("Marca monitor:", data.MarcaMonitor, false);
+                            RenderHwRow("MAC:", data.DireccionMac, true);
+                            RenderHwRow("Sistema Operativo:", data.SistemaOperativo, false);
+                            RenderHwRow("Procesador:", acta.Equipo.Procesador, true);
+                            RenderHwRow("Memoria Ram:", acta.Equipo.MemoriaRam, false);
+                            RenderHwRow("Disco Duro:", acta.Equipo.DiscoDuro, true);
+                            RenderHwRow("Proveedor:", acta.Equipo.Proveedor ?? "Assist Consultores", false);
+                        });
+
+                        mainGrid.RelativeItem(1.1f).PaddingLeft(6).Column(rightCol =>
+                        {
+                            rightCol.Item().Table(userTable =>
+                            {
+                                userTable.ColumnsDefinition(cd =>
+                                {
+                                    cd.ConstantColumn(110);
+                                    cd.RelativeColumn();
+                                });
+
+                                userTable.Cell().ColumnSpan(2).Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(4)
+                                    .AlignCenter().Text("INFORMACIÓN USUARIO (Quien recibe / devuelve el equipo)").Bold().FontColor(Colors.White).FontSize(7.5f);
+
+                                void RenderUserRow(string label, string value, bool isEven)
+                                {
+                                    var bg = isEven ? assistBlueLight : Colors.White;
+                                    userTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                        .Text(label).Bold().FontSize(7.5f);
+                                    userTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                        .Text(value).FontSize(7.5f);
+                                }
+
+                                RenderUserRow("Nombre del Usuario:", nombreDestinatario, false);
+                                RenderUserRow("Identificación (C.C):", documentoCc, true);
+                                RenderUserRow("Fecha de entrega:", fechaEmisionStr, false);
+                                RenderUserRow("Fecha devolución:", fechaDevolucionStr, true);
+                                RenderUserRow("Proyecto y/o Proceso:", proyectoProceso, false);
+                                RenderUserRow("Ciudad:", ciudad, true);
+                            });
+
+                            rightCol.Item().PaddingTop(6).Table(accTable =>
+                            {
+                                accTable.ColumnsDefinition(cd =>
+                                {
+                                    cd.RelativeColumn(1.8f);
+                                    cd.RelativeColumn(1f);
+                                    cd.RelativeColumn(1f);
+                                });
+
+                                accTable.Cell().Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                    .Text("ACCESORIOS").Bold().FontColor(Colors.White).FontSize(7.5f);
+
+                                accTable.Cell().Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                    .AlignCenter().Text("Entregado").Bold().FontColor(Colors.White).FontSize(7.5f);
+
+                                accTable.Cell().Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                    .AlignCenter().Text("Devuelto").Bold().FontColor(Colors.White).FontSize(7.5f);
+
+                                var items = new[] { "Mouse", "Teclado", "Base", "Monitor", "Guaya", "Maletín", "Disco duro externo" };
+                                for (int i = 0; i < items.Length; i++)
+                                {
+                                    var item = items[i];
+                                    var bg = (i % 2 == 1) ? assistBlueLight : Colors.White;
+                                    var isEntregado = data.AccesoriosEntregados.Contains(item) || (!isDevolucion && data.AccesoriosEntregados.Count == 0 && (item == "Cargador" || item == "Maletín"));
+                                    var isDevuelto = data.AccesoriosDevueltos.Contains(item) || (isDevolucion && isEntregado);
+
+                                    accTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f)
+                                        .Text(item).FontSize(7.5f);
+
+                                    accTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f)
+                                        .AlignCenter().Text(isEntregado ? "[ X ]" : "[   ]").FontSize(7.5f).Bold();
+
+                                    accTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f)
+                                        .AlignCenter().Text(isDevuelto ? "[ X ]" : "[   ]").FontSize(7.5f).Bold();
+                                }
+                            });
                         });
                     });
 
-                    // SECCIÓN 6: DILIGENCIAMIENTO AL MOMENTO DE DEVOLUCIÓN (SOLO PARA ENTREGA)
-                    if (!isDevolucion)
-                    {
-                        col.Item().PaddingTop(8)
-                            .Border(0.5f)
-                            .BorderColor(Colors.Grey.Medium)
-                            .Padding(6)
-                            .Column(c =>
-                            {
-                                c.Item().Text("6. DILIGENCIAMIENTO AL MOMENTO DE LA DEVOLUCIÓN FÍSICA FUTURA")
-                                    .FontSize(7.5f).Bold().FontColor(Colors.Grey.Darken3);
+                    col.Item().PaddingTop(10);
 
-                                c.Item().PaddingTop(3).Row(r =>
-                                {
-                                    r.RelativeItem().Text("Fecha Devolución: ____________________").FontSize(7.5f);
-                                    r.RelativeItem().Text("Estado: [ ] Óptimo  [ ] Avería").FontSize(7.5f);
-                                    r.RelativeItem().Text("Recibido por (Firma TI): ____________________").FontSize(7.5f);
-                                });
-                            });
-                    }
-                });
-
-                // PIE DE PÁGINA CON HASH SHA-256
-                page.Footer().Column(col =>
-                {
-                    col.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
-                    col.Item().PaddingTop(4).Row(row =>
+                    col.Item().Row(secRow =>
                     {
-                        row.RelativeItem(3).Column(c =>
+                        secRow.RelativeItem(1.05f).PaddingRight(6).Column(swCol =>
                         {
-                            c.Item().Text("INTEGRIDAD CRIPTOGRÁFICA (SHA-256):").FontSize(7).Bold();
-                            c.Item().Text(acta.HashSha256 ?? "Documento en borrador previo a firma digital").FontSize(6.5f).FontColor(Colors.Grey.Darken2);
+                            swCol.Item().Text("Listado de programas instalados, si necesita agregar un programa favor comunicar al área de soporte para su proceso, si el usuario instala programa(s) sin la debida autorización del área encargada, es responsabilidad del usuario del equipo ante una eventual auditoria. Ley 603 del 2000, Derecho de Propiedad Intelectual.")
+                                .FontSize(6.5f).Italic().FontColor(Colors.Grey.Darken3);
+
+                            swCol.Item().PaddingTop(4).Table(swTable =>
+                            {
+                                swTable.ColumnsDefinition(cd =>
+                                {
+                                    cd.RelativeColumn(1.8f);
+                                    cd.RelativeColumn(1f);
+                                    cd.RelativeColumn(1f);
+                                });
+
+                                swTable.Cell().Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                    .Text("LISTADO PROGRAMAS").Bold().FontColor(Colors.White).FontSize(7.5f);
+                                swTable.Cell().Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                    .AlignCenter().Text("INSTALADO").Bold().FontColor(Colors.White).FontSize(7.5f);
+                                swTable.Cell().Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(3)
+                                    .AlignCenter().Text("VERSION").Bold().FontColor(Colors.White).FontSize(7.5f);
+
+                                var softwares = new (string Name, bool Installed, string Version)[]
+                                {
+                                    ("IIB 10 / Broker 9/8/7", false, ""),
+                                    ("Adobe Reader", true, "DC"),
+                                    ("Soap UI", false, ""),
+                                    ("Microsoft Office", true, "365"),
+                                    ("Tortoise SVN", false, ""),
+                                    ("Microsoft Project", false, ""),
+                                    ("Microsoft Visio", false, ""),
+                                    ("VmWare", false, ""),
+                                    ("7zip", true, "24.0"),
+                                    ("SQL Server", false, ""),
+                                    ("Avast Antivirus", true, "Corporate"),
+                                    ("Otro Software:", false, "")
+                                };
+
+                                for (int i = 0; i < softwares.Length; i++)
+                                {
+                                    var s = softwares[i];
+                                    var bg = (i % 2 == 1) ? assistBlueLight : Colors.White;
+                                    swTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f)
+                                        .Text(s.Name).FontSize(7.5f);
+                                    swTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f)
+                                        .AlignCenter().Text(s.Installed ? "[ X ]" : "[   ]").FontSize(7.5f).Bold();
+                                    swTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f)
+                                        .AlignCenter().Text(s.Version).FontSize(7.5f);
+                                }
+                            });
                         });
 
-                        row.RelativeItem(1.5f).AlignRight().Column(c =>
+                        secRow.RelativeItem(1.1f).PaddingLeft(6).Column(obsCol =>
                         {
-                            c.Item().Text("Certificado Digitalmente").FontSize(7).Bold().FontColor(Colors.Green.Darken3);
-                            c.Item().Text(DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC")).FontSize(6.5f).FontColor(Colors.Grey.Darken1);
+                            obsCol.Item().Text("Observaciones del estado de entrega / devolución del equipo:")
+                                .FontSize(7.5f).Bold();
+
+                            obsCol.Item().PaddingTop(2).Table(obsTable =>
+                            {
+                                obsTable.ColumnsDefinition(cd =>
+                                {
+                                    cd.RelativeColumn();
+                                    cd.RelativeColumn();
+                                });
+
+                                obsTable.Cell().Border(0.5f).BorderColor(assistGreyBorder).Background(assistBlueLight).Padding(2.5f)
+                                    .Text("Entrega:").Bold().FontSize(7.5f);
+                                obsTable.Cell().Border(0.5f).BorderColor(assistGreyBorder).Background(assistBlueLight).Padding(2.5f)
+                                    .Text("Devolución:").Bold().FontSize(7.5f);
+
+                                obsTable.Cell().Border(0.5f).BorderColor(assistGreyBorder).Padding(4).MinHeight(32)
+                                    .Text(data.ObservacionEntrega).FontSize(7);
+                                obsTable.Cell().Border(0.5f).BorderColor(assistGreyBorder).Padding(4).MinHeight(32)
+                                    .Text(data.ObservacionDevolucion).FontSize(7);
+                            });
+
+                            obsCol.Item().PaddingTop(6).Text("AUTORIZACIÓN DE DESCUENTO POR NÓMINA O LIQUIDACIÓN EN CASO DE NO DEVOLUCIÓN, PÉRDIDA O DAÑO DE ELEMENTOS ENTREGADOS.")
+                                .FontSize(7.5f).Bold().FontColor(Colors.Black);
+
+                            obsCol.Item().PaddingTop(2).Text(t =>
+                            {
+                                t.Span($"Yo, {nombreDestinatario} identificado(a) con cédula de ciudadanía No. {documentoCc}, por medio de la presente declaro que he recibido en condiciones óptimas y funcionales los elementos relacionados con anterioridad.\n\n").FontSize(6.8f);
+                                t.Span("Reconozco que estos elementos son propiedad de ").FontSize(6.8f);
+                                t.Span("ASSIST CONSULTORES DE SISTEMAS S.A ").Bold().FontSize(6.8f);
+                                t.Span("y que han sido entregados para el desarrollo de mis funciones laborales. Me comprometo a mantener en buen estado y hacer uso adecuado de dichos elementos.\n\n").FontSize(6.8f);
+                                t.Span("En caso de la no devolución, pérdida, hurto fuera de las instalaciones del cliente, oficina u hogar de los elementos entregados, daño o deterioro que no sea atribuible al desgaste normal por el uso, autorizo expresamente a ").FontSize(6.8f);
+                                t.Span("ASSIST CONSULTORES DE SISTEMAS S.A ").Bold().FontSize(6.8f);
+                                t.Span("para que, después de realizar una investigación interna que determine mi responsabilidad, se proceda a realizar el descuento correspondiente del valor de los elementos de mi salario, prestaciones sociales, liquidación final de prestaciones, o cualquier otro pago que me deba la empresa.").FontSize(6.8f);
+                            });
+
+                            obsCol.Item().PaddingTop(3).Border(0.5f).BorderColor(Colors.Black).Padding(3).Row(vRow =>
+                            {
+                                vRow.AutoItem().Text("Valor de los Elementos: ").Bold().FontSize(7.5f);
+                                vRow.RelativeItem().Text(data.ValorElementos).FontSize(7.5f);
+                            });
+
+                            obsCol.Item().PaddingTop(3).Text("Esta autorización se hace en cumplimiento de las normas laborales vigentes y es válida durante el tiempo que dure mi relación laboral con ASSIST CONSULTORES DE SISTEMAS S.A. He sido informado y entiendo completamente las condiciones establecidas en esta cláusula.")
+                                .FontSize(6.5f).Italic();
+                        });
+                    });
+
+                    col.Item().PaddingTop(8);
+
+                    col.Item().Row(signGrid =>
+                    {
+                        signGrid.RelativeItem().PaddingRight(8).Column(entCol =>
+                        {
+                            entCol.Item().Text("Firmas de Entrega:").Bold().FontSize(7.5f);
+
+                            entCol.Item().PaddingTop(3).Row(er =>
+                            {
+                                er.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(4).Column(sc =>
+                                {
+                                    sc.Item().Text("Entrega:").Bold().FontSize(7);
+                                    sc.Item().Height(36).AlignMiddle().AlignCenter()
+                                        .Text("Andrés Trujillo").FontFamily("Courier").FontSize(10).Bold().FontColor(Colors.Blue.Darken3);
+                                    sc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                    sc.Item().PaddingTop(2).Text("Nombre: Andrés Trujillo").FontSize(6.8f);
+                                    sc.Item().Text("Cargo: Mesa de ayuda").FontSize(6.8f);
+                                });
+
+                                er.ConstantItem(6);
+
+                                er.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(4).Column(rc =>
+                                {
+                                    rc.Item().Text("Recibe:").Bold().FontSize(7);
+                                    rc.Item().Height(36).AlignMiddle().AlignCenter().Element(el =>
+                                    {
+                                        if (signatureImageBytes is { Length: > 0 })
+                                        {
+                                            el.Image(signatureImageBytes).FitArea();
+                                        }
+                                        else
+                                        {
+                                            el.Text("Pendiente de firma").FontSize(7).Italic().FontColor(Colors.Grey.Medium);
+                                        }
+                                    });
+                                    rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                    rc.Item().PaddingTop(2).Text($"Nombre: {nombreDestinatario}").Bold().FontSize(6.8f);
+                                    rc.Item().Text($"Cargo: {proyectoProceso}").FontSize(6.8f);
+                                });
+                            });
+                        });
+
+                        signGrid.RelativeItem().PaddingLeft(8).Column(devCol =>
+                        {
+                            devCol.Item().Text("Firmas de Devolución:").Bold().FontSize(7.5f);
+                            devCol.Item().Text("El equipo de soporte de la organización recibe a conformidad el equipo devuelto:  Si [   ]   No [   ]")
+                                .FontSize(6.8f);
+
+                            devCol.Item().PaddingTop(3).Row(dr =>
+                            {
+                                dr.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(4).Column(sc =>
+                                {
+                                    sc.Item().Text("Entrega:").Bold().FontSize(7);
+                                    sc.Item().Height(36);
+                                    sc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                    sc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.8f);
+                                    sc.Item().Text("Cargo: _________________").FontSize(6.8f);
+                                });
+
+                                dr.ConstantItem(6);
+
+                                dr.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(4).Column(rc =>
+                                {
+                                    rc.Item().Text("Recibe:").Bold().FontSize(7);
+                                    rc.Item().Height(36);
+                                    rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                    rc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.8f);
+                                    rc.Item().Text("Cargo: _________________").FontSize(6.8f);
+                                });
+                            });
                         });
                     });
                 });
@@ -385,6 +443,125 @@ public sealed class DocumentoActaService : IDocumentoActaService
         });
 
         return document.GeneratePdf();
+    }
+
+    private static AssistActaData ParseAssistData(string? formDataJson, ActaDetailResponse acta)
+    {
+        var obsEntrega = "Pendiente inspección física en laboratorio.";
+        var obsDevolucion = "—";
+        var docCc = "—";
+        var ciudad = "Bogotá D.C.";
+        var proyecto = acta.DestinatarioCargo ?? acta.Equipo.Departamento ?? "Tecnología";
+        var serialMonitor = "—";
+        var serialCargador = "—";
+        var marcaMonitor = "—";
+        var mac = "—";
+        var so = "Windows 11 Pro";
+        var valor = "$ 3.500.000 COP (Valor estimado en inventario)";
+        var accEntregados = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var accDevueltos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(formDataJson))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(formDataJson);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("observacion", out var o1) && o1.ValueKind == JsonValueKind.String)
+                {
+                    obsEntrega = o1.GetString() ?? obsEntrega;
+                }
+                else if (root.TryGetProperty("observaciones", out var o2) && o2.ValueKind == JsonValueKind.String)
+                {
+                    obsEntrega = o2.GetString() ?? obsEntrega;
+                }
+
+                if (root.TryGetProperty("observacionDevolucion", out var od) && od.ValueKind == JsonValueKind.String)
+                {
+                    obsDevolucion = od.GetString() ?? obsDevolucion;
+                }
+
+                if (root.TryGetProperty("cedula", out var c1) && c1.ValueKind == JsonValueKind.String)
+                {
+                    docCc = c1.GetString() ?? docCc;
+                }
+                else if (root.TryGetProperty("documento", out var c2) && c2.ValueKind == JsonValueKind.String)
+                {
+                    docCc = c2.GetString() ?? docCc;
+                }
+
+                if (root.TryGetProperty("ciudad", out var ci) && ci.ValueKind == JsonValueKind.String)
+                {
+                    ciudad = ci.GetString() ?? ciudad;
+                }
+
+                if (root.TryGetProperty("proyecto", out var pr) && pr.ValueKind == JsonValueKind.String)
+                {
+                    proyecto = pr.GetString() ?? proyecto;
+                }
+
+                if (root.TryGetProperty("serialMonitor", out var sm) && sm.ValueKind == JsonValueKind.String)
+                {
+                    serialMonitor = sm.GetString() ?? serialMonitor;
+                }
+
+                if (root.TryGetProperty("serialCargador", out var sc) && sc.ValueKind == JsonValueKind.String)
+                {
+                    serialCargador = sc.GetString() ?? serialCargador;
+                }
+
+                if (root.TryGetProperty("marcaMonitor", out var mm) && mm.ValueKind == JsonValueKind.String)
+                {
+                    marcaMonitor = mm.GetString() ?? marcaMonitor;
+                }
+
+                if (root.TryGetProperty("mac", out var mc) && mc.ValueKind == JsonValueKind.String)
+                {
+                    mac = mc.GetString() ?? mac;
+                }
+
+                if (root.TryGetProperty("sistemaOperativo", out var sop) && sop.ValueKind == JsonValueKind.String)
+                {
+                    so = sop.GetString() ?? so;
+                }
+
+                if (root.TryGetProperty("valorElementos", out var val) && val.ValueKind == JsonValueKind.String)
+                {
+                    valor = val.GetString() ?? valor;
+                }
+
+                if (root.TryGetProperty("accesorios", out var acc) && acc.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in acc.EnumerateArray())
+                    {
+                        if (item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()))
+                        {
+                            accEntregados.Add(item.GetString()!);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        return new AssistActaData(
+            obsEntrega,
+            obsDevolucion,
+            docCc,
+            ciudad,
+            proyecto,
+            serialMonitor,
+            serialCargador,
+            marcaMonitor,
+            mac,
+            so,
+            valor,
+            accEntregados,
+            accDevueltos
+        );
     }
 
     public async Task<GenerarDocumentoResponse> GenerarYGuardarPdfAsync(
@@ -443,77 +620,19 @@ public sealed class DocumentoActaService : IDocumentoActaService
             throw new KeyNotFoundException($"El acta con ID '{actaId}' no fue encontrada.");
         }
 
-        var fileName = $"Acta_{SanitizeFileName(acta.NumeroActa ?? acta.Id.ToString())}.pdf";
+        var fileName = $"Acta_ASSIST_{SanitizeFileName(acta.NumeroActa ?? acta.Id.ToString())}.pdf";
 
-        if (!string.IsNullOrWhiteSpace(acta.RutaDocumento))
-        {
-            var bytes = await _fileStorageProvider.GetActaDocumentAsync(acta.RutaDocumento, cancellationToken);
-            if (bytes != null)
-            {
-                return new DocumentoActaResult(
-                    PdfBytes: bytes,
-                    FileName: fileName,
-                    ContentType: "application/pdf",
-                    RutaDocumento: acta.RutaDocumento,
-                    HashSha256: acta.HashSha256,
-                    FechaGeneracion: acta.FechaFirma ?? acta.FechaCreacion
-                );
-            }
-        }
-
-        var generated = await GenerarYGuardarPdfAsync(actaId, cancellationToken);
-        var genBytes = await _fileStorageProvider.GetActaDocumentAsync(generated.RutaDocumento, cancellationToken);
+        var detail = acta.ToDetailResponse();
+        var pdfBytes = GenerarPdfBytes(detail);
 
         return new DocumentoActaResult(
-            PdfBytes: genBytes ?? GenerarPdfBytes(acta.ToDetailResponse()),
+            PdfBytes: pdfBytes,
             FileName: fileName,
             ContentType: "application/pdf",
-            RutaDocumento: generated.RutaDocumento,
-            HashSha256: generated.HashSha256,
-            FechaGeneracion: generated.FechaGeneracion
+            RutaDocumento: acta.RutaDocumento,
+            HashSha256: acta.HashSha256,
+            FechaGeneracion: DateTimeOffset.UtcNow
         );
-    }
-
-    private static (string Observaciones, List<string> Accesorios) ParseFormData(string? formDataJson)
-    {
-        if (string.IsNullOrWhiteSpace(formDataJson))
-        {
-            return ("Sin observaciones registradas.", []);
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(formDataJson);
-            var root = doc.RootElement;
-
-            var observacion = "Sin observaciones registradas.";
-            if (root.TryGetProperty("observacion", out var obsProp) && obsProp.ValueKind == JsonValueKind.String)
-            {
-                observacion = obsProp.GetString() ?? observacion;
-            }
-            else if (root.TryGetProperty("observaciones", out var obsPluralProp) && obsPluralProp.ValueKind == JsonValueKind.String)
-            {
-                observacion = obsPluralProp.GetString() ?? observacion;
-            }
-
-            var accesorios = new List<string>();
-            if (root.TryGetProperty("accesorios", out var accProp) && accProp.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var item in accProp.EnumerateArray())
-                {
-                    if (item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()))
-                    {
-                        accesorios.Add(item.GetString()!);
-                    }
-                }
-            }
-
-            return (observacion, accesorios);
-        }
-        catch
-        {
-            return ("Sin observaciones registradas.", []);
-        }
     }
 
     private static byte[]? ParseSignature(string? signatureDataJson)

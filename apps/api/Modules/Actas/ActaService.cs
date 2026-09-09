@@ -7,37 +7,27 @@ using PlataformaActas.Api.Modules.Actas.Models.Mappers;
 
 namespace PlataformaActas.Api.Modules.Actas.Services;
 
-public sealed class ActaService : IActaService
+public sealed class ActaService(
+    IActaRepository actaRepository,
+    IDocumentoActaService documentoActaService,
+    PlataformaActasDbContext context) : IActaService
 {
-    private readonly IActaRepository _actaRepository;
-    private readonly IDocumentoActaService _documentoActaService;
-    private readonly PlataformaActasDbContext _context;
-
-    public ActaService(
-        IActaRepository actaRepository,
-        IDocumentoActaService documentoActaService,
-        PlataformaActasDbContext context)
-    {
-        _actaRepository = actaRepository;
-        _documentoActaService = documentoActaService;
-        _context = context;
-    }
 
     public async Task<IReadOnlyList<ActaResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var list = await _actaRepository.GetAllAsync(cancellationToken);
+        var list = await actaRepository.GetAllAsync(cancellationToken);
         return list.Select(a => a.ToResponse()).ToList();
     }
 
     public async Task<IReadOnlyList<ActaResponse>> GetByMensajeroAsync(int mensajeroId, CancellationToken cancellationToken = default)
     {
-        var list = await _actaRepository.GetByMensajeroAsync(mensajeroId, cancellationToken);
+        var list = await actaRepository.GetByMensajeroAsync(mensajeroId, cancellationToken);
         return list.Select(a => a.ToResponse()).ToList();
     }
 
     public async Task<ActaDetailResponse?> GetDetailByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var acta = await _actaRepository.GetDetailByIdAsync(id, cancellationToken);
+        var acta = await actaRepository.GetDetailByIdAsync(id, cancellationToken);
         return acta?.ToDetailResponse();
     }
 
@@ -45,14 +35,14 @@ public sealed class ActaService : IActaService
         CreateActaRequest request,
         CancellationToken cancellationToken = default)
     {
-        var equipo = await _context.Equipment.FirstOrDefaultAsync(e => e.Id == request.EquipmentId, cancellationToken);
+        var equipo = await context.Equipment.FirstOrDefaultAsync(e => e.Id == request.EquipmentId, cancellationToken);
         if (equipo is null)
         {
             throw new ArgumentException("El equipo especificado no existe.");
         }
 
         var year = DateTime.UtcNow.Year;
-        var secuencia = await _actaRepository.GetNextSecuenciaByYearAsync(year, cancellationToken);
+        var secuencia = await actaRepository.GetNextSecuenciaByYearAsync(year, cancellationToken);
         var numeroActa = $"ACTA-{year}-{secuencia:D4}";
 
         var tipoActa = string.IsNullOrWhiteSpace(request.TipoActa) ? "Entrega" : request.TipoActa.Trim();
@@ -74,9 +64,9 @@ public sealed class ActaService : IActaService
             FechaCreacion = DateTimeOffset.UtcNow
         };
 
-        var created = await _actaRepository.AddAsync(acta, cancellationToken);
+        var created = await actaRepository.AddAsync(acta, cancellationToken);
 
-        await _actaRepository.AddStatusHistoryAsync(new ActaStatusHistory
+        await actaRepository.AddStatusHistoryAsync(new ActaStatusHistory
         {
             ActaId = created.Id,
             EstadoAnterior = "Ninguno",
@@ -94,7 +84,7 @@ public sealed class ActaService : IActaService
         FirmarActaRequest request,
         CancellationToken cancellationToken = default)
     {
-        var acta = await _actaRepository.GetByIdAsync(id, cancellationToken);
+        var acta = await actaRepository.GetByIdAsync(id, cancellationToken);
         if (acta is null)
         {
             return null;
@@ -104,14 +94,34 @@ public sealed class ActaService : IActaService
         acta.FechaFirma = DateTimeOffset.UtcNow;
         acta.Estado = "Firmada";
 
-        await _actaRepository.AddSignatureAsync(new ActaSignature
+        if (!string.IsNullOrWhiteSpace(request.Observacion))
+        {
+            try
+            {
+                var formData = string.IsNullOrWhiteSpace(acta.FormDataJson)
+                    ? new Dictionary<string, object>()
+                    : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(acta.FormDataJson) ?? new();
+                formData["observacion"] = request.Observacion.Trim();
+                acta.FormDataJson = System.Text.Json.JsonSerializer.Serialize(formData);
+            }
+            catch
+            {
+                acta.FormDataJson = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    tipo = acta.TipoActa,
+                    observacion = request.Observacion.Trim()
+                });
+            }
+        }
+
+        await actaRepository.AddSignatureAsync(new ActaSignature
         {
             ActaId = acta.Id,
             SignatureBase64 = request.SignatureDataJson,
             FechaCreacion = DateTimeOffset.UtcNow
         }, cancellationToken);
 
-        await _actaRepository.AddStatusHistoryAsync(new ActaStatusHistory
+        await actaRepository.AddStatusHistoryAsync(new ActaStatusHistory
         {
             ActaId = acta.Id,
             EstadoAnterior = "Borrador",
@@ -122,12 +132,12 @@ public sealed class ActaService : IActaService
         }, cancellationToken);
 
         // Generar documento oficial PDF
-        var docResponse = await _documentoActaService.GenerarYGuardarPdfAsync(acta.Id, cancellationToken);
+        var docResponse = await documentoActaService.GenerarYGuardarPdfAsync(acta.Id, cancellationToken);
         acta.RutaDocumento = docResponse.RutaDocumento;
         acta.HashSha256 = docResponse.HashSha256;
 
         // Sincronización automática de inventario
-        var equipo = await _context.Equipment.FirstOrDefaultAsync(e => e.Id == acta.EquipmentId, cancellationToken);
+        var equipo = await context.Equipment.FirstOrDefaultAsync(e => e.Id == acta.EquipmentId, cancellationToken);
         if (equipo != null)
         {
             if (acta.TipoActa == "Entrega")
@@ -146,10 +156,10 @@ public sealed class ActaService : IActaService
                 equipo.AsignadoA = null;
             }
 
-            _context.Equipment.Update(equipo);
+            context.Equipment.Update(equipo);
         }
 
-        await _actaRepository.UpdateAsync(acta, cancellationToken);
+        await actaRepository.UpdateAsync(acta, cancellationToken);
         return acta.ToResponse();
     }
 
@@ -157,7 +167,7 @@ public sealed class ActaService : IActaService
         Guid id,
         CancellationToken cancellationToken = default)
     {
-        var acta = await _actaRepository.GetByIdAsync(id, cancellationToken);
+        var acta = await actaRepository.GetByIdAsync(id, cancellationToken);
         if (acta is null)
         {
             return null;
@@ -168,7 +178,7 @@ public sealed class ActaService : IActaService
         acta.FechaFinalizacion = DateTimeOffset.UtcNow;
         acta.ActaEntregada = true;
 
-        await _actaRepository.AddStatusHistoryAsync(new ActaStatusHistory
+        await actaRepository.AddStatusHistoryAsync(new ActaStatusHistory
         {
             ActaId = acta.Id,
             EstadoAnterior = estadoPrevio,
@@ -178,7 +188,7 @@ public sealed class ActaService : IActaService
             FechaCreacion = DateTimeOffset.UtcNow
         }, cancellationToken);
 
-        await _actaRepository.UpdateAsync(acta, cancellationToken);
+        await actaRepository.UpdateAsync(acta, cancellationToken);
         return acta.ToResponse();
     }
 
@@ -188,7 +198,7 @@ public sealed class ActaService : IActaService
         int? usuarioId = null,
         CancellationToken cancellationToken = default)
     {
-        var acta = await _actaRepository.GetByIdAsync(id, cancellationToken);
+        var acta = await actaRepository.GetByIdAsync(id, cancellationToken);
         if (acta is null)
         {
             return null;
@@ -199,7 +209,7 @@ public sealed class ActaService : IActaService
         acta.FechaAnulacion = DateTimeOffset.UtcNow;
         acta.MotivoAnulacion = request.Motivo;
 
-        await _actaRepository.AddStatusHistoryAsync(new ActaStatusHistory
+        await actaRepository.AddStatusHistoryAsync(new ActaStatusHistory
         {
             ActaId = acta.Id,
             EstadoAnterior = estadoPrevio,
@@ -209,7 +219,7 @@ public sealed class ActaService : IActaService
             FechaCreacion = DateTimeOffset.UtcNow
         }, cancellationToken);
 
-        await _actaRepository.UpdateAsync(acta, cancellationToken);
+        await actaRepository.UpdateAsync(acta, cancellationToken);
         return acta.ToResponse();
     }
 }

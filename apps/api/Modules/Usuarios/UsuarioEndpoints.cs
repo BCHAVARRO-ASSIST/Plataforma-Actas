@@ -116,8 +116,15 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
                 IUsuarioService service,
                 CancellationToken cancellationToken) =>
             {
-                var ok = await service.DeleteAsync(id, cancellationToken);
-                return ok ? Results.NoContent() : Results.NotFound();
+                try
+                {
+                    var ok = await service.DeleteAsync(id, cancellationToken);
+                    return ok ? Results.NoContent() : Results.NotFound();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { message = ex.Message });
+                }
             })
             .RequirePermission(Permissions.UsuariosDesactivar);
 
@@ -137,6 +144,37 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
                 {
                     return Results.Conflict(new { message = ex.Message });
                 }
+            })
+            .RequirePermission(Permissions.UsuariosEditar);
+
+            // 7. Restablecer contraseña de usuario (Administrador)
+            endpoints.MapPut("/api/usuarios/{id:int}/password", async (
+                int id,
+                UsuarioResetPasswordRequest request,
+                IUsuarioService service,
+                CancellationToken cancellationToken) =>
+            {
+                if (string.IsNullOrWhiteSpace(request.NewPassword) || string.IsNullOrWhiteSpace(request.ConfirmPassword))
+                {
+                    return Results.BadRequest(new { message = "La nueva contraseña y su confirmación son obligatorias." });
+                }
+
+                if (request.NewPassword != request.ConfirmPassword)
+                {
+                    return Results.BadRequest(new { message = "Las contraseñas ingresadas no coinciden." });
+                }
+
+                if (request.NewPassword.Length < 8 ||
+                    !request.NewPassword.Any(char.IsUpper) ||
+                    !request.NewPassword.Any(char.IsLower) ||
+                    !request.NewPassword.Any(char.IsDigit) ||
+                    !request.NewPassword.Any(c => !char.IsLetterOrDigit(c)))
+                {
+                    return Results.BadRequest(new { message = "La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y un carácter especial." });
+                }
+
+                var ok = await service.ResetPasswordAsync(id, request.NewPassword, cancellationToken);
+                return ok ? Results.Ok(new { message = "Contraseña actualizada exitosamente." }) : Results.NotFound();
             })
             .RequirePermission(Permissions.UsuariosEditar);
 

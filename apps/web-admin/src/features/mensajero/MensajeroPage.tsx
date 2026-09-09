@@ -1,640 +1,172 @@
+import { useEffect, useState } from "react";
+import type { MensajeroActa } from "./mensajeroService";
+import { getMisActas } from "./mensajeroService";
+import { ActaTable } from "../../components/ActaTable";
 import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
-import type {
-  MensajeroActa,
-} from "./mensajeroService";
-
-import {
-  getMisActas,
-} from "./mensajeroService";
-
-import {
-  MensajeroActaTable,
-} from "./components/MensajeroActaTable";
-
-import "./components/mensajero.css";
-
-
-// =====================================================
-// PROPS
-// =====================================================
+  MessengerIcon,
+  ClockIcon,
+  SignatureIcon,
+  PackageIcon,
+  RefreshIcon,
+  SearchIcon,
+} from "../../components/Icons";
 
 interface MensajeroPageProps {
-  onSelectActa: (
-    id: string
-  ) => void;
+  onSelectActa: (id: string) => void;
 }
 
-
-// =====================================================
-// PÁGINA DEL MENSAJERO
-// =====================================================
-
-export function MensajeroPage({
-  onSelectActa,
-}: MensajeroPageProps) {
-
-  const [
-    actas,
-    setActas,
-  ] = useState<MensajeroActa[]>([]);
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [
-    error,
-    setError,
-  ] = useState<string | null>(null);
-
-
-  // ===================================================
-  // CARGAR ACTAS
-  // ===================================================
+export function MensajeroPage({ onSelectActa }: MensajeroPageProps) {
+  const [actas, setActas] = useState<MensajeroActa[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   async function loadActas() {
-
     try {
-
       setLoading(true);
       setError(null);
-
-      const data =
-        await getMisActas();
-
+      const data = await getMisActas();
       setActas(data);
-
     } catch (err) {
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible cargar las actas."
-      );
-
+      setError(err instanceof Error ? err.message : "No fue posible cargar las actas asignadas.");
     } finally {
-
       setLoading(false);
-
     }
   }
 
-
-  // ===================================================
-  // CARGA INICIAL
-  // ===================================================
-
   useEffect(() => {
-
-    let mounted = true;
-
-    async function load() {
-
-      try {
-
-        setLoading(true);
-        setError(null);
-
-        const data =
-          await getMisActas();
-
-        if (mounted) {
-          setActas(data);
-        }
-
-      } catch (err) {
-
-        if (mounted) {
-
-          setError(
-            err instanceof Error
-              ? err.message
-              : "No fue posible cargar las actas."
-          );
-
-        }
-
-      } finally {
-
-        if (mounted) {
-          setLoading(false);
-        }
-
-      }
-
-    }
-
-    load();
-
-    return () => {
-      mounted = false;
-    };
-
+    loadActas();
   }, []);
 
+  const term = search.trim().toLowerCase();
+  const filteredActas = term === "" ? actas : actas.filter((a) => (
+    (a.numeroActa ?? "").toLowerCase().includes(term) ||
+    (a.nombreEquipo ?? "").toLowerCase().includes(term) ||
+    (a.inventoryKey ?? "").toLowerCase().includes(term)
+  ));
 
-  // ===================================================
-  // ESTADÍSTICAS
-  // ===================================================
+  const { totalPendientes, totalFirmadas, totalEntregadas } = actas.reduce(
+    (acc, a) => {
+      const estado = a.estado.toLowerCase();
+      if (!a.actaEntregada && estado !== "anulada") acc.totalPendientes++;
+      if (estado === "firmada" || estado === "finalizada") acc.totalFirmadas++;
+      if (a.actaEntregada) acc.totalEntregadas++;
+      return acc;
+    },
+    { totalPendientes: 0, totalFirmadas: 0, totalEntregadas: 0 }
+  );
 
-  const statistics =
-    useMemo(() => {
-
-      const total =
-        actas.length;
-
-
-      const pendientes =
-        actas.filter(
-          (acta) =>
-            !acta.actaEntregada
-        ).length;
-
-
-      const entregadas =
-        actas.filter(
-          (acta) =>
-            acta.actaEntregada
-        ).length;
-
-
-      const entregas =
-        actas.filter(
-          (acta) =>
-            acta.tipoActa === "Entrega"
-        ).length;
-
-
-      const devoluciones =
-        actas.filter(
-          (acta) =>
-            acta.tipoActa === "Devolución"
-        ).length;
-
-
-      return {
-        total,
-        pendientes,
-        entregadas,
-        entregas,
-        devoluciones,
-      };
-
-    }, [actas]);
-
-
-  const operaciones =
-    statistics.entregas +
-    statistics.devoluciones;
-
-
-  // ===================================================
-  // RENDER
-  // ===================================================
+  if (loading) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "300px", gap: "12px" }}>
+        <div style={{ width: "32px", height: "32px", border: "3px solid var(--border-default)", borderTopColor: "var(--color-primary-600)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>Cargando traslados asignados...</span>
+      </div>
+    );
+  }
 
   return (
-    <main className="mensajero-page">
-
-
-      {/* =================================================
-          CABECERA PRINCIPAL
-          ================================================= */}
-
-      <header className="mensajero-page-header">
-
-        <div className="mensajero-page-heading">
-
-          <span className="mensajero-page-eyebrow">
-            OPERACIÓN DE CAMPO Y MENSAJERÍA
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
+        <div>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+            PANEL OPERATIVO DE CAMPO
           </span>
-
-          <h1>Mis Actas Asignadas y Certificación de Entregas</h1>
-
-          <p>
-            Gestiona tus traslados asignados, consulta los detalles del equipo y destinatario, y recolecta la firma manuscrita digital para certificar la entrega.
+          <h1 style={{ margin: "2px 0 4px", fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
+            Mis Entregas y Traslados
+          </h1>
+          <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-muted)" }}>
+            Actas asignadas para recolección de firma en campo y entrega física de equipos.
           </p>
-
         </div>
 
-        <div className="mensajero-page-actions">
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={loadActas}
+          disabled={loading}
+          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+        >
+          <RefreshIcon size={14} />
+          <span>Actualizar traslados</span>
+        </button>
+      </div>
 
-          <div className="mensajero-live-status">
-
-            <span className="mensajero-live-dot" />
-
-            Turno operativo activo
-
+      {/* KPI Cards Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "14px", marginBottom: "20px" }}>
+        <div className="stat-card">
+          <div className="stat-info">
+            <span className="stat-label">Total Asignadas</span>
+            <span className="stat-value">{actas.length}</span>
           </div>
-
-          <button
-            type="button"
-            className="mensajero-refresh-button"
-            onClick={loadActas}
-            disabled={loading}
-          >
-
-            <span
-              className={
-                loading
-                  ? "mensajero-refresh-icon is-loading"
-                  : "mensajero-refresh-icon"
-              }
-            >
-              ↻
-            </span>
-
-            {loading
-              ? "Actualizando..."
-              : "Actualizar"}
-
-          </button>
-
+          <div className="stat-icon-wrapper">
+            <MessengerIcon size={20} />
+          </div>
         </div>
 
-      </header>
+        <div className="stat-card">
+          <div className="stat-info">
+            <span className="stat-label" style={{ color: "var(--color-warning-700)" }}>Pendientes por Entrega</span>
+            <span className="stat-value" style={{ color: "var(--color-warning-700)" }}>{totalPendientes}</span>
+          </div>
+          <div className="stat-icon-wrapper" style={{ background: "var(--color-warning-50)", color: "var(--color-warning-600)" }}>
+            <ClockIcon size={20} />
+          </div>
+        </div>
 
+        <div className="stat-card">
+          <div className="stat-info">
+            <span className="stat-label" style={{ color: "var(--color-success-700)" }}>Firmadas Digitalmente</span>
+            <span className="stat-value" style={{ color: "var(--color-success-700)" }}>{totalFirmadas}</span>
+          </div>
+          <div className="stat-icon-wrapper" style={{ background: "var(--color-success-50)", color: "var(--color-success-600)" }}>
+            <SignatureIcon size={20} />
+          </div>
+        </div>
 
+        <div className="stat-card">
+          <div className="stat-info">
+            <span className="stat-label" style={{ color: "var(--color-info-700)" }}>Entregadas en Campo</span>
+            <span className="stat-value" style={{ color: "var(--color-info-700)" }}>{totalEntregadas}</span>
+          </div>
+          <div className="stat-icon-wrapper" style={{ background: "var(--color-info-50)", color: "var(--color-info-600)" }}>
+            <PackageIcon size={20} />
+          </div>
+        </div>
+      </div>
 
+      {error && (
+        <div className="auth-alert error" style={{ marginBottom: "16px" }}>
+          <span>!</span>
+          <span>{error}</span>
+        </div>
+      )}
 
-
-      {/* =================================================
-          RESUMEN OPERATIVO
-          ================================================= */}
-
-      <section
-        className="mensajero-summary"
-        aria-label="Resumen operativo"
-      >
-
-        <div className="mensajero-summary-heading">
-
-          <span>
-            RESUMEN
+      {/* Toolbar Search */}
+      <div className="toolbar-container" style={{ background: "var(--bg-surface)", padding: "14px 18px", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-default)" }}>
+        <div className="search-input-wrapper" style={{ maxWidth: "100%" }}>
+          <span className="search-icon">
+            <SearchIcon size={16} />
           </span>
-
-          <strong>
-            Actividad de tus actas
-          </strong>
-
+          <input
+            id="mensajero-search"
+            name="search"
+            className="form-input"
+            type="text"
+            placeholder="Buscar por placa, modelo de equipo o número de acta..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-
-
-        <div className="mensajero-kpis">
-
-
-          {/* TOTAL */}
-
-          <article
-            className="
-              mensajero-kpi
-              mensajero-kpi-primary
-            "
-          >
-
-            <div className="mensajero-kpi-top">
-
-              <span className="mensajero-kpi-label">
-                Total
-              </span>
-
-              <span className="mensajero-kpi-marker" />
-
-            </div>
-
-
-            <strong className="mensajero-kpi-value">
-              {statistics.total}
-            </strong>
-
-
-            <span className="mensajero-kpi-description">
-              Actas asignadas
-            </span>
-
-          </article>
-
-
-          {/* PENDIENTES */}
-
-          <article
-            className="
-              mensajero-kpi
-              mensajero-kpi-warning
-            "
-          >
-
-            <div className="mensajero-kpi-top">
-
-              <span className="mensajero-kpi-label">
-                Pendientes
-              </span>
-
-              <span className="mensajero-kpi-marker" />
-
-            </div>
-
-
-            <strong className="mensajero-kpi-value">
-              {statistics.pendientes}
-            </strong>
-
-
-            <span className="mensajero-kpi-description">
-              Requieren atención
-            </span>
-
-          </article>
-
-
-          {/* ENTREGADAS */}
-
-          <article
-            className="
-              mensajero-kpi
-              mensajero-kpi-success
-            "
-          >
-
-            <div className="mensajero-kpi-top">
-
-              <span className="mensajero-kpi-label">
-                Entregadas
-              </span>
-
-              <span className="mensajero-kpi-marker" />
-
-            </div>
-
-
-            <strong className="mensajero-kpi-value">
-              {statistics.entregadas}
-            </strong>
-
-
-            <span className="mensajero-kpi-description">
-              Procesos completados
-            </span>
-
-          </article>
-
-
-          {/* OPERACIONES */}
-
-          <article
-            className="
-              mensajero-kpi
-              mensajero-kpi-neutral
-            "
-          >
-
-            <div className="mensajero-kpi-top">
-
-              <span className="mensajero-kpi-label">
-                Operaciones
-              </span>
-
-              <span className="mensajero-kpi-marker" />
-
-            </div>
-
-
-            <strong className="mensajero-kpi-value">
-              {operaciones}
-            </strong>
-
-
-            <span className="mensajero-kpi-description">
-
-              {statistics.entregas}{" "}
-              entregas ·{" "}
-              {statistics.devoluciones}{" "}
-              devoluciones
-
-            </span>
-
-          </article>
-
-        </div>
-
-      </section>
-
-
-      {/* =================================================
-          ACTAS ASIGNADAS
-          ================================================= */}
-
-      <section className="mensajero-assignments">
-
-
-        {/* =================================================
-            CABECERA DE LA SECCIÓN
-            ================================================= */}
-
-        <header className="mensajero-section-header">
-
-          <div className="mensajero-section-heading">
-
-            <span className="mensajero-section-kicker">
-              GESTIÓN DE ACTAS
-            </span>
-
-
-            <div className="mensajero-section-title-row">
-
-              <h2>
-                Actas asignadas
-              </h2>
-
-
-              <span className="mensajero-count">
-                {statistics.total}
-              </span>
-
-            </div>
-
-
-            <p>
-              Revisa el estado y detalle de cada acta.
-            </p>
-
-          </div>
-
-
-          {/* INDICADOR DE PENDIENTES */}
-
-          <div className="mensajero-section-meta">
-
-            <span className="mensajero-meta-dot" />
-
-            <span>
-
-              {statistics.pendientes}{" "}
-
-              {statistics.pendientes === 1
-                ? "pendiente"
-                : "pendientes"}
-
-            </span>
-
-          </div>
-
-        </header>
-
-
-        {/* =================================================
-            CONTENEDOR DE CONTENIDO
-            ================================================= */}
-
-        <div className="mensajero-table-shell">
-
-
-          {/* =================================================
-              CARGANDO
-              ================================================= */}
-
-          {loading && (
-
-            <div className="mensajero-state">
-
-              <div className="mensajero-loading-indicator">
-
-                <span />
-                <span />
-                <span />
-
-              </div>
-
-
-              <div className="mensajero-state-content">
-
-                <strong>
-                  Cargando actas
-                </strong>
-
-                <p>
-                  Consultando las asignaciones disponibles.
-                </p>
-
-              </div>
-
-            </div>
-
-          )}
-
-
-          {/* =================================================
-              ERROR
-              ================================================= */}
-
-          {!loading &&
-            error && (
-
-              <div
-                className="
-                  mensajero-state
-                  mensajero-state-error
-                "
-              >
-
-                <div className="mensajero-state-symbol">
-                  !
-                </div>
-
-
-                <div className="mensajero-state-content">
-
-                  <strong>
-                    No fue posible cargar las actas
-                  </strong>
-
-
-                  <p>
-                    {error}
-                  </p>
-
-
-                  <button
-                    type="button"
-                    className="mensajero-secondary-button"
-                    onClick={loadActas}
-                  >
-                    Intentar nuevamente
-                  </button>
-
-                </div>
-
-              </div>
-
-            )}
-
-
-          {/* =================================================
-              SIN ACTAS
-              ================================================= */}
-
-          {!loading &&
-            !error &&
-            actas.length === 0 && (
-
-              <div
-                className="
-                  mensajero-state
-                  mensajero-state-empty
-                "
-              >
-
-                <div className="mensajero-empty-graphic">
-
-                  <span />
-
-                </div>
-
-
-                <div className="mensajero-state-content">
-
-                  <strong>
-                    No tienes actas asignadas
-                  </strong>
-
-
-                  <p>
-                    Cuando se asigne una acta a tu usuario,
-                    aparecerá automáticamente en esta sección.
-                  </p>
-
-                </div>
-
-              </div>
-
-            )}
-
-
-          {/* =================================================
-              TABLA
-              ================================================= */}
-
-          {!loading &&
-            !error &&
-            actas.length > 0 && (
-
-              <MensajeroActaTable
-                actas={actas}
-                onSelect={onSelectActa}
-              />
-
-            )}
-
-        </div>
-
-      </section>
-
-    </main>
+      </div>
+
+      {/* Table */}
+      <ActaTable
+        actas={filteredActas}
+        onSelect={onSelectActa}
+        variant="mensajero"
+      />
+    </div>
   );
 }
-

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { EquipmentFilters } from "./components/EquipmentFilters";
-import { EquipmentTable } from "./components/EquipmentTable";
-import { EquipmentFormModal } from "./components/EquipmentFormModal";
+import { EquipmentFilters } from "../../components/EquipmentFilters";
+import { EquipmentTable } from "../../components/EquipmentTable";
+import { EquipmentFormModal } from "../../components/EquipmentFormModal";
 import {
   getEquipment,
   createEquipment,
@@ -11,10 +11,19 @@ import {
   deleteEquipment,
 } from "./equipmentService";
 import type { Equipment, CreateEquipmentRequest, UpdateEquipmentRequest } from "./equipmentService";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { PERMISSIONS, hasPermission } from "../auth/permissions";
+import {
+  EquipmentIcon,
+  CheckIcon,
+  MaintenanceIcon,
+  PackageIcon,
+  RefreshIcon,
+  PlusIcon,
+} from "../../components/Icons";
+import { AutoDismissAlert } from "../../components/AutoDismissAlert";
 
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 12;
 
 export function EquipmentPage() {
   const { token } = useAuth();
@@ -45,11 +54,7 @@ export function EquipmentPage() {
       const data = await getEquipment();
       setEquipment(data);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible cargar el inventario."
-      );
+      setError(err instanceof Error ? err.message : "No fue posible cargar el inventario.");
     } finally {
       setLoading(false);
     }
@@ -67,11 +72,7 @@ export function EquipmentPage() {
       })
       .catch((err) => {
         if (mounted) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "No fue posible cargar el inventario."
-          );
+          setError(err instanceof Error ? err.message : "No fue posible cargar el inventario.");
           setLoading(false);
         }
       });
@@ -103,59 +104,36 @@ export function EquipmentPage() {
         (item.marca ?? "").toLowerCase().includes(normalizedSearch) ||
         (item.departamento ?? "").toLowerCase().includes(normalizedSearch);
 
-      const matchesStatus =
-        status === "" || item.estatusEquipo === status;
-
-      const matchesBrand =
-        brand === "" || item.marca === brand;
+      const matchesStatus = status === "" || item.estatusEquipo === status;
+      const matchesBrand = brand === "" || item.marca === brand;
 
       return matchesSearch && matchesStatus && matchesBrand;
     });
   }, [equipment, search, status, brand]);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE)
-  );
-
+  const totalPages = Math.max(1, Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE));
   const paginatedEquipment = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredEquipment.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredEquipment, currentPage]);
 
-  const activeEquipment = equipment.filter(
-    (item) => item.estatusEquipo === "Activo"
-  ).length;
-
-  const inactiveEquipment = equipment.filter(
-    (item) => item.estatusEquipo === "Inactivo"
-  ).length;
+  const { activeCount, maintenanceCount, inactiveCount } = useMemo(() => {
+    return equipment.reduce(
+      (acc, i) => {
+        if (i.estatusEquipo === "Activo" || i.estatusEquipo === "Asignado") acc.activeCount++;
+        if (i.estatusEquipo === "Mantenimiento") acc.maintenanceCount++;
+        if (i.estatusEquipo === "Inactivo") acc.inactiveCount++;
+        return acc;
+      },
+      { activeCount: 0, maintenanceCount: 0, inactiveCount: 0 }
+    );
+  }, [equipment]);
 
   function clearFilters() {
     setSearch("");
     setStatus("");
     setBrand("");
     setCurrentPage(1);
-  }
-
-  function handleSearchChange(value: string) {
-    setSearch(value);
-    setCurrentPage(1);
-  }
-
-  function handleStatusChange(value: string) {
-    setStatus(value);
-    setCurrentPage(1);
-  }
-
-  function handleBrandChange(value: string) {
-    setBrand(value);
-    setCurrentPage(1);
-  }
-
-  function goToPage(page: number) {
-    if (page < 1 || page > totalPages) return;
-    setCurrentPage(page);
   }
 
   function handleOpenCreate() {
@@ -211,7 +189,7 @@ export function EquipmentPage() {
   }
 
   async function handleDeleteEquipment(item: Equipment) {
-    const confirmMessage = `¿Estás seguro de que deseas eliminar permanentemente el equipo inactivo ${item.inventoryKey} (${item.nombreEquipo})?\n\nEsta acción eliminará el registro de la base de datos.`;
+    const confirmMessage = `¿Estás seguro de que deseas eliminar permanentemente el equipo inactivo ${item.inventoryKey} (${item.nombreEquipo})?\n\nEsta acción no se puede deshacer.`;
     if (!window.confirm(confirmMessage)) return;
 
     try {
@@ -226,186 +204,167 @@ export function EquipmentPage() {
 
   if (loading) {
     return (
-      <main className="inventory-page">
-        <div className="inventory-state">
-          <span className="inventory-loader" />
-          <strong>Cargando inventario</strong>
-          <small>Consultando equipos registrados...</small>
-        </div>
-      </main>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '12px' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid var(--border-default)', borderTopColor: 'var(--color-primary-600)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Cargando catálogo de hardware...</span>
+      </div>
     );
   }
 
-  const firstItem =
-    filteredEquipment.length === 0
-      ? 0
-      : (currentPage - 1) * ITEMS_PER_PAGE + 1;
-
-  const lastItem = Math.min(
-    currentPage * ITEMS_PER_PAGE,
-    filteredEquipment.length
-  );
-
   return (
-    <main className="inventory-page">
-      {/* HEADER */}
-      <header className="inventory-header">
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
         <div>
-          <span className="inventory-kicker">CATÁLOGO MAESTRO DE HARDWARE</span>
-          <h1>Inventario de Equipos Tecnológicos</h1>
-          <p>
-            Control de especificaciones técnicas, custodia física, marca y estado operativo de los equipos de la organización.
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+            CATÁLOGO MAESTRO DE HARDWARE
+          </span>
+          <h1 style={{ margin: "2px 0 4px", fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
+            Inventario de Equipos
+          </h1>
+          <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-muted)" }}>
+            Control de especificaciones técnicas, custodia física, marca y estado operativo.
           </p>
         </div>
 
-        <div className="inventory-header-actions">
-          <span className="inventory-live">
-            <span className="live-dot" />
-            Catálogo sincronizado
-          </span>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={loadEquipment}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            title="Refrescar catálogo"
+          >
+            <RefreshIcon size={14} />
+            <span>Actualizar</span>
+          </button>
 
           {canCreate && (
             <button
               type="button"
-              className="actas-primary"
+              className="btn btn-primary btn-sm"
               onClick={handleOpenCreate}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              + Registrar equipo
+              <PlusIcon size={14} />
+              <span>Registrar equipo</span>
             </button>
           )}
         </div>
-      </header>
+      </div>
 
-      {/* MENSAJE DE ÉXITO */}
-      {successMessage && (
-        <div className="usuarios-success" style={{ marginBottom: "20px" }}>
-          <span>✓</span>
-          {successMessage}
-          <button type="button" onClick={() => setSuccessMessage(null)} aria-label="Cerrar">
-            ×
-          </button>
+      {/* Quick Status KPI Strip */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+        <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Total Registrados</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>{equipment.length}</div>
+          </div>
+          <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: "var(--color-primary-50)", color: "var(--color-primary-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <EquipmentIcon size={18} />
+          </div>
         </div>
-      )}
 
-      {/* ERROR */}
-      {error && (
-        <div className="actas-error" style={{ marginBottom: "20px" }}>
-          {error}
+        <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "11px", color: "var(--color-success-700)", fontWeight: 700, textTransform: "uppercase" }}>Operativos / Asignados</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-success-700)" }}>{activeCount}</div>
+          </div>
+          <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: "var(--color-success-50)", color: "var(--color-success-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CheckIcon size={18} />
+          </div>
         </div>
-      )}
 
-      {/* METRICS */}
-      <section className="inventory-metrics">
-        <article className="inventory-metric inventory-metric-dark">
-          <div className="inventory-metric-top">
-            <span>TOTAL EQUIPOS</span>
-            <span>▦</span>
+        <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "11px", color: "var(--color-warning-700)", fontWeight: 700, textTransform: "uppercase" }}>En Mantenimiento</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-warning-700)" }}>{maintenanceCount}</div>
           </div>
-          <strong>{equipment.length}</strong>
-          <p>Activos totales registrados</p>
-        </article>
-
-        <article className="inventory-metric">
-          <div className="inventory-metric-top">
-            <span>EQUIPOS ACTIVOS</span>
-            <span className="live-dot" />
+          <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: "var(--color-warning-50)", color: "var(--color-warning-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <MaintenanceIcon size={18} />
           </div>
-          <strong>{activeEquipment}</strong>
-          <p>
-            {equipment.length > 0
-              ? `${Math.round((activeEquipment / equipment.length) * 100)}% en operación`
-              : "Sin datos"}
-          </p>
-        </article>
+        </div>
 
-        <article className="inventory-metric">
-          <div className="inventory-metric-top">
-            <span>INACTIVOS / BODEGA</span>
-            <span>○</span>
+        <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Inactivos / Baja</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-muted)" }}>{inactiveCount}</div>
           </div>
-          <strong>{inactiveEquipment}</strong>
-          <p>Equipos disponibles o en baja</p>
-        </article>
-
-        <article className="inventory-metric">
-          <div className="inventory-metric-top">
-            <span>FILTRADOS</span>
-            <span>🔍</span>
+          <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: "var(--color-slate-100)", color: "var(--color-slate-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <PackageIcon size={18} />
           </div>
-          <strong>{filteredEquipment.length}</strong>
-          <p>Coincidencias en búsqueda</p>
-        </article>
-      </section>
+        </div>
+      </div>
 
-      {/* FILTROS */}
+      <AutoDismissAlert
+        type="success"
+        message={successMessage}
+        duration={4500}
+        onDismiss={() => setSuccessMessage(null)}
+      />
+
+      <AutoDismissAlert
+        type="error"
+        message={error}
+        duration={5000}
+        onDismiss={() => setError(null)}
+      />
+
+      {/* Filters Toolbar */}
       <EquipmentFilters
         search={search}
         status={status}
         brand={brand}
         brands={brands}
-        onSearchChange={handleSearchChange}
-        onStatusChange={handleStatusChange}
-        onBrandChange={handleBrandChange}
+        onSearchChange={(v) => { setSearch(v); setCurrentPage(1); }}
+        onStatusChange={(v) => { setStatus(v); setCurrentPage(1); }}
+        onBrandChange={(v) => { setBrand(v); setCurrentPage(1); }}
         onClear={clearFilters}
       />
 
-      {/* RESULTADOS INFO */}
-      <div className="inventory-results-info">
-        <span>
-          Mostrando <strong>{firstItem}</strong> – <strong>{lastItem}</strong> de <strong>{filteredEquipment.length}</strong> equipos
-        </span>
+      {/* Data Table */}
+      <EquipmentTable
+        equipment={paginatedEquipment}
+        onEdit={handleOpenEdit}
+        onToggleStatus={handleToggleStatus}
+        onDelete={handleDeleteEquipment}
+        canEdit={canEdit}
+        canDeactivate={canDeactivate}
+        canDelete={canDeactivate}
+      />
 
-        {filteredEquipment.length > 0 && (
-          <span className="inventory-page-info">
-            Página {currentPage} de {totalPages}
-          </span>
-        )}
-      </div>
-
-      {/* TABLA */}
-      {filteredEquipment.length === 0 ? (
-        <div className="inventory-state">
-          <strong>No se encontraron equipos</strong>
-          <small>Prueba ajustando los filtros de búsqueda</small>
-        </div>
-      ) : (
-        <EquipmentTable
-          equipment={paginatedEquipment}
-          onEdit={handleOpenEdit}
-          onToggleStatus={handleToggleStatus}
-          onDelete={handleDeleteEquipment}
-          canEdit={canEdit}
-          canDeactivate={canDeactivate}
-          canDelete={canDeactivate}
-        />
-      )}
-
-      {/* PAGINACIÓN */}
+      {/* Pagination Footer */}
       {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            type="button"
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            ←  Anterior
-          </button>
-
-          <span className="pagination-info">
-            {currentPage} / {totalPages}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", padding: "8px 0" }}>
+          <span style={{ fontSize: "12.5px", color: "var(--text-muted)" }}>
+            Mostrando {paginatedEquipment.length} de {filteredEquipment.length} equipos
           </span>
 
-          <button
-            type="button"
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Siguiente →
-          </button>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              ← Anterior
+            </button>
+            <span style={{ padding: "6px 12px", fontSize: "12.5px", fontWeight: 600, color: "var(--text-secondary)" }}>
+              Página {currentPage} de {totalPages}
+            </span>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente →
+            </button>
+          </div>
         </div>
       )}
 
-      {/* MODAL REGISTRAR / EDITAR */}
+      {/* Modal */}
       <EquipmentFormModal
         isOpen={isModalOpen}
         equipmentToEdit={editingEquipment}
@@ -413,7 +372,6 @@ export function EquipmentPage() {
         onSave={handleSaveEquipment}
         saving={saving}
       />
-
-    </main>
+    </div>
   );
 }

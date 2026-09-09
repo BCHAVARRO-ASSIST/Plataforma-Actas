@@ -4,6 +4,19 @@ import {
   updateEquipmentMaintenance,
   type MaintenanceRecord,
 } from "../equipment/equipmentService";
+import {
+  MaintenanceIcon,
+  CheckIcon,
+  ClockIcon,
+  RefreshIcon,
+  SearchIcon,
+  EditIcon,
+  CloseIcon,
+  EquipmentIcon,
+} from "../../components/Icons";
+import { AutoDismissAlert } from "../../components/AutoDismissAlert";
+
+const ITEMS_PER_PAGE = 15;
 
 export function MantenimientosPage() {
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
@@ -16,7 +29,6 @@ export function MantenimientosPage() {
   const [tipoFilter, setTipoFilter] = useState("");
   const [realizadoFilter, setRealizadoFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 15;
 
   // Modal
   const [selectedItem, setSelectedItem] = useState<MaintenanceRecord | null>(null);
@@ -39,34 +51,25 @@ export function MantenimientosPage() {
   }
 
   useEffect(() => {
-    let mounted = true;
-    getMaintenanceRecords()
-      .then((data: MaintenanceRecord[]) => {
-        if (mounted) {
-          setRecords(data);
-          setLoading(false);
-        }
-      })
-      .catch((err: unknown) => {
-        if (mounted) {
-          setError(err instanceof Error ? err.message : "Error al cargar los mantenimientos.");
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
+    loadData();
   }, []);
 
   const stats = useMemo(() => {
-    const total = records.length;
-    const preventivos = records.filter((r) => r.tipoMantenimiento?.toLowerCase() === "preventivo").length;
-    const correctivos = records.filter((r) => r.tipoMantenimiento?.toLowerCase() === "correctivo").length;
-    const concluidos = records.filter((r) => r.mantenimientoRealizado).length;
-    const pendientes = total - concluidos;
+    const result = records.reduce(
+      (acc, r) => {
+        const tipo = r.tipoMantenimiento?.toLowerCase();
+        if (tipo === "preventivo") acc.preventivos++;
+        if (tipo === "correctivo") acc.correctivos++;
+        if (r.mantenimientoRealizado) acc.concluidos++;
+        return acc;
+      },
+      { preventivos: 0, correctivos: 0, concluidos: 0 }
+    );
 
-    return { total, preventivos, correctivos, concluidos, pendientes };
+    const total = records.length;
+    const pendientes = total - result.concluidos;
+
+    return { total, preventivos: result.preventivos, correctivos: result.correctivos, concluidos: result.concluidos, pendientes };
   }, [records]);
 
   const filteredRecords = useMemo(() => {
@@ -129,190 +132,165 @@ export function MantenimientosPage() {
 
   if (loading) {
     return (
-      <main className="inventory-page">
-        <div className="inventory-state">
-          <span className="inventory-loader" />
-          <strong>Cargando módulo de mantenimientos</strong>
-          <small>Consultando historial de soporte técnico...</small>
-        </div>
-      </main>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '12px' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid var(--border-default)', borderTopColor: 'var(--color-primary-600)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Cargando módulo de mantenimientos...</span>
+      </div>
     );
   }
 
   return (
-    <main className="inventory-page">
-      {/* HEADER */}
-      <header className="inventory-header">
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
         <div>
-          <span className="inventory-kicker">SOPORTE TÉCNICO Y CONTROL DE HARDWARE</span>
-          <h1>Control de Mantenimientos</h1>
-          <p>
-            Programa, registra y supervisa el estado de mantenimientos preventivos y correctivos de los equipos tecnológicos.
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+            SOPORTE TÉCNICO Y CONTROL DE HARDWARE
+          </span>
+          <h1 style={{ margin: "2px 0 4px", fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
+            Control de Mantenimientos
+          </h1>
+          <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-muted)" }}>
+            Programa, registra y supervisa el estado de mantenimientos preventivos y correctivos.
           </p>
         </div>
 
-        <div className="inventory-header-actions">
-          <button
-            type="button"
-            className="actas-reset"
-            onClick={loadData}
-            style={{ display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            ↻ Actualizar
-          </button>
-        </div>
-      </header>
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={loadData}
+          style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+        >
+          <RefreshIcon size={14} />
+          <span>Actualizar</span>
+        </button>
+      </div>
 
-      {/* MENSAJES */}
-      {successMessage && (
-        <div className="usuarios-success" style={{ marginBottom: "20px" }}>
-          <span>✓</span>
-          {successMessage}
-          <button type="button" onClick={() => setSuccessMessage(null)} aria-label="Cerrar">
-            ×
-          </button>
-        </div>
-      )}
+      <AutoDismissAlert
+        type="success"
+        message={successMessage}
+        duration={4500}
+        onDismiss={() => setSuccessMessage(null)}
+      />
 
-      {error && (
-        <div className="actas-error" style={{ marginBottom: "20px" }}>
-          {error}
-        </div>
-      )}
+      <AutoDismissAlert
+        type="error"
+        message={error}
+        duration={5000}
+        onDismiss={() => setError(null)}
+      />
 
-      {/* 4 TARJETAS KPI DE MANTENIMIENTO */}
-      <section className="inventory-metrics">
-        <article className="inventory-metric inventory-metric-dark">
-          <div className="inventory-metric-top">
-            <span>TOTAL EQUIPOS</span>
-            <span>⚙</span>
+      {/* 4 KPI Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+        <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Total Equipos</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-primary)" }}>{stats.total}</div>
           </div>
-          <strong>{stats.total}</strong>
-          <p>Equipos bajo supervisión técnica</p>
-        </article>
-
-        <article className="inventory-metric">
-          <div className="inventory-metric-top">
-            <span>PREVENTIVOS</span>
-            <span style={{ color: "#6366f1" }}>● </span>
+          <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: "var(--color-primary-50)", color: "var(--color-primary-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <EquipmentIcon size={18} />
           </div>
-          <strong style={{ color: "#6366f1" }}>{stats.preventivos}</strong>
-          <p>Revisiones periódicas registradas</p>
-        </article>
-
-        <article className="inventory-metric">
-          <div className="inventory-metric-top">
-            <span>CORRECTIVOS</span>
-            <span style={{ color: "#f59e0b" }}>● </span>
-          </div>
-          <strong style={{ color: "#f59e0b" }}>{stats.correctivos}</strong>
-          <p>Reparaciones y soporte puntual</p>
-        </article>
-
-        <article className="inventory-metric">
-          <div className="inventory-metric-top">
-            <span>CONCLUIDOS</span>
-            <span className="live-dot" />
-          </div>
-          <strong style={{ color: "#10b981" }}>{stats.concluidos}</strong>
-          <p>
-            {stats.total > 0
-              ? `${Math.round((stats.concluidos / stats.total) * 100)}% al día`
-              : "100% al día"}
-          </p>
-        </article>
-      </section>
-
-      {/* FILTROS */}
-      <div
-        style={{
-          background: "#ffffff",
-          borderRadius: "14px",
-          padding: "16px 20px",
-          border: "1px solid #e2e8f0",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
-          marginBottom: "20px",
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "14px",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ flex: "1 1 260px" }}>
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Buscar por código, nombre, marca, responsable..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-            style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
-          />
         </div>
 
-        <div style={{ width: "180px" }}>
-          <select
-            className="filter-select"
-            value={tipoFilter}
-            onChange={(e) => {
-              setTipoFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
-          >
-            <option value="">Todos los Tipos</option>
-            <option value="Preventivo">Preventivo</option>
-            <option value="Correctivo">Correctivo</option>
-          </select>
+        <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "11px", color: "var(--color-primary-700)", fontWeight: 700, textTransform: "uppercase" }}>Preventivos</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-primary-700)" }}>{stats.preventivos}</div>
+          </div>
+          <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: "var(--color-primary-50)", color: "var(--color-primary-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <MaintenanceIcon size={18} />
+          </div>
         </div>
 
-        <div style={{ width: "180px" }}>
-          <select
-            className="filter-select"
-            value={realizadoFilter}
-            onChange={(e) => {
-              setRealizadoFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
-          >
-            <option value="">Todos los Estados</option>
-            <option value="si">Concluido / Al día</option>
-            <option value="no">Pendiente</option>
-          </select>
+        <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "11px", color: "var(--color-warning-700)", fontWeight: 700, textTransform: "uppercase" }}>Correctivos</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-warning-700)" }}>{stats.correctivos}</div>
+          </div>
+          <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: "var(--color-warning-50)", color: "var(--color-warning-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <ClockIcon size={18} />
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <span style={{ fontSize: "11px", color: "var(--color-success-700)", fontWeight: 700, textTransform: "uppercase" }}>Concluidos</span>
+            <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--color-success-700)" }}>{stats.concluidos}</div>
+          </div>
+          <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: "var(--color-success-50)", color: "var(--color-success-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CheckIcon size={18} />
+          </div>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="toolbar-container" style={{ background: 'var(--bg-surface)', padding: '16px 20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-default)' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
+          <div className="search-input-wrapper">
+            <span className="search-icon">
+              <SearchIcon size={16} />
+            </span>
+            <input
+              id="mantenimientos-search"
+              name="search"
+              type="text"
+              className="form-input"
+              placeholder="Buscar por placa, nombre, marca o responsable..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+            />
+          </div>
+
+          <div style={{ width: '180px' }}>
+            <select
+              id="mantenimientos-tipo-filter"
+              name="tipoFilter"
+              className="form-select"
+              value={tipoFilter}
+              onChange={(e) => { setTipoFilter(e.target.value); setCurrentPage(1); }}
+            >
+              <option value="">Todos los tipos</option>
+              <option value="Preventivo">Preventivo</option>
+              <option value="Correctivo">Correctivo</option>
+            </select>
+          </div>
+
+          <div style={{ width: '180px' }}>
+            <select
+              id="mantenimientos-realizado-filter"
+              name="realizadoFilter"
+              className="form-select"
+              value={realizadoFilter}
+              onChange={(e) => { setRealizadoFilter(e.target.value); setCurrentPage(1); }}
+            >
+              <option value="">Todos los estados</option>
+              <option value="si">Concluido / Al día</option>
+              <option value="no">Pendiente</option>
+            </select>
+          </div>
         </div>
 
         {(search || tipoFilter || realizadoFilter) && (
           <button
             type="button"
-            className="actas-reset"
-            onClick={() => {
-              setSearch("");
-              setTipoFilter("");
-              setRealizadoFilter("");
-              setCurrentPage(1);
-            }}
-            style={{ padding: "8px 14px" }}
+            className="btn btn-ghost btn-sm"
+            onClick={() => { setSearch(""); setTipoFilter(""); setRealizadoFilter(""); setCurrentPage(1); }}
           >
-            Limpiar filtros
+            Restablecer
           </button>
         )}
       </div>
 
-      {/* TABLA DE MANTENIMIENTOS */}
-      <div className="table-container">
-        <table>
+      {/* Table */}
+      <div className="table-wrapper">
+        <table className="data-table">
           <thead>
             <tr>
-              <th>Inventario</th>
+              <th>Placa / Clave</th>
               <th>Equipo</th>
-              <th>Marca</th>
-              <th>Asignado a</th>
-              <th>Departamento</th>
+              <th>Responsable</th>
               <th>Tipo Mantenimiento</th>
-              <th>Fecha Registro</th>
+              <th>Fecha Programada</th>
               <th>Estado</th>
               <th style={{ textAlign: "center" }}>Acción</th>
             </tr>
@@ -320,198 +298,156 @@ export function MantenimientosPage() {
           <tbody>
             {paginatedRecords.length === 0 ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: "center", padding: "32px", color: "#64748b" }}>
-                  No se encontraron registros de mantenimiento con los criterios seleccionados.
+                <td colSpan={7} style={{ textAlign: "center", padding: "36px", color: "var(--text-muted)" }}>
+                  No se encontraron mantenimientos coincidentes.
                 </td>
               </tr>
             ) : (
-              paginatedRecords.map((r) => {
-                const isRealizado = r.mantenimientoRealizado;
-                const isPreventivo = r.tipoMantenimiento?.toLowerCase() === "preventivo";
-
-                return (
-                  <tr key={r.id}>
-                    <td>
-                      <strong className="equipment-key">{r.inventoryKey}</strong>
-                    </td>
-                    <td>{r.nombreEquipo}</td>
-                    <td>{r.marca ?? "—"}</td>
-                    <td>{r.asignadoA ?? "—"}</td>
-                    <td>{r.departamento ?? "—"}</td>
-                    <td>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "3px 8px",
-                          borderRadius: "6px",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          backgroundColor: isPreventivo ? "#eff6ff" : "#fef3c7",
-                          color: isPreventivo ? "#2563eb" : "#d97706",
-                        }}
-                      >
-                        {r.tipoMantenimiento ?? "Preventivo"}
-                      </span>
-                    </td>
-                    <td>{r.fechaMantenimiento ?? "—"}</td>
-                    <td>
-                      <span
-                        className={isRealizado ? "status-badge status-active" : "status-badge status-warning"}
-                      >
-                        {isRealizado ? "Concluido" : "Pendiente"}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: "center" }}>
+              paginatedRecords.map((r) => (
+                <tr key={r.id}>
+                  <td className="primary-cell">
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-primary-700)', fontWeight: 700 }}>
+                      {r.inventoryKey}
+                    </span>
+                  </td>
+                  <td>
+                    <strong style={{ color: "var(--text-primary)" }}>{r.nombreEquipo}</strong>
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)", display: "block" }}>{r.marca ?? "Marca no especificada"}</span>
+                  </td>
+                  <td>{r.asignadoA ?? "Sin asignar"}</td>
+                  <td>
+                    <span className={r.tipoMantenimiento?.toLowerCase() === "preventivo" ? "badge badge-info" : "badge badge-warning"}>
+                      {r.tipoMantenimiento || "No asignado"}
+                    </span>
+                  </td>
+                  <td style={{ fontSize: "12.5px" }}>
+                    {r.fechaMantenimiento ? new Date(r.fechaMantenimiento).toLocaleDateString("es-CO") : "—"}
+                  </td>
+                  <td>
+                    <span className={r.mantenimientoRealizado ? "badge badge-success" : "badge badge-neutral"}>
+                      <span className="badge-dot" />
+                      {r.mantenimientoRealizado ? "Concluido" : "Pendiente"}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", justifyContent: "center" }}>
                       <button
                         type="button"
+                        className="btn btn-secondary btn-sm"
                         onClick={() => handleOpenModal(r)}
-                        className="usuario-edit-button"
-                        style={{ padding: "5px 12px", fontSize: "12px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
                       >
-                        ⚙ Registrar
+                        <EditIcon size={13} />
+                        <span>Gestionar</span>
                       </button>
-                    </td>
-                  </tr>
-                );
-              })
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
 
-      {/* PAGINACIÓN */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="pagination" style={{ marginTop: "20px" }}>
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-          >
-            ←  Anterior
-          </button>
-          <span className="pagination-info">
-            {currentPage} / {totalPages}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
+          <span style={{ fontSize: "12.5px", color: "var(--text-muted)" }}>
+            Mostrando {paginatedRecords.length} de {filteredRecords.length} registros
           </span>
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Siguiente →
-          </button>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              ← Anterior
+            </button>
+            <span style={{ padding: "6px 12px", fontSize: "12.5px", fontWeight: 600 }}>
+              Página {currentPage} de {totalPages}
+            </span>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Siguiente →
+            </button>
+          </div>
         </div>
       )}
 
-      {/* MODAL DE GESTIÓN DE MANTENIMIENTO */}
+      {/* Modal */}
       {selectedItem && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(15, 23, 42, 0.6)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "20px",
-          }}
-        >
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "16px",
-              width: "100%",
-              maxWidth: "500px",
-              padding: "24px",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "#0f172a" }}>
-                Registrar Mantenimiento
-              </h3>
-              <button
-                type="button"
-                onClick={() => setSelectedItem(null)}
-                style={{ background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#64748b" }}
-              >
-                ✕
+        <div className="modal-backdrop" onClick={() => setSelectedItem(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>SOPORTE TÉCNICO</span>
+                <h2>Mantenimiento: {selectedItem.inventoryKey}</h2>
+              </div>
+              <button type="button" className="modal-close" onClick={() => setSelectedItem(null)}>
+                <CloseIcon size={16} />
               </button>
             </div>
 
-            <div style={{ background: "#f8fafc", padding: "12px 14px", borderRadius: "8px", marginBottom: "18px", fontSize: "13px" }}>
-              <div><strong>Equipo:</strong> {selectedItem.nombreEquipo} ({selectedItem.inventoryKey})</div>
-              <div><strong>Custodio:</strong> {selectedItem.asignadoA || "No asignado"}</div>
-            </div>
-
             <form onSubmit={handleSaveModal}>
-              <div style={{ marginBottom: "14px" }}>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
-                  Tipo de Mantenimiento
-                </label>
-                <select
-                  value={modalTipo}
-                  onChange={(e) => setModalTipo(e.target.value)}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
-                  required
-                >
-                  <option value="Preventivo">Preventivo (Limpieza, revisión y diagnóstico)</option>
-                  <option value="Correctivo">Correctivo (Reparación, cambio de partes)</option>
-                </select>
+              <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="modalTipo">Tipo de Mantenimiento</label>
+                  <select
+                    id="modalTipo"
+                    name="modalTipo"
+                    className="form-select"
+                    value={modalTipo}
+                    onChange={(e) => setModalTipo(e.target.value)}
+                  >
+                    <option value="Preventivo">Preventivo (Limpieza, pasta térmica, diagnóstico)</option>
+                    <option value="Correctivo">Correctivo (Reparación, cambio de componente)</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="modalFecha">Fecha de Mantenimiento</label>
+                  <input
+                    id="modalFecha"
+                    name="modalFecha"
+                    type="date"
+                    className="form-input"
+                    value={modalFecha}
+                    onChange={(e) => setModalFecha(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group" style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "6px" }}>
+                  <input
+                    type="checkbox"
+                    id="modal-realizado"
+                    name="modalRealizado"
+                    checked={modalRealizado}
+                    onChange={(e) => setModalRealizado(e.target.checked)}
+                    style={{ width: "16px", height: "16px", accentColor: "var(--color-primary-600)" }}
+                  />
+                  <label htmlFor="modal-realizado" className="form-label" style={{ margin: 0, cursor: "pointer" }}>
+                    Mantenimiento realizado y verificado
+                  </label>
+                </div>
               </div>
 
-              <div style={{ marginBottom: "14px" }}>
-                <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "#334155", marginBottom: "6px" }}>
-                  Fecha de Mantenimiento
-                </label>
-                <input
-                  type="date"
-                  value={modalFecha}
-                  onChange={(e) => setModalFecha(e.target.value)}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
-                  required
-                />
-              </div>
-
-              <div style={{ marginBottom: "22px", display: "flex", alignItems: "center", gap: "10px" }}>
-                <input
-                  type="checkbox"
-                  id="modalRealizado"
-                  checked={modalRealizado}
-                  onChange={(e) => setModalRealizado(e.target.checked)}
-                  style={{ width: "18px", height: "18px", cursor: "pointer" }}
-                />
-                <label htmlFor="modalRealizado" style={{ fontSize: "13px", fontWeight: 600, color: "#1e293b", cursor: "pointer" }}>
-                  Mantenimiento concluido satisfactoriamente
-                </label>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-                <button
-                  type="button"
-                  className="actas-reset"
-                  onClick={() => setSelectedItem(null)}
-                  disabled={saving}
-                >
+              <div className="modal-footer">
+                <button type="button" className="btn btn-ghost" onClick={() => setSelectedItem(null)}>
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  className="actas-primary"
-                  disabled={saving}
-                >
-                  {saving ? "Guardando..." : "Guardar Registro"}
+                <button type="submit" className="btn btn-primary" disabled={saving}>
+                  {saving ? "Guardando..." : "Guardar Mantenimiento"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }
-

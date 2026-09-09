@@ -53,7 +53,7 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
                 var actas = await actaService.GetByMensajeroAsync(userId, cancellationToken);
                 return Results.Ok(actas);
             })
-            .RequirePermission(Permissions.MensajeroActasConsultar);
+            .RequireAnyPermission(Permissions.ActasConsultar, Permissions.MensajeroActasConsultar);
 
             // 3. Obtener detalle de acta
             group.MapGet("/{id:guid}", async (

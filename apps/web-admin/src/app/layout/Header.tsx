@@ -1,4 +1,6 @@
+import { useState, useRef, useEffect } from "react";
 import type { AuthenticatedUser } from "../../features/auth/authService";
+import { LogoutIcon, MenuIcon, ChevronDownIcon } from "../../components/Icons";
 
 interface HeaderProps {
   user: AuthenticatedUser | null;
@@ -11,58 +13,118 @@ export function Header({
   onLogout,
   onToggleMenu,
 }: HeaderProps) {
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const initials = user
+    ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`.toUpperCase()
+    : "PA";
+
+  // Cerrar menú al hacer clic fuera
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuAbierto(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuAbierto(false);
+      }
+    }
+
+    if (menuAbierto) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuAbierto]);
+
+  function handleLogoutClick() {
+    setMenuAbierto(false);
+    onLogout();
+  }
+
   return (
-    <header className="app-topbar">
-      <div className="topbar-left">
+    <header className="app-header">
+      <div className="header-left">
         {onToggleMenu && (
           <button
             type="button"
-            className="mobile-menu-toggle"
+            className="header-menu-button"
             onClick={onToggleMenu}
-            aria-label="Abrir menú de navegación"
-            title="Abrir menú"
+            aria-label="Alternar menú lateral"
+            title="Mostrar u ocultar barra lateral"
           >
-            ☰
+            <MenuIcon size={18} />
           </button>
         )}
 
-        <div className="topbar-context">
-          <span>
-            SISTEMA ADMINISTRATIVO
+        <div className="header-title-block">
+          <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.8px', color: 'var(--color-primary-600)', textTransform: 'uppercase' }}>
+            Plataforma Corporativa
           </span>
-
-          <strong>
-            Plataforma de Actas
-          </strong>
+          <div className="header-title">Control de Actas e Inventario</div>
         </div>
       </div>
 
-      <div className="app-user">
-        <div className="app-user-avatar">
-          {user
-            ? `${user.nombre.charAt(0)}${user.apellido.charAt(0)}`
-            : "PA"}
+      <div className="header-right">
+        {/* Menú Desplegable de Perfil de Usuario */}
+        <div className="user-menu-wrapper" ref={menuRef}>
+          <button
+            type="button"
+            className={`user-badge-button ${menuAbierto ? "active" : ""}`}
+            onClick={() => setMenuAbierto((prev) => !prev)}
+            aria-haspopup="true"
+            aria-expanded={menuAbierto}
+            title="Opciones de cuenta y usuario"
+          >
+            <div className="user-avatar">{initials}</div>
+            <div className="user-info">
+              <span className="user-name">{user ? `${user.nombre} ${user.apellido}` : "Usuario"}</span>
+              <span className="user-role">{user?.rol ?? "Colaborador"}</span>
+            </div>
+            <div className="user-badge-chevron">
+              <ChevronDownIcon size={14} />
+            </div>
+          </button>
+
+          {menuAbierto && (
+            <div className="user-menu-dropdown">
+              {/* Cabecera del Menú con Detalle del Usuario */}
+              <div className="user-menu-header">
+                <span className="user-menu-header-name">
+                  {user ? `${user.nombre} ${user.apellido}` : "Usuario"}
+                </span>
+                <span className="user-menu-header-email">
+                  {user?.correo || user?.usuarioRed || "usuario@empresa.com"}
+                </span>
+                <span className="user-menu-header-role">
+                  {user?.rol ?? "Colaborador"}
+                </span>
+              </div>
+
+              {/* Lista de Acciones */}
+              <div className="user-menu-items">
+                <button
+                  type="button"
+                  className="user-menu-item danger"
+                  onClick={handleLogoutClick}
+                >
+                  <span className="user-menu-item-icon">
+                    <LogoutIcon size={15} />
+                  </span>
+                  <span>Cerrar sesión</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-
-        <div className="app-user-info">
-          <strong>
-            {user
-              ? `${user.nombre} ${user.apellido}`
-              : "Usuario"}
-          </strong>
-
-          <span>
-            {user?.rol ?? "Usuario"}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={onLogout}
-          className="auth-logout-button"
-        >
-          Salir
-        </button>
       </div>
     </header>
   );

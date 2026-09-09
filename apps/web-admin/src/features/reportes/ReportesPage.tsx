@@ -1,8 +1,8 @@
-﻿import { useState, useEffect } from "react";
-import { ReportFilters } from "./components/ReportFilters";
-import { ReportKpi } from "./components/ReportKpi";
-import { ReportCharts } from "./components/ReportCharts";
-import { ReportTable } from "./components/ReportTable";
+import { useState, useEffect } from "react";
+import { ReportFilters } from "../../components/ReportFilters";
+import { ReportKpi } from "../../components/ReportKpi";
+import { ReportCharts } from "../../components/ReportCharts";
+import { ReportTable } from "../../components/ReportTable";
 import {
   getEquiposReport,
   getActasReport,
@@ -19,6 +19,15 @@ import type {
   EntregasReportItem,
   DevolucionesReportItem,
 } from "./reportesService";
+import {
+  EquipmentIcon,
+  ActaIcon,
+  MessengerIcon,
+  PackageIcon,
+  DocumentPdfIcon,
+  DownloadIcon,
+  RefreshIcon,
+} from "../../components/Icons";
 
 export function ReportesPage() {
   const [activeTab, setActiveTab] = useState<ReportTab>("equipos");
@@ -88,10 +97,6 @@ export function ReportesPage() {
     runFetch(activeTab, {});
   }
 
-  // =========================================================
-  // EXPORTAR A EXCEL
-  // =========================================================
-
   function handleExportExcel() {
     if (activeTab === "equipos") {
       const headers = ["Clave Inventario", "Nombre Equipo", "Marca", "Asignado A", "Departamento", "Empresa", "Proveedor", "Estado", "Tipo Mantenimiento", "Fecha Mantenimiento"];
@@ -109,14 +114,13 @@ export function ReportesPage() {
       ]);
       exportToCsv("Reporte_Equipos", headers, rows);
     } else if (activeTab === "actas") {
-      const headers = ["Número Acta", "Tipo", "Estado", "Clave Equipo", "Nombre Equipo", "Creador", "Destinatario", "Mensajero", "Fecha Creación", "Fecha Firma", "Fecha Finalización"];
+      const headers = ["Número Acta", "Tipo Acta", "Estado", "Clave Equipo", "Nombre Equipo", "Destinatario", "Mensajero", "Fecha Creación", "Fecha Firma", "Fecha Finalización"];
       const rows = actasData.map((a) => [
         a.numeroActa,
         a.tipoActa,
         a.estado,
         a.equipmentInventoryKey,
         a.equipmentNombre,
-        a.creadorNombre,
         a.destinatarioNombre,
         a.mensajeroNombre,
         a.fechaCreacion,
@@ -153,10 +157,6 @@ export function ReportesPage() {
       exportToCsv("Reporte_Devoluciones", headers, rows);
     }
   }
-
-  // =========================================================
-  // EXPORTAR A PDF
-  // =========================================================
 
   function handleExportPdf() {
     if (activeTab === "equipos") {
@@ -218,94 +218,134 @@ export function ReportesPage() {
       ? entregasData
       : devolucionesData;
 
+  const tabsConfig: { id: ReportTab; label: string; icon: React.ReactNode; count: number }[] = [
+    { id: "equipos", label: "Catálogo de Equipos", icon: <EquipmentIcon size={16} />, count: equiposData.length },
+    { id: "actas", label: "Todas las Actas", icon: <ActaIcon size={16} />, count: actasData.length },
+    { id: "entregas", label: "Reporte de Entregas", icon: <MessengerIcon size={16} />, count: entregasData.length },
+    { id: "devoluciones", label: "Reporte de Devoluciones", icon: <PackageIcon size={16} />, count: devolucionesData.length },
+  ];
+
   return (
-    <main className="inventory-page" style={{ padding: "24px", maxWidth: "1600px", margin: "0 auto" }}>
-      {/* HEADER */}
-      <header className="inventory-header" style={{ marginBottom: "20px" }}>
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
         <div>
-          <span className="inventory-kicker">INFORMES Y EXPORTACIÓN AVANZADA</span>
-          <h1 style={{ margin: "4px 0 8px", fontSize: "24px", fontWeight: 800, color: "#0f172a" }}>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+            INFORMES Y EXPORTACIÓN AVANZADA
+          </span>
+          <h1 style={{ margin: "2px 0 4px", fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
             Módulo de Reportes Oficiales
           </h1>
-          <p style={{ margin: 0, color: "#475569", fontSize: "14px" }}>
-            Consolidación y exportación de información operativa, inventario de hardware y trazabilidad documental.
+          <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-muted)" }}>
+            Consolidación y exportación de información operativa, inventario y trazabilidad documental.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
           <button
             type="button"
-            className="actas-reset"
+            className="btn btn-secondary btn-sm"
+            onClick={() => runFetch(activeTab, filters)}
+            disabled={loading}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            title="Refrescar datos del reporte"
+          >
+            <RefreshIcon size={14} className={loading ? "spin-animation" : ""} />
+            <span>Actualizar</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
             onClick={handleExportExcel}
             disabled={loading || activeData.length === 0}
-            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            <span>ðŸ“¥</span> Exportar a Excel (.CSV)
+            <DownloadIcon size={14} />
+            <span>Exportar CSV / Excel</span>
           </button>
 
           <button
             type="button"
-            className="actas-primary"
+            className="btn btn-primary btn-sm"
             onClick={handleExportPdf}
             disabled={loading || activeData.length === 0}
-            style={{ minHeight: "36px", padding: "8px 16px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
           >
-            <span>ðŸ“„</span> Exportar a PDF
+            <DocumentPdfIcon size={14} />
+            <span>Exportar PDF</span>
           </button>
         </div>
-      </header>
+      </div>
 
-      {/* ERROR */}
       {error && (
-        <div className="actas-error" style={{ marginBottom: "20px" }}>
-          {error}
+        <div className="auth-alert error" style={{ marginBottom: "16px" }}>
+          <span>!</span>
+          <span>{error}</span>
         </div>
       )}
 
-      {/* TABS DE SELECCIÓN */}
-      <div style={{ display: "flex", gap: "8px", borderBottom: "2px solid #e2e8f0", marginBottom: "20px" }}>
-        {[
-          { id: "equipos", label: "ðŸ’» Catálogo de Equipos", count: equiposData.length },
-          { id: "actas", label: "ðŸ“‹ Todas las Actas", count: actasData.length },
-          { id: "entregas", label: "ðŸ“¦ Reporte de Entregas", count: entregasData.length },
-          { id: "devoluciones", label: "↩ Reporte de Devoluciones", count: devolucionesData.length },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => handleTabChange(tab.id as ReportTab)}
-            style={{
-              padding: "10px 18px",
-              border: "none",
-              background: "transparent",
-              borderBottom: activeTab === tab.id ? "3px solid #0f172a" : "3px solid transparent",
-              color: activeTab === tab.id ? "#0f172a" : "#64748b",
-              fontWeight: activeTab === tab.id ? 700 : 500,
-              fontSize: "14px",
-              cursor: "pointer",
-              marginBottom: "-2px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <span>{tab.label}</span>
-            <span
+      {/* Modern Segmented Navigation Tabs Grid */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))",
+          gap: "8px",
+          padding: "6px",
+          background: "var(--color-slate-100)",
+          borderRadius: "var(--radius-lg)",
+          marginBottom: "20px",
+          border: "1px solid var(--border-default)",
+        }}
+      >
+        {tabsConfig.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(tab.id)}
               style={{
-                fontSize: "11px",
-                padding: "2px 6px",
-                borderRadius: "10px",
-                backgroundColor: activeTab === tab.id ? "#0f172a" : "#e2e8f0",
-                color: activeTab === tab.id ? "#ffffff" : "#475569",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                padding: "9px 16px",
+                border: isActive ? "1px solid var(--color-primary-200)" : "1px solid transparent",
+                borderRadius: "var(--radius-md)",
+                background: isActive ? "#ffffff" : "transparent",
+                color: isActive ? "var(--color-primary-700)" : "var(--text-secondary)",
+                fontWeight: isActive ? 700 : 500,
+                fontSize: "13.5px",
+                cursor: "pointer",
+                boxShadow: isActive ? "0 2px 8px rgba(99, 102, 241, 0.1)" : "none",
+                transition: "all var(--transition-fast)",
+                whiteSpace: "nowrap",
+                width: "100%",
               }}
             >
-              {tab.count}
-            </span>
-          </button>
-        ))}
+              <span style={{ color: isActive ? "var(--color-primary-600)" : "var(--text-muted)", display: "flex", alignItems: "center" }}>
+                {tab.icon}
+              </span>
+              <span>{tab.label}</span>
+              <span
+                style={{
+                  fontSize: "11px",
+                  padding: "2px 8px",
+                  borderRadius: "var(--radius-pill)",
+                  backgroundColor: isActive ? "var(--color-primary-100)" : "var(--color-slate-200)",
+                  color: isActive ? "var(--color-primary-800)" : "var(--text-muted)",
+                  fontWeight: 700,
+                }}
+              >
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* FILTROS */}
+      {/* Filters Toolbar */}
       <ReportFilters
         tab={activeTab}
         filters={filters}
@@ -315,17 +355,30 @@ export function ReportesPage() {
         loading={loading}
       />
 
-      {/* KPIS DINÁMICOS */}
+      {/* KPI Cards */}
       <ReportKpi tab={activeTab} data={activeData} />
 
-      {/* GRÁFICA RESUMEN */}
+      {/* Distribution Chart */}
       <ReportCharts tab={activeTab} data={activeData} />
 
-      {/* TABLA DE RESULTADOS */}
-      <section className="inventory-panel">
+      {/* Data Table Card */}
+      <div className="card" style={{ padding: 0, overflow: "hidden", marginBottom: "30px" }}>
+        <div className="card-header">
+          <div>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              REGISTROS OFICIALES
+            </span>
+            <h3 style={{ margin: "2px 0 0", fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>
+              Detalle Consolidado de {tabsConfig.find((t) => t.id === activeTab)?.label}
+            </h3>
+          </div>
+          <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
+            {activeData.length} {activeData.length === 1 ? "registro" : "registros"}
+          </span>
+        </div>
+
         <ReportTable tab={activeTab} data={activeData} />
-      </section>
-    </main>
+      </div>
+    </div>
   );
 }
-

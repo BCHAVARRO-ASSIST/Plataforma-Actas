@@ -88,8 +88,15 @@ namespace PlataformaActas.Api.Modules.Roles.Endpoints
                 IRolService service,
                 CancellationToken cancellationToken) =>
             {
-                var ok = await service.SetActiveAsync(id, true, cancellationToken);
-                return ok ? Results.NoContent() : Results.NotFound();
+                try
+                {
+                    var ok = await service.SetActiveAsync(id, true, cancellationToken);
+                    return ok ? Results.NoContent() : Results.NotFound();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { message = ex.Message });
+                }
             })
             .RequirePermission(Permissions.RolesEditar);
 
@@ -99,8 +106,15 @@ namespace PlataformaActas.Api.Modules.Roles.Endpoints
                 IRolService service,
                 CancellationToken cancellationToken) =>
             {
-                var ok = await service.SetActiveAsync(id, false, cancellationToken);
-                return ok ? Results.NoContent() : Results.NotFound();
+                try
+                {
+                    var ok = await service.SetActiveAsync(id, false, cancellationToken);
+                    return ok ? Results.NoContent() : Results.NotFound();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { message = ex.Message });
+                }
             })
             .RequirePermission(Permissions.RolesEditar);
 
@@ -146,8 +160,15 @@ namespace PlataformaActas.Api.Modules.Roles.Endpoints
                 IRolService service,
                 CancellationToken cancellationToken) =>
             {
-                var ok = await service.SetPermisosAsync(id, request.PermisoIds ?? Array.Empty<int>(), cancellationToken);
-                return ok ? Results.NoContent() : Results.NotFound();
+                try
+                {
+                    var ok = await service.SetPermisosAsync(id, request.PermisoIds ?? Array.Empty<int>(), cancellationToken);
+                    return ok ? Results.NoContent() : Results.NotFound();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Conflict(new { message = ex.Message });
+                }
             })
             .RequirePermission(Permissions.RolesEditar);
 

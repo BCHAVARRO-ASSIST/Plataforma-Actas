@@ -53,7 +53,6 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Entities
         public Guid ActaId { get; set; }
         public Acta Acta { get; set; } = null!;
 
-        public string? Categoria { get; set; }
         public string Texto { get; set; } = string.Empty;
         public int? UsuarioId { get; set; }
         public Usuario? Usuario { get; set; }
@@ -67,7 +66,6 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Entities
         public Acta Acta { get; set; } = null!;
 
         public string SignatureBase64 { get; set; } = string.Empty;
-        public string? DeviceId { get; set; }
         public bool ConsentAccepted { get; set; } = true;
         public string? LegalClauseVersion { get; set; } = "3.2-ISO27001";
         public DateTimeOffset FechaCreacion { get; set; } = DateTimeOffset.UtcNow;
@@ -90,6 +88,8 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Entities
 
 namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
 {
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.EntityFrameworkCore.Metadata.Builders;
     using PlataformaActas.Api.Modules.Actas.Data.Entities;
 
     public sealed class ActaConfiguration : IEntityTypeConfiguration<Acta>
@@ -180,7 +180,7 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
 
             builder.Property(a => a.DeviceId)
                 .HasColumnName("device_id")
-                .HasMaxLength(100);
+                .HasMaxLength(200);
 
             builder.Property(a => a.FormDataJson)
                 .HasColumnName("form_data_json")
@@ -190,10 +190,11 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
 
             builder.Property(a => a.HashSha256)
                 .HasColumnName("hash_sha256")
-                .HasMaxLength(64);
+                .HasMaxLength(128);
 
             builder.Property(a => a.MotivoAnulacion)
-                .HasColumnName("motivo_anulacion");
+                .HasColumnName("motivo_anulacion")
+                .HasMaxLength(2000);
 
             builder.Property(a => a.SignatureDataJson)
                 .HasColumnName("signature_data_json")
@@ -251,10 +252,6 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
             builder.HasIndex(o => o.ActaId)
                 .HasDatabaseName("ix_acta_observations_v2_acta_id");
 
-            builder.Property(o => o.Categoria)
-                .HasColumnName("categoria")
-                .HasMaxLength(100);
-
             builder.Property(o => o.Texto)
                 .HasColumnName("texto")
                 .IsRequired();
@@ -307,10 +304,6 @@ namespace PlataformaActas.Api.Modules.Actas.Data.Configurations
             builder.Property(s => s.SignatureBase64)
                 .HasColumnName("signature_base64")
                 .IsRequired();
-
-            builder.Property(s => s.DeviceId)
-                .HasColumnName("device_id")
-                .HasMaxLength(100);
 
             builder.Property(s => s.ConsentAccepted)
                 .HasColumnName("consent_accepted")
@@ -476,7 +469,8 @@ namespace PlataformaActas.Api.Modules.Actas.Models.Dto
     );
 
     public sealed record FirmarActaRequest(
-        string SignatureDataJson
+        string SignatureDataJson,
+        string? Observacion = null
     );
 
     public sealed record AnularActaRequest(

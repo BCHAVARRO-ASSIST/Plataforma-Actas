@@ -64,6 +64,7 @@ export interface CreateActaRequest {
 
 export interface FirmarActaRequest {
   signatureDataJson: string;
+  observacion?: string;
 }
 
 export interface GenerarDocumentoResponse {

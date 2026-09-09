@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 
 import { EquipmentPage } from "./features/equipment/EquipmentPage";
@@ -9,14 +9,13 @@ import { MantenimientosPage } from "./features/mantenimientos/MantenimientosPage
 import { UsuariosPage } from "./features/usuarios/UsuariosPage";
 import { RolesPage } from "./features/roles/RolesPage";
 import { MensajeroPage } from "./features/mensajero/MensajeroPage";
-import { MensajeroActaDetail } from "./features/mensajero/components/MensajeroActaDetail";
+import { MensajeroActaDetail } from "./components/MensajeroActaDetail";
 
-import ForgotPasswordPage from "./features/auth/ForgotPasswordPage";
-import ResetPasswordPage from "./features/auth/ResetPasswordPage";
 import LoginPage from "./features/auth/LoginPage";
 
 import { hasPermission, PERMISSIONS } from "./features/auth/permissions";
-import { AuthProvider, useAuth } from "./features/auth/AuthContext";
+import { AuthProvider } from "./features/auth/AuthContext";
+import { useAuth } from "./features/auth/useAuth";
 
 import { AppShell } from "./app/layout/AppShell";
 import { Sidebar } from "./app/layout/Sidebar";
@@ -24,38 +23,27 @@ import { Header } from "./app/layout/Header";
 import { NAVIGATION_ITEMS } from "./app/navigation/navigation";
 import type { View } from "./app/navigation/navigationTypes";
 
-type AuthView = "login" | "forgot-password" | "reset-password";
-
 function AppContent() {
   const { user, token, login, logout, isAuthenticated } = useAuth();
 
-  const [authView, setAuthView] = useState<AuthView>("login");
   const [view, setView] = useState<View>("dashboard");
   const [selectedMensajeroActaId, setSelectedMensajeroActaId] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopSidebarCollapsed, setDesktopSidebarCollapsed] = useState(false);
+
+  function handleToggleSidebar() {
+    if (typeof window !== "undefined" && window.innerWidth <= 900) {
+      setMobileMenuOpen((prev) => !prev);
+    } else {
+      setDesktopSidebarCollapsed((prev) => !prev);
+    }
+  }
 
   // Login Form States
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
-
-  // =======================================================
-  // ADAPTAR VISTA INICIAL SEGÚN ROL OPERATIVO
-  // =======================================================
-
-  useEffect(() => {
-    if (user) {
-      const isMensajeroOnly =
-        user.rol === "Mensajero" ||
-        (!hasPermission(token, PERMISSIONS.DASHBOARD_CONSULTAR) &&
-          hasPermission(token, PERMISSIONS.MENSAJERO_ACTAS_CONSULTAR));
-
-      if (isMensajeroOnly) {
-        setView("mensajero");
-      }
-    }
-  }, [user, token]);
 
   // =======================================================
   // FILTRAR ÍTEMS DE NAVEGACIÓN POR PERMISOS
@@ -65,6 +53,17 @@ function AppContent() {
     if (!item.permission) return true;
     return hasPermission(token, item.permission);
   });
+
+  // =======================================================
+  // ADAPTAR VISTA EFECTIVA SEGÚN PERMISOS DISPONIBLES
+  // =======================================================
+
+  const isCurrentViewAllowed = navigationItems.some((item) => item.view === view);
+  const effectiveView: View = isCurrentViewAllowed
+    ? view
+    : navigationItems.length > 0
+    ? navigationItems[0].view
+    : "dashboard";
 
   // =======================================================
   // MANEJADORES DE AUTENTICACIÓN
@@ -88,32 +87,15 @@ function AppContent() {
 
   function handleLogout() {
     logout();
-    setAuthView("login");
     setView("dashboard");
     setSelectedMensajeroActaId(null);
   }
 
   // =======================================================
-  // RENDERIZADO DE LOGIN / RECUPERACIÓN
+  // RENDERIZADO DE LOGIN DIRECTO
   // =======================================================
 
   if (!isAuthenticated) {
-    if (authView === "forgot-password") {
-      return (
-        <ForgotPasswordPage
-          onBackToLogin={() => setAuthView("login")}
-        />
-      );
-    }
-
-    if (authView === "reset-password") {
-      return (
-        <ResetPasswordPage
-          onBackToLogin={() => setAuthView("login")}
-        />
-      );
-    }
-
     return (
       <LoginPage
         username={username}
@@ -127,7 +109,6 @@ function AppContent() {
           setPassword(e.target.value)
         }
         onSubmit={handleLoginSubmit}
-        onForgotPassword={() => setAuthView("forgot-password")}
       />
     );
   }
@@ -137,23 +118,23 @@ function AppContent() {
   // =======================================================
 
   function renderCurrentView() {
-    if (view === "equipment" && hasPermission(token, PERMISSIONS.EQUIPOS_CONSULTAR)) {
+    if (effectiveView === "equipment" && hasPermission(token, PERMISSIONS.EQUIPOS_CONSULTAR)) {
       return <EquipmentPage />;
     }
 
-    if (view === "actas" && hasPermission(token, PERMISSIONS.ACTAS_CONSULTAR)) {
+    if (effectiveView === "actas" && hasPermission(token, PERMISSIONS.ACTAS_CONSULTAR)) {
       return <ActaPage />;
     }
 
-    if (view === "mantenimientos" && hasPermission(token, PERMISSIONS.EQUIPOS_CONSULTAR)) {
+    if (effectiveView === "mantenimientos" && hasPermission(token, PERMISSIONS.EQUIPOS_CONSULTAR)) {
       return <MantenimientosPage />;
     }
 
-    if (view === "reportes" && hasPermission(token, PERMISSIONS.REPORTES_CONSULTAR)) {
+    if (effectiveView === "reportes" && hasPermission(token, PERMISSIONS.REPORTES_CONSULTAR)) {
       return <ReportesPage />;
     }
 
-    if (view === "mensajero" && hasPermission(token, PERMISSIONS.MENSAJERO_ACTAS_CONSULTAR)) {
+    if (effectiveView === "mensajero" && hasPermission(token, PERMISSIONS.MENSAJERO_ACTAS_CONSULTAR)) {
       if (selectedMensajeroActaId !== null) {
         return (
           <MensajeroActaDetail
@@ -170,11 +151,11 @@ function AppContent() {
       );
     }
 
-    if (view === "usuarios" && hasPermission(token, PERMISSIONS.USUARIOS_CONSULTAR)) {
+    if (effectiveView === "usuarios" && hasPermission(token, PERMISSIONS.USUARIOS_CONSULTAR)) {
       return <UsuariosPage />;
     }
 
-    if (view === "roles" && hasPermission(token, PERMISSIONS.ROLES_CONSULTAR)) {
+    if (effectiveView === "roles" && hasPermission(token, PERMISSIONS.ROLES_CONSULTAR)) {
       return <RolesPage />;
     }
 
@@ -194,9 +175,10 @@ function AppContent() {
     <AppShell
       sidebar={
         <Sidebar
-          view={view}
+          view={effectiveView}
           navigationItems={navigationItems}
           isOpen={mobileMenuOpen}
+          isCollapsed={desktopSidebarCollapsed}
           onClose={() => setMobileMenuOpen(false)}
           onViewChange={(nextView) => {
             setView(nextView);
@@ -209,7 +191,7 @@ function AppContent() {
         <Header
           user={user}
           onLogout={handleLogout}
-          onToggleMenu={() => setMobileMenuOpen(true)}
+          onToggleMenu={handleToggleSidebar}
         />
       }
     >

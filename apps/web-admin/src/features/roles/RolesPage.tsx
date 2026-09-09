@@ -1,2109 +1,858 @@
-﻿import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import {
+  getRoles,
   createRol,
-  deleteRol,
+  updateRol,
   getPermisos,
   getRol,
-  getRoles,
-  setRolActivo,
-  updateRol,
   updateRolPermisos,
-  type Permiso,
-  type Rol,
-  type RolDetalle,
+  deleteRol,
 } from "./rolService";
+import type { Rol, Permiso } from "./rolService";
+import {
+  SearchIcon,
+  RefreshIcon,
+  PlusIcon,
+  EditIcon,
+  KeyIcon,
+  CloseIcon,
+  RolesIcon,
+  PackageIcon,
+  ActaIcon,
+  DashboardIcon,
+  EquipmentIcon,
+  MessengerIcon,
+  ReportsIcon,
+  UsersIcon,
+  TrashIcon,
+  ShieldIcon,
+} from "../../components/Icons";
+import { AutoDismissAlert } from "../../components/AutoDismissAlert";
 
-type ModalType =
-  | "crear"
-  | "editar"
-  | "permisos"
-  | null;
+const PERMISSION_LABEL_MAP: Record<string, { label: string; desc: string }> = {
+  // Actas
+  ACTAS_CONSULTAR: { label: "Consultar actas", desc: "Ver listado y consultar detalle de actas" },
+  ACTAS_REGISTRAR: { label: "Emitir / Crear acta", desc: "Generar nuevas actas de entrega o devolución" },
+  ACTAS_EDITAR: { label: "Modificar acta", desc: "Editar campos e información antes del cierre" },
+  ACTAS_FIRMAR: { label: "Firmar digitalmente", desc: "Firmar y certificar validez legal del acta" },
+  ACTAS_EXPORTAR: { label: "Exportar actas", desc: "Descargar actas en PDF y planillas" },
 
-type ConfirmationAction =
-  | "activar"
-  | "desactivar"
-  | "eliminar"
-  | null;
+  // Dashboard
+  DASHBOARD_CONSULTAR: { label: "Visualizar indicadores", desc: "Acceso al resumen ejecutivo y KPIs globales" },
 
-// =========================================================
-// FORMATEAR NOMBRE VISIBLE DEL PERMISO
-// =========================================================
-// =========================================================
+  // Equipos
+  EQUIPOS_CONSULTAR: { label: "Consultar inventario", desc: "Ver catálogo y fichas técnicas de equipos" },
+  EQUIPOS_REGISTRAR: { label: "Registrar equipo", desc: "Ingresar nuevos activos al inventario" },
+  EQUIPOS_EDITAR: { label: "Modificar ficha", desc: "Actualizar datos, marca y asignación de equipo" },
+  EQUIPOS_DESACTIVAR: { label: "Inactivar / Dar de baja", desc: "Desactivar equipos obsoletos o retirados" },
 
-function getPermissionLabel(
-  permissionName: string
-): string {
+  // Mensajero
+  MENSAJERO_ACTAS_CONSULTAR: { label: "Consultar entregas", desc: "Ver rutas y actas asignadas para entrega" },
+  MENSAJERO_ACTAS_FIRMAR: { label: "Recoger firma en campo", desc: "Capturar firma digital del receptor" },
+  MENSAJERO_ACTAS_ENTREGAR: { label: "Completar entrega", desc: "Confirmar entrega exitosa en destino" },
+  MENSAJERO_ACTAS_DEVOLVER: { label: "Registrar devolución", desc: "Procesar reintegro de equipo a bodega" },
 
-  const action =
-    permissionName
-      .split("_")
-      .pop();
+  // Reportes
+  REPORTES_CONSULTAR: { label: "Consultar reportes", desc: "Acceso al centro de reportes y analítica" },
+  REPORTES_EXPORTAR: { label: "Exportar datos", desc: "Descargar informes en CSV / Excel y PDF" },
 
-  if (!action) {
-    return permissionName;
+  // Roles
+  ROLES_CONSULTAR: { label: "Consultar roles", desc: "Ver catálogo de roles y perfiles RBAC" },
+  ROLES_CREAR: { label: "Crear rol", desc: "Registrar nuevos perfiles de usuario" },
+  ROLES_EDITAR: { label: "Asignar permisos", desc: "Configurar matriz de privilegios por rol" },
+  ROLES_ELIMINAR: { label: "Eliminar rol", desc: "Remover roles sin usuarios asociados" },
+
+  // Usuarios
+  USUARIOS_CONSULTAR: { label: "Consultar directorio", desc: "Ver directorio corporativo de colaboradores" },
+  USUARIOS_REGISTRAR: { label: "Crear usuario", desc: "Dar de alta nuevos colaboradores" },
+  USUARIOS_EDITAR: { label: "Editar usuario", desc: "Modificar datos personales y rol asignado" },
+  USUARIOS_DESACTIVAR: { label: "Inactivar usuario", desc: "Suspender acceso de colaboradores retirados" },
+};
+
+function formatPermission(p: Permiso): { label: string; desc: string } {
+  if (PERMISSION_LABEL_MAP[p.nombre]) {
+    return PERMISSION_LABEL_MAP[p.nombre];
   }
+  const clean = p.nombre
+    .replace(/^([A-Z]+)_/, "")
+    .replace(/_/g, " ")
+    .toLowerCase();
+  const label = clean.charAt(0).toUpperCase() + clean.slice(1);
+  return { label, desc: p.descripcion || "Permiso de operación en el módulo" };
+}
 
-  const labels: Record<string, string> = {
-    CONSULTAR: "Consultar",
-    REGISTRAR: "Registrar",
-    CREAR: "Crear",
-    EDITAR: "Editar",
-    DESACTIVAR: "Desactivar",
-    FIRMAR: "Firmar",
-    EXPORTAR: "Exportar",
-    ELIMINAR: "Eliminar",
-  };
+function getModuloIcon(modulo: string) {
+  const m = modulo.toLowerCase();
+  if (m.includes("acta")) return <ActaIcon size={16} />;
+  if (m.includes("dash")) return <DashboardIcon size={16} />;
+  if (m.includes("equip")) return <EquipmentIcon size={16} />;
+  if (m.includes("mensaj")) return <MessengerIcon size={16} />;
+  if (m.includes("rep")) return <ReportsIcon size={16} />;
+  if (m.includes("rol")) return <RolesIcon size={16} />;
+  if (m.includes("usu")) return <UsersIcon size={16} />;
+  return <PackageIcon size={16} />;
+}
 
+function getRoleAccessBadge(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes("admin")) {
+    return (
+      <span className="badge" style={{ background: "var(--color-primary-50)", color: "var(--color-primary-700)", border: "1px solid var(--color-primary-200)", whiteSpace: "nowrap" }}>
+        <span className="badge-dot" style={{ background: "var(--color-primary-600)" }} />
+        Acceso Total (Superadmin)
+      </span>
+    );
+  }
+  if (n.includes("audit")) {
+    return (
+      <span className="badge badge-info" style={{ whiteSpace: "nowrap" }}>
+        <span className="badge-dot" />
+        Auditoría y Consulta
+      </span>
+    );
+  }
+  if (n.includes("gestor")) {
+    return (
+      <span className="badge badge-success" style={{ whiteSpace: "nowrap" }}>
+        <span className="badge-dot" />
+        Gestión Operativa
+      </span>
+    );
+  }
+  if (n.includes("mensaj")) {
+    return (
+      <span className="badge badge-warning" style={{ whiteSpace: "nowrap" }}>
+        <span className="badge-dot" />
+        Operaciones de Campo
+      </span>
+    );
+  }
   return (
-    labels[action] ??
-    (
-      action.charAt(0).toUpperCase() +
-      action.slice(1).toLowerCase()
-    )
+    <span className="badge badge-neutral" style={{ whiteSpace: "nowrap" }}>
+      <span className="badge-dot" />
+      Personalizado
+    </span>
   );
 }
 
+function getRoleIcon(name: string) {
+  const n = name.toLowerCase();
+  if (n.includes("admin")) return <ShieldIcon size={16} />;
+  if (n.includes("audit")) return <ReportsIcon size={16} />;
+  if (n.includes("gestor")) return <EquipmentIcon size={16} />;
+  if (n.includes("mensaj")) return <MessengerIcon size={16} />;
+  return <RolesIcon size={16} />;
+}
 
 export function RolesPage() {
+  const [roles, setRoles] = useState<Rol[]>([]);
+  const [permisos, setPermisos] = useState<Permiso[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [mensaje, setMensaje] = useState<string | null>(null);
 
-  const [roles, setRoles] =
-    useState<Rol[]>([]);
+  // Filters
+  const [busqueda, setBusqueda] = useState("");
 
-  const [permisos, setPermisos] =
-    useState<Permiso[]>([]);
+  // Modal Crear / Editar Rol
+  const [modalRolAbierto, setModalRolAbierto] = useState(false);
+  const [modoFormulario, setModoFormulario] = useState<"crear" | "editar">("crear");
+  const [rolSeleccionado, setRolSeleccionado] = useState<Rol | null>(null);
+  const [formularioRol, setFormularioRol] = useState({
+    nombre: "",
+    descripcion: "",
+  });
+  const [guardandoRol, setGuardandoRol] = useState(false);
 
-  const [loading, setLoading] =
-    useState(true);
+  // Modal Matriz de Permisos
+  const [modalPermisosAbierto, setModalPermisosAbierto] = useState(false);
+  const [rolPermisosSeleccionado, setRolPermisosSeleccionado] = useState<Rol | null>(null);
+  const [permisosSeleccionados, setPermisosSeleccionados] = useState<number[]>([]);
+  const [guardandoPermisos, setGuardandoPermisos] = useState(false);
 
-  const [error, setError] =
-    useState<string | null>(null);
-
-  const [busqueda, setBusqueda] =
-    useState("");
-
-  const [modal, setModal] =
-    useState<ModalType>(null);
-
-  const [rolSeleccionado, setRolSeleccionado] =
-    useState<RolDetalle | null>(null);
-
-  const [nombre, setNombre] =
-    useState("");
-
-  const [descripcion, setDescripcion] =
-    useState("");
-
-  const [permisosSeleccionados, setPermisosSeleccionados] =
-    useState<number[]>([]);
-
-  const [guardando, setGuardando] =
-    useState(false);
-
-  const [cambiandoEstado, setCambiandoEstado] =
-    useState<number | null>(null);
-
-
-  // =========================================================
-  // CONFIRMACIÓN DE ACCIONES
-  // =========================================================
-
-  const [confirmationAction, setConfirmationAction] =
-    useState<ConfirmationAction>(null);
-
-  const [rolParaConfirmar, setRolParaConfirmar] =
-    useState<Rol | null>(null);
-
-  const [procesandoConfirmacion, setProcesandoConfirmacion] =
-    useState(false);
-
-
-  // =========================================================
-  // CARGAR DATOS
-  // =========================================================
+  // Modal Eliminar Rol
+  const [modalEliminarAbierto, setModalEliminarAbierto] = useState(false);
+  const [rolAEliminar, setRolAEliminar] = useState<Rol | null>(null);
+  const [eliminandoRol, setEliminandoRol] = useState(false);
 
   async function cargarDatos() {
-
     try {
-
       setLoading(true);
       setError(null);
-
-      const [
-        rolesData,
-        permisosData,
-      ] = await Promise.all([
-        getRoles(),
-        getPermisos(),
-      ]);
-
-      setRoles(rolesData);
-      setPermisos(permisosData);
-
+      const [rData, pData] = await Promise.all([getRoles(), getPermisos()]);
+      setRoles(rData);
+      setPermisos(pData);
     } catch (err) {
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible cargar los roles."
-      );
-
+      setError(err instanceof Error ? err.message : "Error al cargar los roles y permisos.");
     } finally {
-
       setLoading(false);
-
     }
   }
-
 
   useEffect(() => {
-
-    void Promise.resolve().then(cargarDatos);
-
+    cargarDatos();
   }, []);
 
-
-  // =========================================================
-  // FILTRAR
-  // =========================================================
-
-  const rolesFiltrados =
-    useMemo(() => {
-
-      const texto =
-        busqueda
-          .trim()
-          .toLowerCase();
-
-      if (!texto) {
-        return roles;
-      }
-
-      return roles.filter(
-        (rol) =>
-          rol.nombre
-            .toLowerCase()
-            .includes(texto) ||
-          (
-            rol.descripcion ?? ""
-          )
-            .toLowerCase()
-            .includes(texto)
+  const rolesFiltrados = useMemo(() => {
+    const term = busqueda.trim().toLowerCase();
+    return roles.filter((r) => {
+      return (
+        term === "" ||
+        r.nombre.toLowerCase().includes(term) ||
+        (r.descripcion ?? "").toLowerCase().includes(term)
       );
+    });
+  }, [roles, busqueda]);
 
-    }, [
-      roles,
-      busqueda,
-    ]);
+  // Agrupar permisos por módulo
+  const permisosPorModulo = useMemo(() => {
+    const mapa: Record<string, Permiso[]> = {};
+    for (const p of permisos) {
+      const modulo = p.modulo || "General";
+      if (!mapa[modulo]) mapa[modulo] = [];
+      mapa[modulo].push(p);
+    }
+    return mapa;
+  }, [permisos]);
 
-
-  const rolesActivos =
-    roles.filter(
-      (rol) => rol.activo
-    ).length;
-
-
-  const rolesInactivos =
-    roles.filter(
-      (rol) => !rol.activo
-    ).length;
-
-
-  // =========================================================
-  // PERMISOS AGRUPADOS
-  // =========================================================
-
-  const permisosPorModulo =
-    useMemo(() => {
-
-      const grupos =
-        new Map<
-          string,
-          Permiso[]
-        >();
-
-      permisos.forEach(
-        (permiso) => {
-
-          const grupo =
-            grupos.get(
-              permiso.modulo
-            ) ?? [];
-
-          grupo.push(
-            permiso
-          );
-
-          grupos.set(
-            permiso.modulo,
-            grupo
-          );
-
-        }
-      );
-
-      return Array.from(
-        grupos.entries()
-      );
-
-    }, [permisos]);
-
-
-  // =========================================================
-  // CREAR
-  // =========================================================
-
-  function abrirCrear() {
-
+  function abrirModalCrear() {
+    setModoFormulario("crear");
     setRolSeleccionado(null);
-    setNombre("");
-    setDescripcion("");
-    setPermisosSeleccionados([]);
-    setError(null);
-    setModal("crear");
-
+    setFormularioRol({ nombre: "", descripcion: "" });
+    setModalRolAbierto(true);
   }
 
+  function abrirModalEditar(r: Rol) {
+    setModoFormulario("editar");
+    setRolSeleccionado(r);
+    setFormularioRol({ nombre: r.nombre, descripcion: r.descripcion || "" });
+    setModalRolAbierto(true);
+  }
 
-  // =========================================================
-  // EDITAR
-  // =========================================================
+  function abrirModalEliminar(r: Rol) {
+    setRolAEliminar(r);
+    setModalEliminarAbierto(true);
+  }
 
-  async function abrirEditar(
-    rol: Rol
-  ) {
-
+  async function abrirModalPermisos(r: Rol) {
     try {
-
       setError(null);
-
-      const detalle =
-        await getRol(rol.id);
-
-      setRolSeleccionado(
-        detalle
-      );
-
-      setNombre(
-        detalle.nombre
-      );
-
-      setDescripcion(
-        detalle.descripcion ?? ""
-      );
-
-      setPermisosSeleccionados(
-        detalle.permisos.map(
-          (permiso) =>
-            permiso.id
-        )
-      );
-
-      setModal("editar");
-
+      setRolPermisosSeleccionado(r);
+      const rolDetalle = await getRol(r.id);
+      setPermisosSeleccionados(rolDetalle.permisos.map((p) => p.id));
+      setModalPermisosAbierto(true);
     } catch (err) {
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible obtener el rol."
-      );
-
+      setError(err instanceof Error ? err.message : "Error al cargar los permisos del rol.");
     }
-
   }
 
-
-  // =========================================================
-  // PERMISOS
-  // =========================================================
-
-  async function abrirPermisos(
-    rol: Rol
-  ) {
-
-    try {
-
-      setError(null);
-
-      const detalle =
-        await getRol(rol.id);
-
-      setRolSeleccionado(
-        detalle
-      );
-
-      setPermisosSeleccionados(
-        detalle.permisos.map(
-          (permiso) =>
-            permiso.id
-        )
-      );
-
-      setModal("permisos");
-
-    } catch (err) {
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible obtener los permisos."
-      );
-
-    }
-
-  }
-
-
-  function togglePermiso(
-    permisoId: number
-  ) {
-
-    setPermisosSeleccionados(
-      (actuales) =>
-        actuales.includes(
-          permisoId
-        )
-          ? actuales.filter(
-              (id) =>
-                id !== permisoId
-            )
-          : [
-              ...actuales,
-              permisoId,
-            ]
-    );
-
-  }
-
-
-  function seleccionarModulo(
-    permisosModulo: Permiso[]
-  ) {
-
-    const ids =
-      permisosModulo.map(
-        (permiso) =>
-          permiso.id
-      );
-
-    const todosSeleccionados =
-      ids.every((id) =>
-        permisosSeleccionados.includes(
-          id
-        )
-      );
-
-    setPermisosSeleccionados(
-      (actuales) =>
-        todosSeleccionados
-          ? actuales.filter(
-              (id) =>
-                !ids.includes(id)
-            )
-          : Array.from(
-              new Set([
-                ...actuales,
-                ...ids,
-              ])
-            )
-    );
-
-  }
-
-
-  function seleccionarTodos() {
-
-    setPermisosSeleccionados(
-      permisos.map(
-        (permiso) =>
-          permiso.id
-      )
-    );
-
-  }
-
-
-  function limpiarPermisos() {
-
-    setPermisosSeleccionados([]);
-
-  }
-
-
-  // =========================================================
-  // GUARDAR ROL
-  // =========================================================
-
-  async function guardarRol() {
-
-    if (!nombre.trim()) {
-
-      setError(
-        "El nombre del rol es obligatorio."
-      );
-
+  async function handleGuardarRol(e: React.FormEvent) {
+    e.preventDefault();
+    if (!formularioRol.nombre.trim()) {
+      setError("El nombre del rol es obligatorio.");
       return;
     }
 
     try {
-
-      setGuardando(true);
+      setGuardandoRol(true);
       setError(null);
+      if (modoFormulario === "crear") {
+        await createRol({
+          nombre: formularioRol.nombre.trim(),
+          descripcion: formularioRol.descripcion.trim(),
+        });
+        setMensaje(`Rol "${formularioRol.nombre}" creado con éxito.`);
+      } else if (rolSeleccionado) {
+        await updateRol(rolSeleccionado.id, {
+          nombre: formularioRol.nombre.trim(),
+          descripcion: formularioRol.descripcion.trim(),
+        });
+        setMensaje(`Rol "${formularioRol.nombre}" actualizado con éxito.`);
+      }
+      setModalRolAbierto(false);
+      await cargarDatos();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al guardar el rol.");
+    } finally {
+      setGuardandoRol(false);
+    }
+  }
 
-      let rolId: number;
+  async function handleConfirmarEliminarRol() {
+    if (!rolAEliminar) return;
 
-      if (modal === "crear") {
+    try {
+      setEliminandoRol(true);
+      setError(null);
+      await deleteRol(rolAEliminar.id);
+      setMensaje(`Rol "${rolAEliminar.nombre}" eliminado exitosamente.`);
+      setModalEliminarAbierto(false);
+      setRolAEliminar(null);
+      await cargarDatos();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al eliminar el rol.");
+      setModalEliminarAbierto(false);
+    } finally {
+      setEliminandoRol(false);
+    }
+  }
 
-        const nuevo =
-          await createRol({
-            nombre,
-            descripcion,
-          });
+  const CRITICAL_ADMIN_PERMISSIONS = [
+    "ROLES_CONSULTAR",
+    "ROLES_EDITAR",
+    "USUARIOS_CONSULTAR",
+    "DASHBOARD_CONSULTAR",
+  ];
 
-        rolId =
-          nuevo.id;
+  async function handleGuardarPermisos(e: React.FormEvent) {
+    e.preventDefault();
+    if (!rolPermisosSeleccionado) return;
 
-      } else if (
-        modal === "editar" &&
-        rolSeleccionado
-      ) {
+    const esAdmin = rolPermisosSeleccionado.nombre.toLowerCase().includes("admin");
 
-        await updateRol(
-          rolSeleccionado.id,
-          {
-            nombre,
-            descripcion,
-          }
-        );
-
-        rolId =
-          rolSeleccionado.id;
-
-      } else {
-
+    if (esAdmin) {
+      if (permisosSeleccionados.length === 0) {
+        setError("Acción Bloqueada: No es posible revocar todos los permisos del rol Administrador ya que provocaría un bloqueo total del sistema.");
         return;
-
       }
 
-      await updateRolPermisos(
-        rolId,
-        permisosSeleccionados
+      const missingCritical = permisos.filter(
+        (p) => CRITICAL_ADMIN_PERMISSIONS.includes(p.nombre) && !permisosSeleccionados.includes(p.id)
       );
 
-      cerrarModal();
-
-      await cargarDatos();
-
-    } catch (err) {
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible guardar el rol."
-      );
-
-    } finally {
-
-      setGuardando(false);
-
-    }
-
-  }
-
-
-  // =========================================================
-  // GUARDAR PERMISOS
-  // =========================================================
-
-  async function guardarPermisos() {
-
-    if (!rolSeleccionado) {
-      return;
+      if (missingCritical.length > 0) {
+        setError(
+          `Advertencia de Seguridad: El rol Administrador debe conservar obligatoriamente los permisos esenciales de acceso (${missingCritical.map((p) => p.nombre).join(", ")}).`
+        );
+        return;
+      }
     }
 
     try {
-
-      setGuardando(true);
+      setGuardandoPermisos(true);
       setError(null);
-
-      await updateRolPermisos(
-        rolSeleccionado.id,
-        permisosSeleccionados
-      );
-
-      cerrarModal();
-
-      await cargarDatos();
-
+      await updateRolPermisos(rolPermisosSeleccionado.id, permisosSeleccionados);
+      setMensaje(`Permisos actualizados para el rol "${rolPermisosSeleccionado.nombre}".`);
+      setModalPermisosAbierto(false);
     } catch (err) {
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible actualizar los permisos."
-      );
-
+      setError(err instanceof Error ? err.message : "Error al asignar permisos.");
     } finally {
-
-      setGuardando(false);
-
+      setGuardandoPermisos(false);
     }
-
   }
 
+  function togglePermiso(id: number) {
+    const esAdmin = rolPermisosSeleccionado?.nombre.toLowerCase().includes("admin");
+    const permisoObj = permisos.find((p) => p.id === id);
 
-  // =========================================================
-  // ABRIR CONFIRMACIÓN
-  // =========================================================
-
-  function abrirConfirmacion(
-    rol: Rol,
-    accion: Exclude<
-      ConfirmationAction,
-      null
-    >
-  ) {
-
-    setError(null);
-    setRolParaConfirmar(rol);
-    setConfirmationAction(accion);
-
-  }
-
-
-  // =========================================================
-  // CERRAR CONFIRMACIÓN
-  // =========================================================
-
-  function cerrarConfirmacion() {
-
-    if (procesandoConfirmacion) {
+    if (esAdmin && permisoObj && CRITICAL_ADMIN_PERMISSIONS.includes(permisoObj.nombre) && permisosSeleccionados.includes(id)) {
+      setError(`El permiso "${permisoObj.nombre}" es crítico para el rol Administrador y no puede ser desmarcado.`);
       return;
     }
 
-    setConfirmationAction(null);
-    setRolParaConfirmar(null);
-
+    setPermisosSeleccionados((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+    );
   }
 
+  function seleccionarModuloCompleto(modulo: string, seleccionar: boolean) {
+    const idsModulo = (permisosPorModulo[modulo] || []).map((p) => p.id);
+    const esAdmin = rolPermisosSeleccionado?.nombre.toLowerCase().includes("admin");
 
-  // =========================================================
-  // EJECUTAR CONFIRMACIÓN
-  // =========================================================
-
-  async function ejecutarConfirmacion() {
-
-    if (
-      !rolParaConfirmar ||
-      !confirmationAction
-    ) {
-      return;
+    if (seleccionar) {
+      setPermisosSeleccionados((prev) => Array.from(new Set([...prev, ...idsModulo])));
+    } else {
+      setPermisosSeleccionados((prev) => {
+        return prev.filter((id) => {
+          if (!idsModulo.includes(id)) return true;
+          if (esAdmin) {
+            const pObj = permisos.find((p) => p.id === id);
+            if (pObj && CRITICAL_ADMIN_PERMISSIONS.includes(pObj.nombre)) return true; // keep critical
+          }
+          return false;
+        });
+      });
     }
-
-    const rol =
-      rolParaConfirmar;
-
-    const accion =
-      confirmationAction;
-
-    try {
-
-      setProcesandoConfirmacion(true);
-      setError(null);
-
-
-      // =====================================================
-      // ACTIVAR / DESACTIVAR
-      // =====================================================
-
-      if (
-        accion === "activar" ||
-        accion === "desactivar"
-      ) {
-
-        const activar =
-          accion === "activar";
-
-        setCambiandoEstado(
-          rol.id
-        );
-
-        await setRolActivo(
-          rol.id,
-          activar
-        );
-
-        setRoles(
-          (actuales) =>
-            actuales.map(
-              (actual) =>
-                actual.id === rol.id
-                  ? {
-                      ...actual,
-                      activo: activar,
-                    }
-                  : actual
-            )
-        );
-
-      }
-
-
-      // =====================================================
-      // ELIMINAR
-      // =====================================================
-
-      if (
-        accion === "eliminar"
-      ) {
-
-        await deleteRol(
-          rol.id
-        );
-
-        setRoles(
-          (actuales) =>
-            actuales.filter(
-              (actual) =>
-                actual.id !== rol.id
-            )
-        );
-
-      }
-
-
-      cerrarConfirmacion();
-
-    } catch (err) {
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : obtenerMensajeError(
-              accion
-            )
-      );
-
-    } finally {
-
-      setProcesandoConfirmacion(false);
-      setCambiandoEstado(null);
-
-    }
-
   }
 
-
-  // =========================================================
-  // MENSAJES DE ERROR
-  // =========================================================
-
-  function obtenerMensajeError(
-    accion: Exclude<
-      ConfirmationAction,
-      null
-    >
-  ): string {
-
-    if (accion === "activar") {
-      return "No fue posible activar el rol.";
+  function seleccionarTodosGlobal(seleccionar: boolean) {
+    const esAdmin = rolPermisosSeleccionado?.nombre.toLowerCase().includes("admin");
+    if (seleccionar) {
+      setPermisosSeleccionados(permisos.map((p) => p.id));
+    } else {
+      if (esAdmin) {
+        // Keep critical admin permissions
+        const criticalIds = permisos
+          .filter((p) => CRITICAL_ADMIN_PERMISSIONS.includes(p.nombre))
+          .map((p) => p.id);
+        setPermisosSeleccionados(criticalIds);
+        setMensaje("Se han desmarcado los permisos no esenciales. Los permisos críticos de administración se mantienen protegidos.");
+      } else {
+        setPermisosSeleccionados([]);
+      }
     }
-
-    if (accion === "desactivar") {
-      return "No fue posible desactivar el rol.";
-    }
-
-    return "No fue posible eliminar el rol.";
-
   }
-
-
-  // =========================================================
-  // CERRAR MODAL
-  // =========================================================
-
-  function cerrarModal() {
-
-    setModal(null);
-    setRolSeleccionado(null);
-    setNombre("");
-    setDescripcion("");
-    setPermisosSeleccionados([]);
-
-  }
-
-
-  // =========================================================
-  // PROPIEDADES DE CONFIRMACIÓN
-  // =========================================================
-
-  const confirmationContent =
-    useMemo(() => {
-
-      if (
-        !confirmationAction ||
-        !rolParaConfirmar
-      ) {
-        return null;
-      }
-
-      if (
-        confirmationAction === "eliminar"
-      ) {
-
-        return {
-          eyebrow: "ACCIÓN PERMANENTE",
-          title: "Eliminar rol",
-          description:
-            `¿Estás seguro de eliminar el rol "${rolParaConfirmar.nombre}"?`,
-          detail:
-            "Esta acción eliminará el perfil y sus relaciones de permisos. No se puede deshacer.",
-          actionLabel: "Eliminar rol",
-          icon: "×",
-          variant: "danger",
-        };
-
-      }
-
-      if (
-        confirmationAction === "desactivar"
-      ) {
-
-        return {
-          eyebrow: "CAMBIO DE ESTADO",
-          title: "Desactivar rol",
-          description:
-            `¿Deseas desactivar el rol "${rolParaConfirmar.nombre}"?`,
-          detail:
-            "El rol dejará de estar disponible como perfil activo dentro de la plataforma.",
-          actionLabel: "Desactivar",
-          icon: "⊘",
-          variant: "warning",
-        };
-
-      }
-
-      return {
-        eyebrow: "CAMBIO DE ESTADO",
-        title: "Activar rol",
-        description:
-          `¿Deseas activar el rol "${rolParaConfirmar.nombre}"?`,
-        detail:
-          "El rol volverá a estar disponible para la gestión de acceso.",
-        actionLabel: "Activar",
-        icon: "✓",
-        variant: "success",
-      };
-
-    }, [
-      confirmationAction,
-      rolParaConfirmar,
-    ]);
-
-
-  // =========================================================
-  // LOADING
-  // =========================================================
 
   if (loading) {
-
     return (
-
-      <section className="roles-page">
-
-        <div className="roles-loading">
-
-          <div className="roles-loading-spinner" />
-
-          <strong>
-            Cargando roles y permisos
-          </strong>
-
-          <span>
-            Consultando la configuración de seguridad...
-          </span>
-
-        </div>
-
-      </section>
-
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '12px' }}>
+        <div style={{ width: '32px', height: '32px', border: '3px solid var(--border-default)', borderTopColor: 'var(--color-primary-600)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Cargando catálogo de roles y permisos...</span>
+      </div>
     );
-
   }
 
-
-  // =========================================================
-  // VISTA
-  // =========================================================
-
   return (
-
-    <section className="roles-page">
-
-      {/* HEADER */}
-
-      <div className="roles-page-header">
-
-        <div className="roles-title-area">
-
-          <span className="roles-kicker">
-            SEGURIDAD Y CONTROL DE ACCESO (RBAC)
+    <div>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
+        <div>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+            CONTROL DE ACCESO BASADO EN ROLES (RBAC)
           </span>
-
-          <h1>Perfiles, Roles y Matriz de Permisos</h1>
-
-          <p>
-            Administración de políticas de autorización y asignación granular de capacidades operativas.
+          <h1 style={{ margin: "2px 0 4px", fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
+            Roles y Permisos
+          </h1>
+          <p style={{ margin: 0, fontSize: "13.5px", color: "var(--text-muted)" }}>
+            Configuración de perfiles de seguridad y asignación granular de privilegios en el sistema.
           </p>
-
         </div>
 
-        <button
-          type="button"
-          className="roles-add-button"
-          onClick={abrirCrear}
-        >
-
-          <span className="roles-button-icon">
-            +
-          </span>
-
-          Crear nuevo rol
-
-        </button>
-
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={cargarDatos} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <RefreshIcon size={14} />
+            <span>Actualizar</span>
+          </button>
+          <button type="button" className="btn btn-primary btn-sm" onClick={abrirModalCrear} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <PlusIcon size={14} />
+            <span>Nuevo rol</span>
+          </button>
+        </div>
       </div>
 
-      {/* RESUMEN */}
+      <AutoDismissAlert
+        type="success"
+        message={mensaje}
+        duration={4500}
+        onDismiss={() => setMensaje(null)}
+      />
 
-      <div className="roles-summary">
+      <AutoDismissAlert
+        type="error"
+        message={error}
+        duration={5000}
+        onDismiss={() => setError(null)}
+      />
 
-        <div className="roles-summary-card">
-
-          <div className="roles-summary-icon">
-            ◈
-          </div>
-
-          <div>
-
-            <span>
-              Total de roles
-            </span>
-
-            <strong>
-              {roles.length}
-            </strong>
-
-          </div>
-
+      {/* Toolbar Search */}
+      <div className="toolbar-container" style={{ background: 'var(--bg-surface)', padding: '16px 20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-default)', marginBottom: '20px' }}>
+        <div className="search-input-wrapper" style={{ maxWidth: '400px' }}>
+          <span className="search-icon">
+            <SearchIcon size={16} />
+          </span>
+          <input
+            id="rolesSearchInput"
+            name="rolesSearch"
+            className="form-input"
+            type="text"
+            placeholder="Buscar por nombre o descripción de rol..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
         </div>
-
-
-        <div className="roles-summary-card">
-
-          <div className="roles-summary-icon roles-summary-icon-active">
-            ✓
-          </div>
-
-          <div>
-
-            <span>
-              Roles activos
-            </span>
-
-            <strong>
-              {rolesActivos}
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <div className="roles-summary-card">
-
-          <div className="roles-summary-icon roles-summary-icon-inactive">
-            ◯
-          </div>
-
-          <div>
-
-            <span>
-              Roles inactivos
-            </span>
-
-            <strong>
-              {rolesInactivos}
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <div className="roles-summary-card">
-
-          <div className="roles-summary-icon">
-            ◫
-          </div>
-
-          <div>
-
-            <span>
-              Permisos disponibles
-            </span>
-
-            <strong>
-              {permisos.length}
-            </strong>
-
-          </div>
-
-        </div>
-
       </div>
 
-
-      {/* ERROR */}
-
-      {error && (
-
-        <div className="roles-error">
-
-          <span>
-            !
-          </span>
-
-          <div>
-
-            <strong>
-              No fue posible completar la operación
-            </strong>
-
-            <p>
-              {error}
-            </p>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-      {/* LISTADO */}
-
-      <div className="roles-panel">
-
-        <div className="roles-panel-header">
-
-          <div>
-
-            <span className="roles-panel-kicker">
-              CONFIGURACIÓN
-            </span>
-
-            <h2>
-              Perfiles de acceso
-            </h2>
-
-          </div>
-
-          <span className="roles-count">
-
-            {rolesFiltrados.length}{" "}
-
-            {rolesFiltrados.length === 1
-              ? "rol"
-              : "roles"}
-
-          </span>
-
-        </div>
-
-
-        <div className="roles-toolbar">
-
-          <div className="roles-search">
-
-            <span>
-              🔍
-            </span>
-
-            <input
-              type="text"
-              placeholder="Buscar por nombre o descripción..."
-              value={busqueda}
-              onChange={(event) =>
-                setBusqueda(
-                  event.target.value
-                )
-              }
-            />
-
-            {busqueda && (
-
-              <button
-                type="button"
-                onClick={() =>
-                  setBusqueda("")
-                }
-                aria-label="Limpiar búsqueda"
-              >
-                ×
-              </button>
-
-            )}
-
-          </div>
-
-        </div>
-
-
-        {/* TARJETAS DE ROLES */}
-
-        <div className="roles-grid">
-
-          {rolesFiltrados.length === 0 ? (
-
-            <div className="roles-empty">
-
-              <div className="roles-empty-icon">
-                ◈
-              </div>
-
-              <h3>
-                No encontramos roles
-              </h3>
-
-              <p>
-                Prueba con otro término de búsqueda
-                o crea un nuevo rol.
-              </p>
-
-              <button
-                type="button"
-                className="roles-primary-button"
-                onClick={abrirCrear}
-              >
-                + Crear rol
-              </button>
-
-            </div>
-
-          ) : (
-
-            rolesFiltrados.map(
-              (rol) => (
-
-                <article
-                  className="role-card"
-                  key={rol.id}
-                >
-
-                  <div className="role-card-top">
-
-                    <div className="role-avatar">
-
-                      {rol.nombre
-                        .charAt(0)
-                        .toUpperCase()}
-
+      {/* Tabla de Roles */}
+      <div className="table-wrapper">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Nombre del Rol</th>
+              <th>Descripción Operativa</th>
+              <th>Nivel de Acceso y Alcance</th>
+              <th style={{ textAlign: "center" }}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rolesFiltrados.length === 0 ? (
+              <tr>
+                <td colSpan={4} style={{ textAlign: "center", padding: "36px", color: "var(--text-muted)" }}>
+                  No se encontraron roles configurados.
+                </td>
+              </tr>
+            ) : (
+              rolesFiltrados.map((r) => (
+                <tr key={r.id}>
+                  <td className="primary-cell">
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ width: "32px", height: "32px", borderRadius: "var(--radius-sm)", background: "var(--color-primary-50)", color: "var(--color-primary-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {getRoleIcon(r.nombre)}
+                      </div>
+                      <strong style={{ color: "var(--text-primary)" }}>{r.nombre}</strong>
                     </div>
-
-                    <div className="role-card-heading">
-
-                      <h3>
-                        {rol.nombre}
-                      </h3>
-
-                      <span
-                        className={
-                          rol.activo
-                            ? "role-status role-status-active"
-                            : "role-status role-status-inactive"
-                        }
+                  </td>
+                  <td style={{ color: "var(--text-secondary)" }}>{r.descripcion || "Sin descripción"}</td>
+                  <td>
+                    {getRoleAccessBadge(r.nombre)}
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => abrirModalEditar(r)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        title="Editar nombre y descripción"
                       >
-
-                        <span />
-
-                        {rol.activo
-                          ? "Activo"
-                          : "Inactivo"}
-
-                      </span>
-
-                    </div>
-
-                  </div>
-
-
-                  <p className="role-description">
-
-                    {rol.descripcion ||
-                      "Este rol no tiene una descripción definida."}
-
-                  </p>
-
-
-                  <div className="role-card-meta">
-
-                    <span>
-                      ID #{rol.id}
-                    </span>
-
-                    <span>
-
-                      {new Date(
-                        rol.fechaCreacion
-                      ).toLocaleDateString(
-                        "es-CO"
+                        <EditIcon size={13} />
+                        <span>Editar</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => abrirModalPermisos(r)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}
+                        title="Configurar matriz de permisos"
+                      >
+                        <KeyIcon size={13} />
+                        <span>Permisos</span>
+                      </button>
+                      {r.nombre.toLowerCase() !== "administrador" && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => abrirModalEliminar(r)}
+                          style={{ color: "var(--color-danger-600)", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                          title="Eliminar rol del sistema"
+                        >
+                          <TrashIcon size={13} />
+                          <span>Eliminar</span>
+                        </button>
                       )}
-
-                    </span>
-
-                  </div>
-
-
-                  <div className="role-card-actions">
-
-                    <button
-                      type="button"
-                      className="role-action-primary"
-                      onClick={() =>
-                        abrirPermisos(
-                          rol
-                        )
-                      }
-                    >
-                      Administrar permisos
-                    </button>
-
-
-                    <div className="role-action-secondary">
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          abrirEditar(
-                            rol
-                          )
-                        }
-                      >
-                        Editar
-                      </button>
-
-
-                      <button
-                        type="button"
-                        disabled={
-                          cambiandoEstado === rol.id
-                        }
-                        onClick={() =>
-                          abrirConfirmacion(
-                            rol,
-                            rol.activo
-                              ? "desactivar"
-                              : "activar"
-                          )
-                        }
-                      >
-
-                        {cambiandoEstado === rol.id
-                          ? "Guardando..."
-                          : rol.activo
-                            ? "Desactivar"
-                            : "Activar"}
-
-                      </button>
-
-
-                      <button
-                        type="button"
-                        className="role-action-danger"
-                        onClick={() =>
-                          abrirConfirmacion(
-                            rol,
-                            "eliminar"
-                          )
-                        }
-                      >
-                        Eliminar
-                      </button>
-
                     </div>
-
-                  </div>
-
-                </article>
-
-              )
-            )
-
-          )}
-
-        </div>
-
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-
-      {/* =====================================================
-          MODAL CREAR / EDITAR
-          ===================================================== */}
-
-      {(modal === "crear" ||
-        modal === "editar") && (
-
-        <div className="roles-modal-overlay">
-
-          <div className="roles-modal roles-modal-large">
-
-            <div className="roles-modal-header">
-
-              <div className="roles-modal-title">
-
-                <div className="roles-modal-icon">
-
-                  {modal === "crear"
-                    ? "+"
-                    : "✍"}
-
-                </div>
-
-                <div>
-
-                  <span>
-
-                    {modal === "crear"
-                      ? "NUEVO PERFIL"
-                      : "CONFIGURACIÓN"}
-
-                  </span>
-
-                  <h2>
-
-                    {modal === "crear"
-                      ? "Crear nuevo rol"
-                      : "Editar rol"}
-
-                  </h2>
-
-                  <p>
-
-                    {modal === "crear"
-                      ? "Define la identidad y los permisos del nuevo perfil."
-                      : "Actualiza la información y capacidades del perfil."}
-
-                  </p>
-
-                </div>
-
+      {/* Modal Crear / Editar Rol */}
+      {modalRolAbierto && (
+        <div className="modal-backdrop" onClick={() => setModalRolAbierto(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>CONFIGURACIÓN</span>
+                <h2>{modoFormulario === "crear" ? "Registrar Nuevo Rol" : "Editar Rol"}</h2>
               </div>
-
-
-              <button
-                type="button"
-                className="roles-modal-close"
-                onClick={
-                  cerrarModal
-                }
-              >
-                ×
+              <button type="button" className="modal-close" onClick={() => setModalRolAbierto(false)}>
+                <CloseIcon size={16} />
               </button>
-
             </div>
 
-
-            <div className="roles-modal-content">
-
-              <section className="roles-form-section">
-
-                <div className="roles-section-heading">
-
-                  <div className="roles-section-number">
-                    01
-                  </div>
-
-                  <div>
-
-                    <h3>
-                      Información del rol
-                    </h3>
-
-                    <p>
-                      Define los datos básicos del perfil.
-                    </p>
-
-                  </div>
-
+            <form onSubmit={handleGuardarRol}>
+              <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="rolNombreInput">Nombre del Rol *</label>
+                  <input
+                    id="rolNombreInput"
+                    name="nombre"
+                    type="text"
+                    className="form-input"
+                    required
+                    placeholder="Ej. Auditor, Soporte Técnico, Mensajero..."
+                    value={formularioRol.nombre}
+                    onChange={(e) => setFormularioRol({ ...formularioRol, nombre: e.target.value })}
+                  />
                 </div>
 
-
-                <div className="roles-form-grid">
-
-                  <label className="roles-field">
-
-                    <span>
-
-                      Nombre del rol
-
-                      <b>*</b>
-
-                    </span>
-
-                    <input
-                      type="text"
-                      value={nombre}
-                      onChange={(event) =>
-                        setNombre(
-                          event.target.value
-                        )
-                      }
-                      placeholder="Ej. Supervisor de Equipos"
-                    />
-
-                    <small>
-                      Utiliza un nombre claro y fácil de identificar.
-                    </small>
-
-                  </label>
-
-
-                  <label className="roles-field roles-field-full">
-
-                    <span>
-                      Descripción
-                    </span>
-
-                    <textarea
-                      value={descripcion}
-                      onChange={(event) =>
-                        setDescripcion(
-                          event.target.value
-                        )
-                      }
-                      placeholder="Describe las responsabilidades y alcance de este rol..."
-                      rows={3}
-                    />
-
-                    <small>
-                      Una descripción ayuda a los administradores
-                      a identificar el propósito del perfil.
-                    </small>
-
-                  </label>
-
+                <div className="form-group">
+                  <label className="form-label" htmlFor="rolDescripcionInput">Descripción Operativa</label>
+                  <textarea
+                    id="rolDescripcionInput"
+                    name="descripcion"
+                    className="form-input"
+                    rows={3}
+                    placeholder="Describe el alcance y responsabilidades asignadas a este rol..."
+                    value={formularioRol.descripcion}
+                    onChange={(e) => setFormularioRol({ ...formularioRol, descripcion: e.target.value })}
+                  />
                 </div>
-
-              </section>
-
-
-              <section className="roles-form-section">
-
-                <div className="roles-section-heading roles-permission-heading">
-
-                  <div className="roles-section-number">
-                    02
-                  </div>
-
-                  <div>
-
-                    <h3>
-                      Permisos de acceso
-                    </h3>
-
-                    <p>
-                      Selecciona las acciones que podrá realizar este rol.
-                    </p>
-
-                  </div>
-
-
-                  <div className="roles-permission-counter">
-
-                    <strong>
-                      {permisosSeleccionados.length}
-                    </strong>
-
-                    <span>
-                      de {permisos.length} permisos
-                    </span>
-
-                  </div>
-
-                </div>
-
-
-                <div className="roles-permission-toolbar">
-
-                  <button
-                    type="button"
-                    onClick={
-                      seleccionarTodos
-                    }
-                  >
-                    Seleccionar todos
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={
-                      limpiarPermisos
-                    }
-                  >
-                    Limpiar selección
-                  </button>
-
-                </div>
-
-
-                <div className="roles-permission-groups">
-
-                  {permisosPorModulo.map(
-                    ([
-                      modulo,
-                      permisosModulo,
-                    ]) => {
-
-                      const seleccionadosModulo =
-                        permisosModulo.filter(
-                          (permiso) =>
-                            permisosSeleccionados.includes(
-                              permiso.id
-                            )
-                        ).length;
-
-
-                      const todosModulo =
-                        seleccionadosModulo ===
-                        permisosModulo.length;
-
-
-                      return (
-
-                        <div
-                          className="roles-permission-group"
-                          key={modulo}
-                        >
-
-                          <div className="roles-permission-group-header">
-
-                            <div>
-
-                              <span className="roles-module-icon">
-                                ◫
-                              </span>
-
-                              <div>
-
-                                <h4>
-                                  {modulo}
-                                </h4>
-
-                                <span>
-                                  {seleccionadosModulo} de{" "}
-                                  {permisosModulo.length} seleccionados
-                                </span>
-
-                              </div>
-
-                            </div>
-
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                seleccionarModulo(
-                                  permisosModulo
-                                )
-                              }
-                            >
-
-                              {todosModulo
-                                ? "Quitar todos"
-                                : "Seleccionar todos"}
-
-                            </button>
-
-                          </div>
-
-
-                          <div className="roles-permission-grid">
-
-                            {permisosModulo.map(
-                              (permiso) => {
-
-                                const seleccionado =
-                                  permisosSeleccionados.includes(
-                                    permiso.id
-                                  );
-
-
-                                return (
-
-                                  <label
-                                    className={
-                                      seleccionado
-                                        ? "role-permission-card selected"
-                                        : "role-permission-card"
-                                    }
-                                    key={
-                                      permiso.id
-                                    }
-                                  >
-
-                                    <input
-                                      type="checkbox"
-                                      checked={
-                                        seleccionado
-                                      }
-                                      onChange={() =>
-                                        togglePermiso(
-                                          permiso.id
-                                        )
-                                      }
-                                    />
-
-
-                                    <span className="permission-check">
-                                      ✓
-                                    </span>
-
-
-                                    <span className="permission-content">
-
-                                      <strong>
-                                        {getPermissionLabel(
-                                          permiso.nombre
-                                        )}
-                                      </strong>
-
-                                    </span>
-
-                                  </label>
-
-                                );
-
-                              }
-                            )}
-
-                          </div>
-
-                        </div>
-
-                      );
-
-                    }
-                  )}
-
-                </div>
-
-              </section>
-
-            </div>
-
-
-            <div className="roles-modal-footer">
-
-              <div className="roles-footer-info">
-
-                <span className="roles-footer-dot" />
-
-                <span>
-                  Los cambios se guardarán inmediatamente.
-                </span>
-
               </div>
 
-
-              <div className="roles-footer-actions">
-
-                <button
-                  type="button"
-                  className="roles-cancel-button"
-                  onClick={
-                    cerrarModal
-                  }
-                >
+              <div className="modal-footer">
+                <button type="button" className="btn btn-ghost" onClick={() => setModalRolAbierto(false)}>
                   Cancelar
                 </button>
-
-
-                <button
-                  type="button"
-                  className="roles-primary-button"
-                  disabled={
-                    guardando
-                  }
-                  onClick={
-                    guardarRol
-                  }
-                >
-
-                  {guardando
-                    ? "Guardando..."
-                    : modal === "crear"
-                      ? "Crear rol"
-                      : "Guardar cambios"}
-
+                <button type="submit" className="btn btn-primary" disabled={guardandoRol}>
+                  {guardandoRol ? "Guardando..." : modoFormulario === "crear" ? "Crear Rol" : "Guardar Cambios"}
                 </button>
-
               </div>
-
-            </div>
-
+            </form>
           </div>
-
         </div>
-
       )}
 
-
-      {/* =====================================================
-          MODAL PERMISOS
-          ===================================================== */}
-
-      {modal === "permisos" && (
-
-        <div className="roles-modal-overlay">
-
-          <div className="roles-modal roles-modal-large">
-
-            <div className="roles-modal-header">
-
-              <div className="roles-modal-title">
-
-                <div className="roles-modal-icon">
-                  ◫
-                </div>
-
-                <div>
-
-                  <span>
-                    CONTROL DE ACCESO
-                  </span>
-
-                  <h2>
-                    Administrar permisos
-                  </h2>
-
-                  <p>
-
-                    Configura las capacidades de{" "}
-
-                    <strong>
-                      {rolSeleccionado?.nombre}
-                    </strong>.
-
-                  </p>
-
-                </div>
-
-              </div>
-
-
-              <button
-                type="button"
-                className="roles-modal-close"
-                onClick={
-                  cerrarModal
-                }
-              >
-                ×
-              </button>
-
-            </div>
-
-
-            <div className="roles-modal-content">
-
-              <section className="roles-form-section">
-
-                <div className="roles-section-heading roles-permission-heading">
-
-                  <div className="roles-section-number">
-                    01
-                  </div>
-
-                  <div>
-
-                    <h3>
-                      Permisos disponibles
-                    </h3>
-
-                    <p>
-                      Activa o desactiva las capacidades
-                      de este perfil.
-                    </p>
-
-                  </div>
-
-
-                  <div className="roles-permission-counter">
-
-                    <strong>
-                      {permisosSeleccionados.length}
-                    </strong>
-
-                    <span>
-                      seleccionados
-                    </span>
-
-                  </div>
-
-                </div>
-
-
-                <div className="roles-permission-toolbar">
-
-                  <button
-                    type="button"
-                    onClick={
-                      seleccionarTodos
-                    }
-                  >
-                    Seleccionar todos
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={
-                      limpiarPermisos
-                    }
-                  >
-                    Limpiar selección
-                  </button>
-
-                </div>
-
-
-                <div className="roles-permission-groups">
-
-                  {permisosPorModulo.map(
-                    ([
-                      modulo,
-                      permisosModulo,
-                    ]) => {
-
-                      const seleccionadosModulo =
-                        permisosModulo.filter(
-                          (permiso) =>
-                            permisosSeleccionados.includes(
-                              permiso.id
-                            )
-                        ).length;
-
-
-                      const todosModulo =
-                        seleccionadosModulo ===
-                        permisosModulo.length;
-
-
-                      return (
-
-                        <div
-                          className="roles-permission-group"
-                          key={modulo}
-                        >
-
-                          <div className="roles-permission-group-header">
-
-                            <div>
-
-                              <span className="roles-module-icon">
-                                ◫
-                              </span>
-
-                              <div>
-
-                                <h4>
-                                  {modulo}
-                                </h4>
-
-                                <span>
-                                  {seleccionadosModulo} de{" "}
-                                  {permisosModulo.length} seleccionados
-                                </span>
-
-                              </div>
-
-                            </div>
-
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                seleccionarModulo(
-                                  permisosModulo
-                                )
-                              }
-                            >
-
-                              {todosModulo
-                                ? "Quitar todos"
-                                : "Seleccionar todos"}
-
-                            </button>
-
-                          </div>
-
-
-                          <div className="roles-permission-grid">
-
-                            {permisosModulo.map(
-                              (permiso) => {
-
-                                const seleccionado =
-                                  permisosSeleccionados.includes(
-                                    permiso.id
-                                  );
-
-
-                                return (
-
-                                  <label
-                                    className={
-                                      seleccionado
-                                        ? "role-permission-card selected"
-                                        : "role-permission-card"
-                                    }
-                                    key={
-                                      permiso.id
-                                    }
-                                  >
-
-                                    <input
-                                      type="checkbox"
-                                      checked={
-                                        seleccionado
-                                      }
-                                      onChange={() =>
-                                        togglePermiso(
-                                          permiso.id
-                                        )
-                                      }
-                                    />
-
-
-                                    <span className="permission-check">
-                                      ✓
-                                    </span>
-
-
-                                    <span className="permission-content">
-
-                                      <strong>
-                                        {getPermissionLabel(
-                                          permiso.nombre
-                                        )}
-                                      </strong>
-
-                                    </span>
-
-                                  </label>
-
-                                );
-
-                              }
-                            )}
-
-                          </div>
-
-                        </div>
-
-                      );
-
-                    }
-                  )}
-
-                </div>
-
-              </section>
-
-            </div>
-
-
-            <div className="roles-modal-footer">
-
-              <div className="roles-footer-info">
-
-                <span className="roles-footer-dot" />
-
-                <span>
-                  Los cambios se guardarán inmediatamente.
+      {/* Modal Confirmar Eliminar Rol */}
+      {modalEliminarAbierto && rolAEliminar && (
+        <div className="modal-backdrop" onClick={() => setModalEliminarAbierto(false)}>
+          <div className="modal-content small" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-danger-600)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  ELIMINACIÓN DE ROL
                 </span>
-
+                <h2 style={{ margin: "2px 0 0" }}>Eliminar Rol: {rolAEliminar.nombre}</h2>
               </div>
-
-
-              <div className="roles-footer-actions">
-
-                <button
-                  type="button"
-                  className="roles-cancel-button"
-                  onClick={
-                    cerrarModal
-                  }
-                >
-                  Cancelar
-                </button>
-
-
-                <button
-                  type="button"
-                  className="roles-primary-button"
-                  disabled={
-                    guardando
-                  }
-                  onClick={
-                    guardarPermisos
-                  }
-                >
-
-                  {guardando
-                    ? "Guardando..."
-                    : "Guardar permisos"}
-
-                </button>
-
-              </div>
-
+              <button type="button" className="modal-close" onClick={() => setModalEliminarAbierto(false)}>
+                <CloseIcon size={16} />
+              </button>
             </div>
 
-          </div>
-
-        </div>
-
-      )}
-
-
-      {/* =====================================================
-          MODAL DE CONFIRMACIÓN
-          ===================================================== */}
-
-      {confirmationContent &&
-        rolParaConfirmar && (
-
-        <div
-          className="roles-confirmation-overlay"
-          onMouseDown={(event) => {
-
-            if (
-              event.target ===
-              event.currentTarget &&
-              !procesandoConfirmacion
-            ) {
-              cerrarConfirmacion();
-            }
-
-          }}
-        >
-
-          <div
-            className={
-              `roles-confirmation-modal roles-confirmation-${confirmationContent.variant}`
-            }
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="roles-confirmation-title"
-          >
-
-            <div className="roles-confirmation-icon">
-
-              {confirmationContent.icon}
-
-            </div>
-
-
-            <div className="roles-confirmation-content">
-
-              <span className="roles-confirmation-eyebrow">
-
-                {confirmationContent.eyebrow}
-
-              </span>
-
-
-              <h2 id="roles-confirmation-title">
-
-                {confirmationContent.title}
-
-              </h2>
-
-
-              <p className="roles-confirmation-description">
-
-                {confirmationContent.description}
-
+            <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "20px 24px" }}>
+              <p style={{ fontSize: "13.5px", color: "var(--text-primary)", margin: 0, lineHeight: 1.5 }}>
+                ¿Estás seguro de que deseas eliminar permanentemente el rol <strong>"{rolAEliminar.nombre}"</strong>?
               </p>
-
-
-              <div className="roles-confirmation-detail">
-
-                <span className="roles-confirmation-detail-icon">
-                  i
-                </span>
-
-                <span>
-                  {confirmationContent.detail}
-                </span>
-
+              <div style={{ background: "var(--color-warning-50)", border: "1px solid var(--color-warning-200)", borderRadius: "var(--radius-md)", padding: "12px", fontSize: "12px", color: "var(--color-warning-900)" }}>
+                <strong>Regla de integridad RBAC:</strong> Si este rol tiene usuarios asociados actualmente, el sistema rechazará la eliminación para no dejar usuarios sin permisos. Primero deberás reasignar sus colaboradores a otro rol.
               </div>
-
             </div>
 
-
-            <div className="roles-confirmation-actions">
-
-              <button
-                type="button"
-                className="roles-confirmation-cancel"
-                disabled={
-                  procesandoConfirmacion
-                }
-                onClick={
-                  cerrarConfirmacion
-                }
-              >
+            <div className="modal-footer" style={{ borderTop: "1px solid var(--border-default)", background: "var(--bg-surface)", padding: "16px 24px" }}>
+              <button type="button" className="btn btn-ghost" onClick={() => setModalEliminarAbierto(false)} disabled={eliminandoRol}>
                 Cancelar
               </button>
-
-
               <button
                 type="button"
-                className={
-                  `roles-confirmation-submit roles-confirmation-submit-${confirmationContent.variant}`
-                }
-                disabled={
-                  procesandoConfirmacion
-                }
-                onClick={
-                  ejecutarConfirmacion
-                }
+                className="btn btn-primary"
+                style={{ background: "var(--color-danger-600)", borderColor: "var(--color-danger-600)" }}
+                onClick={handleConfirmarEliminarRol}
+                disabled={eliminandoRol}
               >
-
-                {procesandoConfirmacion
-                  ? "Procesando..."
-                  : confirmationContent.actionLabel}
-
+                {eliminandoRol ? "Eliminando..." : "Eliminar Rol"}
               </button>
-
             </div>
-
           </div>
-
         </div>
-
       )}
 
-    </section>
+      {/* Modal Matriz de Permisos */}
+      {modalPermisosAbierto && rolPermisosSeleccionado && (
+        <div className="modal-backdrop" onClick={() => setModalPermisosAbierto(false)}>
+          <div className="modal-content large" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+            <div className="modal-header">
+              <div>
+                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-primary-600)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  MATRIZ RBAC DE PRIVILEGIOS
+                </span>
+                <h2 style={{ margin: "2px 0 0" }}>Permisos para: {rolPermisosSeleccionado.nombre}</h2>
+              </div>
+              <button type="button" className="modal-close" onClick={() => setModalPermisosAbierto(false)}>
+                <CloseIcon size={16} />
+              </button>
+            </div>
 
+            <form onSubmit={handleGuardarPermisos} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              {/* Barra de estado y acciones rápidas */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px", background: "var(--color-slate-100)", borderBottom: "1px solid var(--border-default)", flexWrap: "wrap", gap: "10px" }}>
+                <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+                  Asignados: <strong style={{ color: "var(--color-primary-700)" }}>{permisosSeleccionados.length}</strong> de <strong>{permisos.length}</strong> permisos disponibles
+                </span>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => seleccionarTodosGlobal(true)}
+                  >
+                    Seleccionar todos
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => seleccionarTodosGlobal(false)}
+                  >
+                    Desmarcar todos
+                  </button>
+                </div>
+              </div>
+
+              <div className="modal-body" style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                {rolPermisosSeleccionado?.nombre.toLowerCase().includes("admin") && (
+                  <div
+                    style={{
+                      background: "var(--color-warning-50)",
+                      border: "1px solid var(--color-warning-200)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "12px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      color: "var(--color-warning-900)",
+                      fontSize: "12.5px",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    <div style={{ color: "var(--color-warning-600)", display: "flex", alignItems: "center" }}>
+                      <ShieldIcon size={22} />
+                    </div>
+                    <div>
+                      <strong>Protección de Rol Maestro:</strong> Para garantizar la continuidad operativa y evitar bloqueos accidentales de acceso, el rol <strong>Administrador</strong> mantiene protegidos los permisos críticos de administración (Dashboard, Roles y Usuarios).
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  {Object.entries(permisosPorModulo).map(([modulo, lista]) => {
+                    const idsModulo = lista.map((p) => p.id);
+                    const seleccionadosEnModulo = idsModulo.filter((id) => permisosSeleccionados.includes(id)).length;
+
+                    return (
+                      <div
+                        key={modulo}
+                        style={{
+                          background: "#ffffff",
+                          border: "1px solid var(--border-default)",
+                          borderRadius: "var(--radius-lg)",
+                          padding: "16px 18px",
+                          boxShadow: "var(--shadow-sm)",
+                        }}
+                      >
+                        {/* Cabecera del Módulo */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", borderBottom: "1px solid var(--border-subtle)", paddingBottom: "10px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: "28px", height: "28px", borderRadius: "var(--radius-sm)", background: "var(--color-primary-50)", color: "var(--color-primary-700)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              {getModuloIcon(modulo)}
+                            </div>
+                            <div>
+                              <strong style={{ fontSize: "13.5px", color: "var(--text-primary)" }}>
+                                {modulo}
+                              </strong>
+                              <span style={{ marginLeft: "8px", fontSize: "11px", padding: "2px 7px", borderRadius: "var(--radius-pill)", background: seleccionadosEnModulo > 0 ? "var(--color-primary-50)" : "var(--color-slate-100)", color: seleccionadosEnModulo > 0 ? "var(--color-primary-700)" : "var(--text-muted)", fontWeight: 700 }}>
+                                {seleccionadosEnModulo} / {idsModulo.length}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              style={{ fontSize: "11.5px", padding: "3px 8px" }}
+                              onClick={() => seleccionarModuloCompleto(modulo, true)}
+                            >
+                              Marcar todos
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              style={{ fontSize: "11.5px", padding: "3px 8px" }}
+                              onClick={() => seleccionarModuloCompleto(modulo, false)}
+                            >
+                              Ninguno
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Grid de Checkboxes con Acciones Claras */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: "10px" }}>
+                          {lista.map((p) => {
+                            const checked = permisosSeleccionados.includes(p.id);
+                            const info = formatPermission(p);
+                            const esAdmin = rolPermisosSeleccionado?.nombre.toLowerCase().includes("admin");
+                            const esCritico = esAdmin && CRITICAL_ADMIN_PERMISSIONS.includes(p.nombre);
+
+                            return (
+                              <label
+                                key={p.id}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "flex-start",
+                                  gap: "10px",
+                                  padding: "10px 12px",
+                                  background: checked ? (esCritico ? "var(--color-warning-50)" : "var(--color-primary-50)") : "#ffffff",
+                                  border: `1.5px solid ${checked ? (esCritico ? "var(--color-warning-400)" : "var(--color-primary-500)") : "var(--border-default)"}`,
+                                  borderRadius: "var(--radius-md)",
+                                  cursor: esCritico ? "not-allowed" : "pointer",
+                                  transition: "all var(--transition-fast)",
+                                  userSelect: "none",
+                                  opacity: esCritico ? 0.95 : 1,
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  disabled={esCritico}
+                                  onChange={() => togglePermiso(p.id)}
+                                  style={{
+                                    accentColor: esCritico ? "var(--color-warning-600)" : "var(--color-primary-600)",
+                                    marginTop: "2px",
+                                    width: "15px",
+                                    height: "15px",
+                                    cursor: esCritico ? "not-allowed" : "pointer",
+                                  }}
+                                />
+                                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                    <span
+                                      style={{
+                                       fontSize: "13px",
+                                       fontWeight: checked ? 700 : 600,
+                                       color: checked ? "var(--color-primary-900)" : "var(--text-primary)",
+                                      }}
+                                    >
+                                      {info.label}
+                                    </span>
+                                    {esCritico && (
+                                      <span
+                                        style={{
+                                          fontSize: "10px",
+                                          padding: "1px 5px",
+                                          borderRadius: "var(--radius-pill)",
+                                          background: "var(--color-warning-100)",
+                                          color: "var(--color-warning-900)",
+                                          fontWeight: 700,
+                                          border: "1px solid var(--color-warning-300)",
+                                        }}
+                                        title="Permiso protegido para el rol Administrador"
+                                      >
+                                        Protegido
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span
+                                    style={{
+                                      fontSize: "11px",
+                                      color: "var(--text-muted)",
+                                      lineHeight: 1.25,
+                                    }}
+                                  >
+                                    {info.desc}
+                                  </span>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ borderTop: "1px solid var(--border-default)", background: "var(--bg-surface)", padding: "16px 24px" }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setModalPermisosAbierto(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={guardandoPermisos}>
+                  {guardandoPermisos ? "Guardando permisos..." : "Guardar Matriz de Permisos"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
-
-

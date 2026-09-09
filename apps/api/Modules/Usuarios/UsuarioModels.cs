@@ -74,8 +74,9 @@ namespace PlataformaActas.Api.Modules.Usuarios.Data.Configurations
 
 namespace PlataformaActas.Api.Modules.Usuarios.Models.Dto
 {
-    public record UsuarioCreateRequest(string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso);
+    public record UsuarioCreateRequest(string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, string? Password = null, int? RolId = null);
     public record UsuarioUpdateRequest(string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, bool Activo);
+    public record UsuarioResetPasswordRequest(string NewPassword, string ConfirmPassword);
     public record UsuarioRolRequest(int RolId);
     public record UsuarioResponse(int Id, string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, bool Activo, DateTime FechaCreacion, string? RolNombre, int? RolId);
 }

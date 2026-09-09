@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -16,16 +14,7 @@ import {
   type AuthContextValue,
   type LoginCredentials,
 } from "./authService";
-
-const AuthContext = createContext<AuthContextValue | null>(null);
-
-export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth debe utilizarse dentro de un AuthProvider");
-  }
-  return context;
-}
+import { AuthContext } from "./AuthContextInstance";
 
 interface AuthProviderProps {
   children: ReactNode;

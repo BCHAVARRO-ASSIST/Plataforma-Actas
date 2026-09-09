@@ -1,9 +1,5 @@
+import type { ReactNode } from "react";
 import type { Permission } from "../../features/auth/permissions";
-
-
-// =========================================================
-// VISTAS DE LA APLICACIÓN
-// =========================================================
 
 export type View =
   | "dashboard"
@@ -15,36 +11,14 @@ export type View =
   | "roles"
   | "mensajero";
 
-
-
-
-// =========================================================
-// SECCIONES DE NAVEGACIÓN
-// =========================================================
-
-export type NavigationSection =
-  | "principal"
-  | "gestion";
-
-
-// =========================================================
-// ELEMENTO DE NAVEGACIÓN
-// =========================================================
+export type NavigationSection = "principal" | "gestion";
 
 export interface NavigationItem {
-
   id: string;
-
   label: string;
-
   view: View;
-
   section: NavigationSection;
-
-  icon: string;
-
+  icon?: ReactNode;
   permission?: Permission;
-
   disabled?: boolean;
-
 }

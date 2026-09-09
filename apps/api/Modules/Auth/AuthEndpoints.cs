@@ -184,6 +184,64 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
             })
             .RequireRateLimiting("auth-limit");
 
+            // 5. Cambiar contraseña del usuario autenticado
+            group.MapPost("/change-password", async (
+                [FromBody] ChangePasswordRequest request,
+                HttpContext httpContext,
+                [FromServices] PlataformaActasDbContext context,
+                CancellationToken cancellationToken) =>
+            {
+                var userIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrWhiteSpace(userIdStr) || !int.TryParse(userIdStr, out var userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                if (string.IsNullOrWhiteSpace(request.CurrentPassword) ||
+                    string.IsNullOrWhiteSpace(request.NewPassword) ||
+                    string.IsNullOrWhiteSpace(request.ConfirmPassword))
+                {
+                    return Results.BadRequest(new { message = "Todos los campos son obligatorios." });
+                }
+
+                if (request.NewPassword != request.ConfirmPassword)
+                {
+                    return Results.BadRequest(new { message = "La nueva contraseña y su confirmación no coinciden." });
+                }
+
+                if (request.NewPassword.Length < 8 ||
+                    !request.NewPassword.Any(char.IsUpper) ||
+                    !request.NewPassword.Any(char.IsLower) ||
+                    !request.NewPassword.Any(char.IsDigit) ||
+                    !request.NewPassword.Any(c => !char.IsLetterOrDigit(c)))
+                {
+                    return Results.BadRequest(new { message = "La nueva contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y un carácter especial." });
+                }
+
+                var user = await context.Usuarios.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+                if (user is null || !user.Activo)
+                {
+                    return Results.Unauthorized();
+                }
+
+                if (string.IsNullOrWhiteSpace(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+                {
+                    return Results.BadRequest(new { message = "La contraseña actual ingresada es incorrecta." });
+                }
+
+                if (string.Equals(request.NewPassword, request.CurrentPassword, StringComparison.Ordinal) ||
+                    BCrypt.Net.BCrypt.Verify(request.NewPassword, user.PasswordHash))
+                {
+                    return Results.BadRequest(new { message = "La nueva contraseña debe ser diferente a la contraseña actual." });
+                }
+
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+                await context.SaveChangesAsync(cancellationToken);
+
+                return Results.Ok(new { message = "Tu contraseña ha sido actualizada exitosamente." });
+            })
+            .RequireAuthorization();
+
             return app;
         }
     }

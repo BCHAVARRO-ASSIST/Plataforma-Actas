@@ -1,12 +1,11 @@
-import type {
-  View,
-  NavigationItem,
-} from "../navigation/navigationTypes";
+import type { View, NavigationItem } from "../navigation/navigationTypes";
+import { CloseIcon } from "../../components/Icons";
 
 interface SidebarProps {
   view: View;
   navigationItems: NavigationItem[];
   isOpen?: boolean;
+  isCollapsed?: boolean;
   onClose?: () => void;
   onViewChange: (view: View) => void;
 }
@@ -15,6 +14,7 @@ export function Sidebar({
   view,
   navigationItems,
   isOpen = false,
+  isCollapsed = false,
   onClose,
   onViewChange,
 }: SidebarProps) {
@@ -27,7 +27,7 @@ export function Sidebar({
 
   return (
     <>
-      {/* OVERLAY PARA MÓVIL */}
+      {/* Overlay para móvil */}
       {isOpen && (
         <div
           className="sidebar-overlay active"
@@ -36,20 +36,14 @@ export function Sidebar({
         />
       )}
 
-      <aside className={`app-sidebar ${isOpen ? "open" : ""}`}>
-        {/* BRAND */}
+      <aside className={`app-sidebar ${isOpen ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}>
+        {/* Brand */}
         <div className="app-brand">
-          <div className="app-brand-mark">
-            PA
-          </div>
+          <div className="app-brand-mark">PA</div>
 
           <div className="app-brand-text">
-            <strong>
-              Plataforma
-            </strong>
-            <span>
-              de Actas
-            </span>
+            <strong>Plataforma</strong>
+            <span>de Actas</span>
           </div>
 
           {onClose && (
@@ -59,16 +53,14 @@ export function Sidebar({
               onClick={onClose}
               aria-label="Cerrar menú"
             >
-              ✕
+              <CloseIcon size={16} />
             </button>
           )}
         </div>
 
-        {/* NAVEGACIÓN UNIFICADA EN UNA SOLA VISTA */}
+        {/* Navegación unificada */}
         <nav className="app-nav">
-          <span className="app-nav-section">
-            Menú Principal
-          </span>
+          <span className="app-nav-section">Menú Principal</span>
 
           {navigationItems.map((item) => (
             <button
@@ -81,18 +73,16 @@ export function Sidebar({
                 handleSelectView(item.view);
               }}
             >
-              <span className="app-nav-icon">
-                {item.icon}
-              </span>
-              {item.label}
+              {item.icon && <span className="app-nav-icon">{item.icon}</span>}
+              <span className="app-nav-label">{item.label}</span>
             </button>
           ))}
         </nav>
 
-        {/* FOOTER */}
+        {/* Footer */}
         <div className="sidebar-version">
           <span>PLATAFORMA DE ACTAS</span>
-          <strong>v0.1 · Responsive</strong>
+          <strong>v2.0 · Enterprise</strong>
         </div>
       </aside>
     </>

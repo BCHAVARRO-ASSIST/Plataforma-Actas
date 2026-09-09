@@ -88,6 +88,12 @@ namespace PlataformaActas.Api.Modules.Auth.Models.Dto
         string ConfirmPassword
     );
 
+    public sealed record ChangePasswordRequest(
+        string CurrentPassword,
+        string NewPassword,
+        string ConfirmPassword
+    );
+
     public sealed record LoginData(
         UsuarioAuthResponse Usuario,
         RolAuthResponse? Rol,
