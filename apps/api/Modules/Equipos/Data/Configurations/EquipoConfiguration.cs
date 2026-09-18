@@ -4,15 +4,15 @@ using PlataformaActas.Api.Modules.Equipos.Data.Entities;
 
 namespace PlataformaActas.Api.Modules.Equipos.Data.Configurations;
 
-public sealed class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
+public sealed class EquipoConfiguration : IEntityTypeConfiguration<Equipo>
 {
-    public void Configure(EntityTypeBuilder<Equipment> builder)
+    public void Configure(EntityTypeBuilder<Equipo> builder)
     {
-        // Conserva el nombre exacto de la tabla existente en PostgreSQL
-        builder.ToTable("equipment");
+        // Mapeo canónico hacia la tabla 'equipos' en PostgreSQL (UDL)
+        builder.ToTable("equipos");
 
         builder.HasKey(e => e.Id)
-            .HasName("equipment_pkey");
+            .HasName("equipos_pkey");
 
         builder.Property(e => e.Id)
             .HasColumnName("id")
@@ -25,7 +25,7 @@ public sealed class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
 
         builder.HasIndex(e => e.InventoryKey)
             .IsUnique()
-            .HasDatabaseName("equipment_inventory_key_key");
+            .HasDatabaseName("equipos_inventory_key_key");
 
         builder.Property(e => e.Empresa)
             .HasColumnName("empresa")
@@ -48,7 +48,7 @@ public sealed class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
             .IsRequired();
 
         builder.HasIndex(e => e.NombreEquipo)
-            .HasDatabaseName("ix_equipment_nombre");
+            .HasDatabaseName("ix_equipos_nombre");
 
         builder.Property(e => e.HojaDeVida)
             .HasColumnName("hoja_de_vida");
@@ -84,7 +84,7 @@ public sealed class EquipmentConfiguration : IEntityTypeConfiguration<Equipment>
             .IsRequired();
 
         builder.HasIndex(e => e.EstatusEquipo)
-            .HasDatabaseName("ix_equipment_estatus");
+            .HasDatabaseName("ix_equipos_estatus");
 
         builder.Property(e => e.MantenimientoRealizado)
             .HasColumnName("mantenimiento_realizado");

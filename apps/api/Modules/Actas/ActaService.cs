@@ -74,7 +74,7 @@ public sealed class ActaService(
         CreateActaRequest request,
         CancellationToken cancellationToken = default)
     {
-        var equipo = await context.Equipment.FirstOrDefaultAsync(e => e.Id == request.EquipmentId, cancellationToken);
+        var equipo = await context.Equipos.FirstOrDefaultAsync(e => e.Id == request.EquipmentId, cancellationToken);
         if (equipo is null)
         {
             throw new ArgumentException("El equipo especificado no existe.");
@@ -246,7 +246,7 @@ public sealed class ActaService(
             acta.HashSha256 = docResponse.HashSha256;
 
             // Sincronización automática de inventario
-            var equipo = await context.Equipment.FirstOrDefaultAsync(e => e.Id == acta.EquipmentId, cancellationToken);
+            var equipo = await context.Equipos.FirstOrDefaultAsync(e => e.Id == acta.EquipmentId, cancellationToken);
             if (equipo != null)
             {
                 if (acta.TipoActa == "Entrega")
@@ -265,7 +265,7 @@ public sealed class ActaService(
                     equipo.AsignadoA = null;
                 }
 
-                context.Equipment.Update(equipo);
+                context.Equipos.Update(equipo);
             }
 
             await actaRepository.UpdateAsync(acta, cancellationToken);

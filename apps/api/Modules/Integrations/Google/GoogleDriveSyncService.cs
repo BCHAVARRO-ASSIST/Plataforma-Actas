@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PlataformaActas.Api.Infrastructure.Persistence;
-using EquipmentEntity = PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment;
+using PlataformaActas.Api.Modules.Equipos.Data.Entities;
 
 namespace PlataformaActas.Api.Modules.Integrations.Google;
 
@@ -145,7 +145,7 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
             var normalizedKey = inventoryKey.Trim();
             processedKeys.Add(normalizedKey);
 
-            var existing = await _context.Equipment
+            var existing = await _context.Equipos
                 .FirstOrDefaultAsync(e => e.InventoryKey.ToLower() == normalizedKey.ToLower(), cancellationToken);
 
             var empresa = GetValue(row, colMap, "empresa");
@@ -195,7 +195,7 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
             else
             {
                 // Crear nuevo
-                var newEquipment = new EquipmentEntity
+                var newEquipment = new Equipo
                 {
                     Id = Guid.NewGuid(),
                     InventoryKey = normalizedKey,
@@ -219,13 +219,13 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
                     LastSyncAt = DateTimeOffset.UtcNow
                 };
 
-                _context.Equipment.Add(newEquipment);
+                _context.Equipos.Add(newEquipment);
                 createdCount++;
             }
         }
 
         // Limpiar o inactivar equipos eliminados o renombrados en el Excel
-        var allSyncEquipments = await _context.Equipment
+        var allSyncEquipments = await _context.Equipos
             .Where(e => e.SourceSystem == "P8-FR-019")
             .ToListAsync(cancellationToken);
 
@@ -236,7 +236,7 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
                 var hasActas = await _context.Actas.AnyAsync(a => a.EquipmentId == eq.Id, cancellationToken);
                 if (!hasActas)
                 {
-                    _context.Equipment.Remove(eq);
+                    _context.Equipos.Remove(eq);
                     prunedCount++;
                 }
                 else if (eq.EstatusEquipo != "Inactivo")

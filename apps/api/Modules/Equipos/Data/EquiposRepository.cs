@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PlataformaActas.Api.Infrastructure.Persistence;
-using EquipmentEntity = PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment;
+using PlataformaActas.Api.Modules.Equipos.Data.Entities;
 using PlataformaActas.Api.Modules.Equipos.Models.Dto;
 
 namespace PlataformaActas.Api.Modules.Equipos.Data;
@@ -19,41 +19,41 @@ public sealed class EquiposRepository : IEquiposRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<EquipmentEntity>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Equipo>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Equipment
+        return await _context.Equipos
             .AsNoTracking()
             .OrderBy(e => e.InventoryKey)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<EquipmentEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Equipo?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        return await _context.Equipos.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
-    public async Task<EquipmentEntity?> GetByInventoryKeyAsync(string inventoryKey, CancellationToken cancellationToken = default)
+    public async Task<Equipo?> GetByInventoryKeyAsync(string inventoryKey, CancellationToken cancellationToken = default)
     {
-        return await _context.Equipment
+        return await _context.Equipos
             .FirstOrDefaultAsync(e => e.InventoryKey.ToLower() == inventoryKey.ToLower(), cancellationToken);
     }
 
-    public async Task<EquipmentEntity> AddAsync(EquipmentEntity equipment, CancellationToken cancellationToken = default)
+    public async Task<Equipo> AddAsync(Equipo equipo, CancellationToken cancellationToken = default)
     {
-        _context.Equipment.Add(equipment);
+        _context.Equipos.Add(equipo);
         await _context.SaveChangesAsync(cancellationToken);
-        return equipment;
+        return equipo;
     }
 
-    public async Task UpdateAsync(EquipmentEntity equipment, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Equipo equipo, CancellationToken cancellationToken = default)
     {
-        _context.Equipment.Update(equipment);
+        _context.Equipos.Update(equipo);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<bool> SetStatusAsync(Guid id, string status, CancellationToken cancellationToken = default)
     {
-        var eq = await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        var eq = await _context.Equipos.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         if (eq is null)
         {
             return false;
@@ -66,13 +66,13 @@ public sealed class EquiposRepository : IEquiposRepository
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var eq = await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        var eq = await _context.Equipos.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         if (eq is null)
         {
             return false;
         }
 
-        _context.Equipment.Remove(eq);
+        _context.Equipos.Remove(eq);
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -86,7 +86,7 @@ public sealed class EquiposRepository : IEquiposRepository
 
     public async Task<bool> HasActiveDeliveryActasAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var equipo = await _context.Equipment.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        var equipo = await _context.Equipos.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         if (equipo != null && string.Equals(equipo.EstatusEquipo, "Asignado", StringComparison.OrdinalIgnoreCase))
         {
             return true;
@@ -115,7 +115,7 @@ public sealed class EquiposRepository : IEquiposRepository
 
     public async Task<IReadOnlyList<EquipmentMaintenanceItem>> GetMaintenanceListAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Equipment
+        return await _context.Equipos
             .AsNoTracking()
             .Select(e => new EquipmentMaintenanceItem(
                 e.Id,
@@ -135,7 +135,7 @@ public sealed class EquiposRepository : IEquiposRepository
 
     public async Task<bool> UpdateMaintenanceAsync(Guid id, UpdateMaintenanceRequest request, CancellationToken cancellationToken = default)
     {
-        var eq = await _context.Equipment.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        var eq = await _context.Equipos.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         if (eq is null)
         {
             return false;

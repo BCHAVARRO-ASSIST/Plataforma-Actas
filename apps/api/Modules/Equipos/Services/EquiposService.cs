@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using PlataformaActas.Api.Modules.Equipos.Data;
-using EquipmentEntity = PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment;
+using PlataformaActas.Api.Modules.Equipos.Data.Entities;
 using PlataformaActas.Api.Modules.Equipos.Models.Dto;
 using PlataformaActas.Api.Modules.Equipos.Models.Mappers;
 
@@ -38,7 +38,7 @@ public sealed class EquiposService(IEquiposRepository equiposRepository) : IEqui
             throw new ArgumentException($"Ya existe un equipo con la clave de inventario '{request.InventoryKey}'.");
         }
 
-        var eq = new EquipmentEntity
+        var eq = new Equipo
         {
             Id = Guid.NewGuid(),
             InventoryKey = request.InventoryKey.Trim().ToUpper(),

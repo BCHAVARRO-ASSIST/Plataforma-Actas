@@ -657,7 +657,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
         CancellationToken cancellationToken = default)
     {
         var acta = await _context.Actas
-            .Include(a => a.Equipment)
+            .Include(a => a.Equipo)
             .Include(a => a.Usuario)
             .Include(a => a.DestinatarioUsuario)
             .Include(a => a.MensajeroUsuario)
@@ -713,7 +713,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
         CancellationToken cancellationToken = default)
     {
         var acta = await _context.Actas
-            .Include(a => a.Equipment)
+            .Include(a => a.Equipo)
             .Include(a => a.Usuario)
             .Include(a => a.DestinatarioUsuario)
             .Include(a => a.MensajeroUsuario)

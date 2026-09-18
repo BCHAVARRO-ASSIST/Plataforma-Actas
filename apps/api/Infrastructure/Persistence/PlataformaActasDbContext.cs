@@ -23,7 +23,9 @@ public class PlataformaActasDbContext : DbContext
     public DbSet<UsuarioRol> UsuarioRoles => Set<UsuarioRol>();
     public DbSet<PlataformaActas.Api.Modules.Usuarios.Data.Entities.Usuario> Usuarios => Set<PlataformaActas.Api.Modules.Usuarios.Data.Entities.Usuario>();
     public DbSet<PlataformaActas.Api.Modules.Auth.Data.Entities.PasswordResetToken> PasswordResetTokens => Set<PlataformaActas.Api.Modules.Auth.Data.Entities.PasswordResetToken>();
-    public DbSet<PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment> Equipment => Set<PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment>();
+    public DbSet<PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipo> Equipos => Set<PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipo>();
+    [Obsolete("Utilice el DbSet Equipos.")]
+    public DbSet<PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipo> Equipment => Equipos;
     public DbSet<PlataformaActas.Api.Modules.Actas.Data.Entities.Acta> Actas => Set<PlataformaActas.Api.Modules.Actas.Data.Entities.Acta>();
     public DbSet<PlataformaActas.Api.Modules.Actas.Data.Entities.ActaObservation> ActaObservations => Set<PlataformaActas.Api.Modules.Actas.Data.Entities.ActaObservation>();
     public DbSet<PlataformaActas.Api.Modules.Actas.Data.Entities.ActaSignature> ActaSignatures => Set<PlataformaActas.Api.Modules.Actas.Data.Entities.ActaSignature>();

@@ -17,7 +17,7 @@ public sealed class ActaRepository : IActaRepository
     {
         return await _context.Actas
             .AsNoTracking()
-            .Include(a => a.Equipment)
+            .Include(a => a.Equipo)
             .Include(a => a.Usuario)
             .Include(a => a.DestinatarioUsuario)
             .Include(a => a.MensajeroUsuario)
@@ -29,7 +29,7 @@ public sealed class ActaRepository : IActaRepository
     {
         return await _context.Actas
             .AsNoTracking()
-            .Include(a => a.Equipment)
+            .Include(a => a.Equipo)
             .Include(a => a.Usuario)
             .Include(a => a.DestinatarioUsuario)
             .Include(a => a.MensajeroUsuario)
@@ -41,7 +41,7 @@ public sealed class ActaRepository : IActaRepository
     public async Task<Acta?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Actas
-            .Include(a => a.Equipment)
+            .Include(a => a.Equipo)
             .Include(a => a.Usuario)
             .Include(a => a.DestinatarioUsuario)
             .Include(a => a.MensajeroUsuario)
@@ -53,7 +53,7 @@ public sealed class ActaRepository : IActaRepository
     {
         return await _context.Actas
             .AsNoTracking()
-            .Include(a => a.Equipment)
+            .Include(a => a.Equipo)
             .Include(a => a.Usuario)
             .Include(a => a.DestinatarioUsuario)
             .Include(a => a.MensajeroUsuario)

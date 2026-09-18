@@ -13,8 +13,8 @@ public static class ActaMappingExtensions
             Id: acta.Id,
             NumeroActa: acta.NumeroActa,
             EquipmentId: acta.EquipmentId,
-            InventoryKey: acta.Equipment?.InventoryKey,
-            NombreEquipo: acta.Equipment?.NombreEquipo,
+            InventoryKey: acta.Equipo?.InventoryKey,
+            NombreEquipo: acta.Equipo?.NombreEquipo,
             UsuarioId: acta.UsuarioId,
             DestinatarioUsuarioId: acta.DestinatarioUsuarioId,
             MensajeroUsuarioId: acta.MensajeroUsuarioId,
@@ -36,20 +36,20 @@ public static class ActaMappingExtensions
 
     public static ActaDetailResponse ToDetailResponse(this Acta acta)
     {
-        var equipoResponse = acta.Equipment != null
+        var equipoResponse = acta.Equipo != null
             ? new EquipmentActaResponse(
-                Id: acta.Equipment.Id,
-                InventoryKey: acta.Equipment.InventoryKey,
-                NombreEquipo: acta.Equipment.NombreEquipo,
-                Empresa: acta.Equipment.Empresa,
-                AsignadoA: acta.Equipment.AsignadoA,
-                Proveedor: acta.Equipment.Proveedor,
-                Marca: acta.Equipment.Marca,
-                Procesador: acta.Equipment.Procesador,
-                DiscoDuro: acta.Equipment.DiscoDuro,
-                MemoriaRam: acta.Equipment.MemoriaRam,
-                Departamento: acta.Equipment.Departamento,
-                EstatusEquipo: acta.Equipment.EstatusEquipo
+                Id: acta.Equipo.Id,
+                InventoryKey: acta.Equipo.InventoryKey,
+                NombreEquipo: acta.Equipo.NombreEquipo,
+                Empresa: acta.Equipo.Empresa,
+                AsignadoA: acta.Equipo.AsignadoA,
+                Proveedor: acta.Equipo.Proveedor,
+                Marca: acta.Equipo.Marca,
+                Procesador: acta.Equipo.Procesador,
+                DiscoDuro: acta.Equipo.DiscoDuro,
+                MemoriaRam: acta.Equipo.MemoriaRam,
+                Departamento: acta.Equipo.Departamento,
+                EstatusEquipo: acta.Equipo.EstatusEquipo
             )
             : new EquipmentActaResponse(
                 Guid.Empty, string.Empty, string.Empty, null, null, null, null, null, null, null, null, null

@@ -17,7 +17,7 @@ public sealed class ReportesService : IReportesService
         ReportFilterRequest filter,
         CancellationToken cancellationToken = default)
     {
-        var query = _context.Equipment.AsNoTracking().AsQueryable();
+        var query = _context.Equipos.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filter.Estado))
         {
@@ -119,7 +119,7 @@ public sealed class ReportesService : IReportesService
             var s = filter.Search.Trim().ToLower();
             query = query.Where(a =>
                 (a.NumeroActa != null && a.NumeroActa.ToLower().Contains(s)) ||
-                (a.Equipment != null && a.Equipment.NombreEquipo.ToLower().Contains(s)) ||
+                (a.Equipo != null && a.Equipo.NombreEquipo.ToLower().Contains(s)) ||
                 (a.DestinatarioUsuario != null && (a.DestinatarioUsuario.Nombre.ToLower().Contains(s) || a.DestinatarioUsuario.Apellido.ToLower().Contains(s))));
         }
 
@@ -131,8 +131,8 @@ public sealed class ReportesService : IReportesService
                 a.TipoActa,
                 a.Estado,
                 a.EquipmentId,
-                a.Equipment != null ? a.Equipment.InventoryKey : null,
-                a.Equipment != null ? a.Equipment.NombreEquipo : null,
+                a.Equipo != null ? a.Equipo.InventoryKey : null,
+                a.Equipo != null ? a.Equipo.NombreEquipo : null,
                 a.UsuarioId,
                 a.Usuario != null ? (a.Usuario.Nombre + " " + a.Usuario.Apellido).Trim() : null,
                 a.DestinatarioUsuarioId,
@@ -179,8 +179,8 @@ public sealed class ReportesService : IReportesService
             .Select(a => new EntregasReportItem(
                 a.Id,
                 a.NumeroActa,
-                a.Equipment != null ? a.Equipment.InventoryKey : "-",
-                a.Equipment != null ? a.Equipment.NombreEquipo : "-",
+                a.Equipo != null ? a.Equipo.InventoryKey : "-",
+                a.Equipo != null ? a.Equipo.NombreEquipo : "-",
                 a.MensajeroUsuario != null ? (a.MensajeroUsuario.Nombre + " " + a.MensajeroUsuario.Apellido).Trim() : null,
                 a.DestinatarioUsuario != null ? (a.DestinatarioUsuario.Nombre + " " + a.DestinatarioUsuario.Apellido).Trim() : null,
                 a.Estado,
@@ -223,8 +223,8 @@ public sealed class ReportesService : IReportesService
                 a.NumeroActa,
                 a.ActaOrigenId,
                 a.ActaOrigen != null ? a.ActaOrigen.NumeroActa : null,
-                a.Equipment != null ? a.Equipment.InventoryKey : "-",
-                a.Equipment != null ? a.Equipment.NombreEquipo : "-",
+                a.Equipo != null ? a.Equipo.InventoryKey : "-",
+                a.Equipo != null ? a.Equipo.NombreEquipo : "-",
                 a.DestinatarioUsuario != null ? (a.DestinatarioUsuario.Nombre + " " + a.DestinatarioUsuario.Apellido).Trim() : null,
                 a.Estado,
                 a.FechaCreacion,

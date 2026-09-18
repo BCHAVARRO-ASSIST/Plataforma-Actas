@@ -324,7 +324,7 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                     b.ToTable("password_reset_tokens", (string)null);
                 });
 
-            modelBuilder.Entity("PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment", b =>
+            modelBuilder.Entity("PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipo", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -436,19 +436,19 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasColumnName("tipo_mantenimiento");
 
                     b.HasKey("Id")
-                        .HasName("equipment_pkey");
+                        .HasName("equipos_pkey");
 
                     b.HasIndex("EstatusEquipo")
-                        .HasDatabaseName("ix_equipment_estatus");
+                        .HasDatabaseName("ix_equipos_estatus");
 
                     b.HasIndex("InventoryKey")
                         .IsUnique()
-                        .HasDatabaseName("equipment_inventory_key_key");
+                        .HasDatabaseName("equipos_inventory_key_key");
 
                     b.HasIndex("NombreEquipo")
-                        .HasDatabaseName("ix_equipment_nombre");
+                        .HasDatabaseName("ix_equipos_nombre");
 
-                    b.ToTable("equipment", (string)null);
+                    b.ToTable("equipos", (string)null);
                 });
 
             modelBuilder.Entity("PlataformaActas.Api.Modules.Roles.Data.Entities.Permiso", b =>
@@ -625,7 +625,7 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_actas_v2_destinatario");
 
-                    b.HasOne("PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment", "Equipment")
+                    b.HasOne("PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipo", "Equipo")
                         .WithMany()
                         .HasForeignKey("EquipmentId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -649,7 +649,7 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
 
                     b.Navigation("DestinatarioUsuario");
 
-                    b.Navigation("Equipment");
+                    b.Navigation("Equipo");
 
                     b.Navigation("MensajeroUsuario");
 

@@ -115,7 +115,11 @@ public sealed class ActaConfiguration : IEntityTypeConfiguration<Acta>
             .HasColumnName("signature_data_json")
             .HasColumnType("jsonb");
 
-        builder.HasOne(a => a.Equipment)
+#pragma warning disable CS0618
+        builder.Ignore(a => a.Equipment);
+#pragma warning restore CS0618
+
+        builder.HasOne(a => a.Equipo)
             .WithMany()
             .HasForeignKey(a => a.EquipmentId)
             .HasConstraintName("fk_actas_v2_equipment")

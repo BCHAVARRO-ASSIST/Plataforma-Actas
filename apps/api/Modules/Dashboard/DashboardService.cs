@@ -9,7 +9,7 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
 
     public async Task<DashboardKpiResponse> GetKpisAsync(CancellationToken cancellationToken = default)
     {
-        var eqCounts = await context.Equipment
+        var eqCounts = await context.Equipos
             .GroupBy(e => e.EstatusEquipo ?? "Sin Estado")
             .Select(g => new { Estado = g.Key, Count = g.Count() })
             .ToListAsync(cancellationToken);
@@ -19,7 +19,7 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
         var equiposInactivos = eqCounts.Where(c => c.Estado == "Inactivo").Sum(c => c.Count);
         var equiposAsignados = eqCounts.Where(c => c.Estado == "Asignado").Sum(c => c.Count);
         
-        var equiposMantenimiento = await context.Equipment
+        var equiposMantenimiento = await context.Equipos
             .CountAsync(e => (e.EstatusEquipo != null && e.EstatusEquipo.Contains("Mantenimiento")) ||
                              (e.MantenimientoRealizado == true && e.FechaMantenimiento == null), cancellationToken);
 
@@ -62,7 +62,7 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
 
     public async Task<IReadOnlyList<StatusCountItem>> GetEquipmentStatusChartAsync(CancellationToken cancellationToken = default)
     {
-        var rawCounts = await context.Equipment
+        var rawCounts = await context.Equipos
             .GroupBy(e => string.IsNullOrWhiteSpace(e.EstatusEquipo) ? "Sin Estado" : e.EstatusEquipo)
             .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
             .ToListAsync(cancellationToken);
@@ -164,10 +164,10 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
 
     public async Task<MaintenanceStatsResponse> GetMaintenanceStatsAsync(CancellationToken cancellationToken = default)
     {
-        var totalMantenimientos = await context.Equipment
+        var totalMantenimientos = await context.Equipos
             .CountAsync(e => e.MantenimientoRealizado == true || e.FechaMantenimiento != null, cancellationToken);
 
-        var maintenanceStats = await context.Equipment
+        var maintenanceStats = await context.Equipos
             .Where(e => e.TipoMantenimiento != null)
             .GroupBy(e => e.TipoMantenimiento)
             .Select(g => new { Tipo = g.Key, Count = g.Count() })
@@ -176,7 +176,7 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
         var preventivos = maintenanceStats.Where(m => m.Tipo != null && m.Tipo.Contains("Preventivo")).Sum(m => m.Count);
         var correctivos = maintenanceStats.Where(m => m.Tipo != null && m.Tipo.Contains("Correctivo")).Sum(m => m.Count);
 
-        var pendientes = await context.Equipment
+        var pendientes = await context.Equipos
             .CountAsync(e => e.EstatusEquipo != null && e.EstatusEquipo.Contains("Mantenimiento"), cancellationToken);
 
         var concluidos = totalMantenimientos - pendientes;
@@ -211,7 +211,7 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
                 Id = a.Id.ToString(),
                 a.TipoActa,
                 a.NumeroActa,
-                NombreEquipo = a.Equipment != null ? a.Equipment.NombreEquipo : "Equipo",
+                NombreEquipo = a.Equipo != null ? a.Equipo.NombreEquipo : "Equipo",
                 UsuarioNombre = a.Usuario != null ? a.Usuario.Nombre : null,
                 UsuarioApellido = a.Usuario != null ? a.Usuario.Apellido : null,
                 a.FechaCreacion,

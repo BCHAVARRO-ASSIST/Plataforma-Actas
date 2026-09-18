@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using EquipmentEntity = PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment;
+using PlataformaActas.Api.Modules.Equipos.Data.Entities;
 using PlataformaActas.Api.Modules.Usuarios.Data.Entities;
 
 namespace PlataformaActas.Api.Modules.Actas.Data.Entities;
@@ -11,7 +11,14 @@ public class Acta
     public string? NumeroActa { get; set; }
 
     public Guid EquipmentId { get; set; }
-    public EquipmentEntity Equipment { get; set; } = null!;
+    public Equipo Equipo { get; set; } = null!;
+
+    [Obsolete("Utilice la propiedad canónica de navegación Equipo.")]
+    public Equipo Equipment
+    {
+        get => Equipo;
+        set => Equipo = value;
+    }
 
     public int UsuarioId { get; set; }
     public Usuario Usuario { get; set; } = null!;
