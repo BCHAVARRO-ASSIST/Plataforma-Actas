@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using PlataformaActas.Api.Modules.Actas.Data.Entities;
-using PlataformaActas.Api.Modules.Equipment.Data.Entities;
 using PlataformaActas.Api.Modules.Usuarios.Data.Entities;
 
 namespace PlataformaActas.Api.Infrastructure.Persistence;
@@ -108,272 +106,38 @@ public static class DatabaseSeeder
                   );
                 """);
 
-            // 5. Asegurar usuarios iniciales con contraseña "Admin123*"
-            var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123*");
-
-            var usuariosSeed = new[]
+            // 5. Asegurar usuario Administrador esencial
+            var adminUser = await context.Usuarios.FirstOrDefaultAsync(x => x.UsuarioRed == "admin");
+            if (adminUser is null)
             {
-                new { Nombre = "Administrador", Apellido = "Sistema", UsuarioRed = "admin", Correo = "admin@plataformaactas.local", Proceso = "Tecnología", Rol = "Administrador" },
-                new { Nombre = "Carlos", Apellido = "Gómez", UsuarioRed = "gestor", Correo = "gestor@plataformaactas.local", Proceso = "Operaciones TI", Rol = "Gestor" },
-                new { Nombre = "Andrés", Apellido = "Trujillo", UsuarioRed = "mensajero", Correo = "andres.trujillo@plataformaactas.local", Proceso = "Mesa de ayuda TI", Rol = "Mensajero" },
-                new { Nombre = "Juan", Apellido = "Pérez", UsuarioRed = "juan.perez", Correo = "juan.perez@plataformaactas.local", Proceso = "Desarrollo", Rol = "Gestor" },
-                new { Nombre = "María", Apellido = "Rodríguez", UsuarioRed = "maria.rodriguez", Correo = "maria.rodriguez@plataformaactas.local", Proceso = "Talento Humano", Rol = "Auditor" }
-            };
-
-            foreach (var u in usuariosSeed)
-            {
-                var existing = await context.Usuarios.FirstOrDefaultAsync(x => x.UsuarioRed == u.UsuarioRed);
-                if (existing is null)
+                var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123*");
+                var nuevoAdmin = new Usuario
                 {
-                    var nuevo = new Usuario
-                    {
-                        Nombre = u.Nombre,
-                        Apellido = u.Apellido,
-                        UsuarioRed = u.UsuarioRed,
-                        Correo = u.Correo,
-                        Proceso = u.Proceso,
-                        Activo = true,
-                        PasswordHash = passwordHash,
-                        FechaCreacion = DateTime.UtcNow
-                    };
-                    context.Usuarios.Add(nuevo);
-                    await context.SaveChangesAsync();
-
-                    var rol = await context.Roles.FirstOrDefaultAsync(r => r.Nombre == u.Rol);
-                    if (rol != null)
-                    {
-                        context.UsuarioRoles.Add(new Modules.Roles.Data.Entities.UsuarioRol
-                        {
-                            UsuarioId = nuevo.Id,
-                            RolId = rol.Id
-                        });
-                        await context.SaveChangesAsync();
-                    }
-                }
-            }
-
-            // 6. Asegurar Inventario de Equipos Tecnológicos inicial
-            if (!await context.Equipment.AnyAsync())
-            {
-                var equipos = new List<Equipment>
-                {
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryKey = "EQ-LEN-001",
-                        NombreEquipo = "Lenovo ThinkPad T14 Gen 3",
-                        Empresa = "Sede Principal",
-                        AsignadoA = "Juan Pérez",
-                        Proveedor = "Lenovo Colombia",
-                        Marca = "Lenovo",
-                        Procesador = "Intel Core i7-1260P",
-                        DiscoDuro = "512 GB SSD NVMe",
-                        MemoriaRam = "16 GB DDR4",
-                        Departamento = "Desarrollo y TI",
-                        EstatusEquipo = "Activo",
-                        ActaEntregada = true,
-                        MantenimientoRealizado = false
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryKey = "EQ-DEL-002",
-                        NombreEquipo = "Dell Latitude 5430",
-                        Empresa = "Sede Principal",
-                        AsignadoA = "María Rodríguez",
-                        Proveedor = "Dell Technologies",
-                        Marca = "Dell",
-                        Procesador = "Intel Core i5-1245U",
-                        DiscoDuro = "256 GB SSD",
-                        MemoriaRam = "16 GB DDR4",
-                        Departamento = "Talento Humano",
-                        EstatusEquipo = "Activo",
-                        ActaEntregada = true,
-                        MantenimientoRealizado = false
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryKey = "EQ-HP-003",
-                        NombreEquipo = "HP Z2 G9 Workstation Tower",
-                        Empresa = "Sede Norte",
-                        AsignadoA = "Equipo Diseño Gráfico",
-                        Proveedor = "HP Enterprise",
-                        Marca = "HP",
-                        Procesador = "Intel Core i9-13900K",
-                        DiscoDuro = "1 TB SSD NVMe Gen4",
-                        MemoriaRam = "32 GB DDR5",
-                        Departamento = "Comunicaciones",
-                        EstatusEquipo = "Activo",
-                        ActaEntregada = true,
-                        MantenimientoRealizado = true,
-                        TipoMantenimiento = "Preventivo",
-                        FechaMantenimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-1))
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryKey = "EQ-APL-004",
-                        NombreEquipo = "MacBook Pro 14 M3 Pro",
-                        Empresa = "Sede Principal",
-                        AsignadoA = "Dirección de Tecnología",
-                        Proveedor = "Apple Colombia",
-                        Marca = "Apple",
-                        Procesador = "Apple M3 Pro (11-Core)",
-                        DiscoDuro = "512 GB SSD",
-                        MemoriaRam = "18 GB Unified",
-                        Departamento = "Dirección TI",
-                        EstatusEquipo = "Activo",
-                        ActaEntregada = true,
-                        MantenimientoRealizado = false
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryKey = "EQ-LEN-005",
-                        NombreEquipo = "Lenovo ThinkBook 15 G2",
-                        Empresa = "Sede Principal",
-                        AsignadoA = "En Stock / Sin Asignar",
-                        Proveedor = "Lenovo Colombia",
-                        Marca = "Lenovo",
-                        Procesador = "Intel Core i5-1135G7",
-                        DiscoDuro = "256 GB SSD",
-                        MemoriaRam = "8 GB DDR4",
-                        Departamento = "Bodega TI",
-                        EstatusEquipo = "Inactivo",
-                        ActaEntregada = false,
-                        MantenimientoRealizado = false
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryKey = "EQ-DEL-006",
-                        NombreEquipo = "Monitor Dell UltraSharp U2723QE 27\" 4K",
-                        Empresa = "Sede Principal",
-                        AsignadoA = "Juan Pérez",
-                        Proveedor = "Dell Technologies",
-                        Marca = "Dell",
-                        Procesador = "N/A",
-                        DiscoDuro = "N/A",
-                        MemoriaRam = "N/A",
-                        Departamento = "Desarrollo y TI",
-                        EstatusEquipo = "Activo",
-                        ActaEntregada = true,
-                        MantenimientoRealizado = false
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryKey = "EQ-HP-007",
-                        NombreEquipo = "HP EliteBook 840 G8",
-                        Empresa = "Sede Principal",
-                        AsignadoA = "Mesa de Ayuda",
-                        Proveedor = "HP Inc",
-                        Marca = "HP",
-                        Procesador = "Intel Core i7-1165G7",
-                        DiscoDuro = "512 GB SSD",
-                        MemoriaRam = "16 GB DDR4",
-                        Departamento = "Soporte Técnico",
-                        EstatusEquipo = "Mantenimiento",
-                        ActaEntregada = false,
-                        MantenimientoRealizado = true,
-                        TipoMantenimiento = "Correctivo",
-                        FechaMantenimiento = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5))
-                    },
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        InventoryKey = "EQ-SAM-008",
-                        NombreEquipo = "Samsung Galaxy S23 5G Enterprise",
-                        Empresa = "Sede Principal",
-                        AsignadoA = "Pedro Ramírez",
-                        Proveedor = "Samsung Electronics",
-                        Marca = "Samsung",
-                        Procesador = "Snapdragon 8 Gen 2",
-                        DiscoDuro = "256 GB UFS",
-                        MemoriaRam = "8 GB LPDDR5X",
-                        Departamento = "Mensajería y Logística",
-                        EstatusEquipo = "Activo",
-                        ActaEntregada = true,
-                        MantenimientoRealizado = false
-                    }
+                    Nombre = "Administrador",
+                    Apellido = "Sistema",
+                    UsuarioRed = "admin",
+                    Correo = "admin@plataformaactas.local",
+                    Proceso = "Tecnología",
+                    Activo = true,
+                    PasswordHash = passwordHash,
+                    FechaCreacion = DateTime.UtcNow
                 };
-
-                context.Equipment.AddRange(equipos);
+                context.Usuarios.Add(nuevoAdmin);
                 await context.SaveChangesAsync();
-            }
 
-            // 7. Asegurar Actas de ejemplo para Mensajería y Operaciones
-            if (!await context.Actas.AnyAsync())
-            {
-                var adminUser = await context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioRed == "admin");
-                var mensajeroUser = await context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioRed == "mensajero");
-                var juanUser = await context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioRed == "juan.perez");
-                var mariaUser = await context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioRed == "maria.rodriguez");
-
-                var eqLenovo = await context.Equipment.FirstOrDefaultAsync(e => e.InventoryKey == "EQ-LEN-001");
-                var eqDell = await context.Equipment.FirstOrDefaultAsync(e => e.InventoryKey == "EQ-DEL-002");
-                var eqMac = await context.Equipment.FirstOrDefaultAsync(e => e.InventoryKey == "EQ-APL-004");
-
-                if (adminUser != null && eqLenovo != null && eqDell != null)
+                var rolAdmin = await context.Roles.FirstOrDefaultAsync(r => r.Nombre == "Administrador");
+                if (rolAdmin != null)
                 {
-                    var actas = new List<Acta>
+                    context.UsuarioRoles.Add(new Modules.Roles.Data.Entities.UsuarioRol
                     {
-                        new()
-                        {
-                            Id = Guid.NewGuid(),
-                            NumeroActa = "ACT-2026-0001",
-                            EquipmentId = eqLenovo.Id,
-                            UsuarioId = adminUser.Id,
-                            DestinatarioUsuarioId = juanUser?.Id,
-                            MensajeroUsuarioId = mensajeroUser?.Id ?? adminUser.Id,
-                            TipoActa = "Entrega",
-                            Estado = "Borrador",
-                            ActaEntregada = false,
-                            FechaCreacion = DateTimeOffset.UtcNow.AddDays(-1),
-                            FormDataJson = "{\"proposito\":\"Asignación para proyecto de desarrollo\",\"observaciones\":\"Equipo entregado con cargador original y funda.\"}"
-                        },
-                        new()
-                        {
-                            Id = Guid.NewGuid(),
-                            NumeroActa = "ACT-2026-0002",
-                            EquipmentId = eqDell.Id,
-                            UsuarioId = adminUser.Id,
-                            DestinatarioUsuarioId = mariaUser?.Id,
-                            MensajeroUsuarioId = mensajeroUser?.Id ?? adminUser.Id,
-                            TipoActa = "Entrega",
-                            Estado = "Firmada",
-                            ActaEntregada = true,
-                            FechaCreacion = DateTimeOffset.UtcNow.AddDays(-3),
-                            FechaFirma = DateTimeOffset.UtcNow.AddDays(-2),
-                            FormDataJson = "{\"proposito\":\"Renovación de activo TI\",\"observaciones\":\"Verificado y firmado en conformidad.\"}"
-                        }
-                    };
-
-                    if (eqMac != null)
-                    {
-                        actas.Add(new()
-                        {
-                            Id = Guid.NewGuid(),
-                            NumeroActa = "ACT-2026-0003",
-                            EquipmentId = eqMac.Id,
-                            UsuarioId = adminUser.Id,
-                            DestinatarioUsuarioId = adminUser.Id,
-                            MensajeroUsuarioId = mensajeroUser?.Id ?? adminUser.Id,
-                            TipoActa = "Devolución",
-                            Estado = "Borrador",
-                            ActaEntregada = false,
-                            FechaCreacion = DateTimeOffset.UtcNow.AddHours(-4),
-                            FormDataJson = "{\"proposito\":\"Devolución por fin de asignación\",\"observaciones\":\"Pendiente inspección física en laboratorio.\"}"
-                        });
-                    }
-
-                    context.Actas.AddRange(actas);
+                        UsuarioId = nuevoAdmin.Id,
+                        RolId = rolAdmin.Id
+                    });
                     await context.SaveChangesAsync();
                 }
             }
 
-            Console.WriteLine("[DatabaseSeeder] Permisos, roles, usuarios, catálogo de equipos y actas sincronizados con éxito.");
+            Console.WriteLine("[DatabaseSeeder] Roles, permisos y cuenta de administrador asegurados con éxito.");
         }
         catch (Exception ex)
         {

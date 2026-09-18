@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { MensajeroActa } from "./mensajeroService";
 import { getMisActas } from "./mensajeroService";
-import { ActaTable } from "../../components/ActaTable";
+import { ActaTable } from "@/features/actas/components/ActaTable";
 import {
   MessengerIcon,
   ClockIcon,
@@ -9,7 +9,7 @@ import {
   PackageIcon,
   RefreshIcon,
   SearchIcon,
-} from "../../components/Icons";
+} from "@/components/ui/Icons";
 
 interface MensajeroPageProps {
   onSelectActa: (id: string) => void;

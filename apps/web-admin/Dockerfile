@@ -8,6 +8,8 @@ RUN npm ci
 
 # Copy source code and build
 COPY apps/web-admin/ ./
+ARG VITE_GOOGLE_CLIENT_ID=""
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 
 # Runtime stage with Nginx

@@ -3,7 +3,7 @@
 // Plataforma de Actas
 // =====================================================
 
-import { AUTH_PERMISSIONS_KEY } from "./authService";
+import type { AuthenticatedUser } from "./authService";
 
 export const PERMISSIONS = {
   // DASHBOARD
@@ -48,87 +48,17 @@ export const PERMISSIONS = {
 export type Permission =
   (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
-interface JwtPayload {
-  permiso?: string | string[];
-  exp?: number;
-  [key: string]: unknown;
-}
-
 // =====================================================
-// DECODIFICAR PAYLOAD DEL JWT
+// OBTENER PERMISOS DEL USUARIO EN MEMORIA
 // =====================================================
 
-function decodeToken(
-  token: string
-): JwtPayload | null {
-  try {
-    const parts = token.split(".");
-
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const payload = parts[1];
-
-    const normalizedPayload =
-      payload
-        .replace(/-/g, "+")
-        .replace(/_/g, "/");
-
-    const paddedPayload =
-      normalizedPayload.padEnd(
-        normalizedPayload.length +
-          ((4 - (normalizedPayload.length % 4)) % 4),
-        "="
-      );
-
-    const decoded =
-      atob(paddedPayload);
-
-    return JSON.parse(
-      decoded
-    ) as JwtPayload;
-
-  } catch {
-    return null;
-  }
-}
-
-// =====================================================
-// OBTENER PERMISOS
-// =====================================================
-
-export function getPermissionsFromToken(
-  token: string | null
+export function getUserPermissions(
+  user: AuthenticatedUser | null | undefined
 ): string[] {
-  // 1. Prioridad: Permisos autorizados guardados en sesión/almacenamiento
-  try {
-    const raw = localStorage.getItem(AUTH_PERMISSIONS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    }
-  } catch {
-    // Si falla el parseo, intentar desde el token
-  }
-
-  // 2. Fallback: Si el token contiene claims de permiso
-  if (!token) {
+  if (!user || !Array.isArray(user.permisos)) {
     return [];
   }
-
-  const payload = decodeToken(token);
-  if (!payload?.permiso) {
-    return [];
-  }
-
-  if (Array.isArray(payload.permiso)) {
-    return payload.permiso;
-  }
-
-  return [payload.permiso];
+  return user.permisos;
 }
 
 // =====================================================
@@ -136,10 +66,10 @@ export function getPermissionsFromToken(
 // =====================================================
 
 export function hasPermission(
-  token: string | null,
+  user: AuthenticatedUser | null | undefined,
   permission: Permission
 ): boolean {
-  const permissions = getPermissionsFromToken(token);
+  const permissions = getUserPermissions(user);
   return permissions.includes(permission);
 }
 
@@ -148,10 +78,10 @@ export function hasPermission(
 // =====================================================
 
 export function hasAnyPermission(
-  token: string | null,
+  user: AuthenticatedUser | null | undefined,
   permissions: Permission[]
 ): boolean {
-  const userPermissions = getPermissionsFromToken(token);
+  const userPermissions = getUserPermissions(user);
   return permissions.some((permission) => userPermissions.includes(permission));
 }
 
@@ -160,9 +90,9 @@ export function hasAnyPermission(
 // =====================================================
 
 export function hasAllPermissions(
-  token: string | null,
+  user: AuthenticatedUser | null | undefined,
   permissions: Permission[]
 ): boolean {
-  const userPermissions = getPermissionsFromToken(token);
+  const userPermissions = getUserPermissions(user);
   return permissions.every((permission) => userPermissions.includes(permission));
 }

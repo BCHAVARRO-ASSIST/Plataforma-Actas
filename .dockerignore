@@ -1,10 +1,34 @@
+# Control de versiones y editores
 **/.git
+**/.github
 **/.vs
 **/.vscode
+**/.idea
+
+# Artefactos de compilación
 **/bin
 **/obj
 **/node_modules
 **/dist
-**/.env.local
-**/.env.*.local
+**/build
+**/.vite
 
+# Variables de entorno y secretos locales (NUNCA incluir en imágenes)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Claves de cuentas de servicio y certificados
+**/google-credentials.json
+**/*.pfx
+**/*.key
+**/*.pem
+
+# Archivos de pruebas y logs
+**/tests
+**/scratch
+**/*.log
+**/*.user
+**/*.suo
+.DS_Store
+Thumbs.db

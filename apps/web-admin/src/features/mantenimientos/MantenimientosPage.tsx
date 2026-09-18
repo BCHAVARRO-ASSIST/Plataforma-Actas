@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  getMaintenanceRecords,
-  updateEquipmentMaintenance,
-  type MaintenanceRecord,
-} from "../equipment/equipmentService";
+  getMantenimientos as getMaintenanceRecords,
+  updateEquipoMantenimiento as updateEquipmentMaintenance,
+  type RegistroMantenimiento as MaintenanceRecord,
+} from "@/features/equipos/equipoService";
 import {
   MaintenanceIcon,
   CheckIcon,
@@ -13,8 +13,10 @@ import {
   EditIcon,
   CloseIcon,
   EquipmentIcon,
-} from "../../components/Icons";
-import { AutoDismissAlert } from "../../components/AutoDismissAlert";
+} from "@/components/ui/Icons";
+import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
+import { Modal } from "@/components/ui/Modal";
+import { formatDate } from "@/shared/utils/date";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -321,7 +323,7 @@ export function MantenimientosPage() {
                     </span>
                   </td>
                   <td style={{ fontSize: "12.5px" }}>
-                    {r.fechaMantenimiento ? new Date(r.fechaMantenimiento).toLocaleDateString("es-CO") : "—"}
+                    {formatDate(r.fechaMantenimiento)}
                   </td>
                   <td>
                     <span className={r.mantenimientoRealizado ? "badge badge-success" : "badge badge-neutral"}>
@@ -381,72 +383,70 @@ export function MantenimientosPage() {
 
       {/* Modal */}
       {selectedItem && (
-        <div className="modal-backdrop" onClick={() => setSelectedItem(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>SOPORTE TÉCNICO</span>
-                <h2>Mantenimiento: {selectedItem.inventoryKey}</h2>
+        <Modal isOpen={!!selectedItem} onClose={() => setSelectedItem(null)}>
+          <div className="modal-header">
+            <div>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>SOPORTE TÉCNICO</span>
+              <h2>Gestionar Mantenimiento: {selectedItem.inventoryKey}</h2>
+            </div>
+            <button type="button" className="modal-close" onClick={() => setSelectedItem(null)}>
+              <CloseIcon size={16} />
+            </button>
+          </div>
+
+          <form onSubmit={handleSaveModal}>
+            <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="modalTipo">Tipo de Mantenimiento</label>
+                <select
+                  id="modalTipo"
+                  name="modalTipo"
+                  className="form-select"
+                  value={modalTipo}
+                  onChange={(e) => setModalTipo(e.target.value)}
+                >
+                  <option value="Preventivo">Preventivo (Limpieza, pasta térmica, diagnóstico)</option>
+                  <option value="Correctivo">Correctivo (Reparación, cambio de componente)</option>
+                </select>
               </div>
-              <button type="button" className="modal-close" onClick={() => setSelectedItem(null)}>
-                <CloseIcon size={16} />
-              </button>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="modalFecha">Fecha de Mantenimiento</label>
+                <input
+                  id="modalFecha"
+                  name="modalFecha"
+                  type="date"
+                  className="form-input"
+                  value={modalFecha}
+                  onChange={(e) => setModalFecha(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "6px" }}>
+                <input
+                  type="checkbox"
+                  id="modal-realizado"
+                  name="modalRealizado"
+                  checked={modalRealizado}
+                  onChange={(e) => setModalRealizado(e.target.checked)}
+                  style={{ width: "16px", height: "16px", accentColor: "var(--color-primary-600)" }}
+                />
+                <label htmlFor="modal-realizado" className="form-label" style={{ margin: 0, cursor: "pointer" }}>
+                  Mantenimiento realizado y verificado
+                </label>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveModal}>
-              <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="modalTipo">Tipo de Mantenimiento</label>
-                  <select
-                    id="modalTipo"
-                    name="modalTipo"
-                    className="form-select"
-                    value={modalTipo}
-                    onChange={(e) => setModalTipo(e.target.value)}
-                  >
-                    <option value="Preventivo">Preventivo (Limpieza, pasta térmica, diagnóstico)</option>
-                    <option value="Correctivo">Correctivo (Reparación, cambio de componente)</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label" htmlFor="modalFecha">Fecha de Mantenimiento</label>
-                  <input
-                    id="modalFecha"
-                    name="modalFecha"
-                    type="date"
-                    className="form-input"
-                    value={modalFecha}
-                    onChange={(e) => setModalFecha(e.target.value)}
-                  />
-                </div>
-
-                <div className="form-group" style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "6px" }}>
-                  <input
-                    type="checkbox"
-                    id="modal-realizado"
-                    name="modalRealizado"
-                    checked={modalRealizado}
-                    onChange={(e) => setModalRealizado(e.target.checked)}
-                    style={{ width: "16px", height: "16px", accentColor: "var(--color-primary-600)" }}
-                  />
-                  <label htmlFor="modal-realizado" className="form-label" style={{ margin: 0, cursor: "pointer" }}>
-                    Mantenimiento realizado y verificado
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button type="button" className="btn btn-ghost" onClick={() => setSelectedItem(null)}>
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? "Guardando..." : "Guardar Mantenimiento"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-ghost" onClick={() => setSelectedItem(null)}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? "Guardando..." : "Guardar Mantenimiento"}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

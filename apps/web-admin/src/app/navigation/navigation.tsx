@@ -1,4 +1,4 @@
-import { PERMISSIONS } from "../../features/auth/permissions";
+import { PERMISSIONS } from "@/features/auth/permissions";
 import type { NavigationItem } from "./navigationTypes";
 import {
   DashboardIcon,
@@ -9,7 +9,7 @@ import {
   MessengerIcon,
   UsersIcon,
   RolesIcon,
-} from "../../components/Icons";
+} from "@/components/ui/Icons";
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   {
@@ -22,7 +22,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   },
   {
     id: "equipment",
-    label: "Inventario",
+    label: "Equipos e Inventario",
     view: "equipment",
     section: "principal",
     icon: <EquipmentIcon size={18} />,
@@ -70,7 +70,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   },
   {
     id: "roles",
-    label: "Roles y permisos",
+    label: "Roles y Permisos",
     view: "roles",
     section: "principal",
     icon: <RolesIcon size={18} />,

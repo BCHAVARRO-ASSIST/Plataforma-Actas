@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { ExecutiveSummaryCards } from "../../components/ExecutiveSummaryCards";
-import { RecentActasCard } from "../../components/RecentActasCard";
-import { RefreshIcon } from "../../components/Icons";
+import { ExecutiveSummaryCards } from "./components/ExecutiveSummaryCards";
+import { RecentActasCard } from "./components/RecentActasCard";
+import { RefreshIcon } from "@/components/ui/Icons";
 import {
   getDashboardKpis,
   getRecentActivity,

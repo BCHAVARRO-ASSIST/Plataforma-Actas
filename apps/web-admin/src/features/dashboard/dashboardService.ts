@@ -1,4 +1,4 @@
-import { API_URL } from "../../shared/config/api";
+import { apiGet } from "../../shared/api/httpClient";
 
 export interface DashboardKpis {
   totalEquipos: number;
@@ -26,29 +26,14 @@ export interface RecentActivityItem {
   badgeTipo: string | null;
 }
 
-const TOKEN_KEY = "plataforma_actas_token";
-
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem(TOKEN_KEY);
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 export async function getDashboardKpis(): Promise<DashboardKpis> {
-  const res = await fetch(`${API_URL}/dashboard/kpis`, {
-    headers: getAuthHeaders(),
+  return apiGet<DashboardKpis>("/dashboard/kpis", {
+    errorMessage: "No fue posible cargar los indicadores KPI.",
   });
-  if (!res.ok) throw new Error("No fue posible cargar los indicadores KPI.");
-  return res.json();
 }
 
 export async function getRecentActivity(limit: number = 10): Promise<RecentActivityItem[]> {
-  const res = await fetch(`${API_URL}/dashboard/recent-activity?limit=${limit}`, {
-    headers: getAuthHeaders(),
+  return apiGet<RecentActivityItem[]>(`/dashboard/recent-activity?limit=${limit}`, {
+    errorMessage: "No fue posible cargar la actividad reciente.",
   });
-  if (!res.ok) throw new Error("No fue posible cargar la actividad reciente.");
-  return res.json();
 }
-

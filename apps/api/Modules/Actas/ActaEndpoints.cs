@@ -81,12 +81,26 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             // 4. Crear acta
             group.MapPost("/", async (
                 CreateActaRequest request,
+                HttpContext httpContext,
                 IActaService actaService,
                 CancellationToken cancellationToken) =>
             {
                 try
                 {
-                    var created = await actaService.CreateAsync(request, cancellationToken);
+                    int creatorUserId = request.UsuarioId;
+                    var userIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (int.TryParse(userIdStr, out var authUserId) && authUserId > 0)
+                    {
+                        creatorUserId = authUserId;
+                    }
+
+                    if (creatorUserId <= 0)
+                    {
+                        return Results.BadRequest(new { message = "No se pudo identificar el usuario autenticado que registra el acta." });
+                    }
+
+                    var safeRequest = request with { UsuarioId = creatorUserId };
+                    var created = await actaService.CreateAsync(safeRequest, cancellationToken);
                     return Results.Created($"/api/actas/{created.Id}", created);
                 }
                 catch (ArgumentException ex)

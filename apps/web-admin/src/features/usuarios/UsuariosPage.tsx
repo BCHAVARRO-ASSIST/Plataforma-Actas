@@ -21,8 +21,10 @@ import {
   MoreVerticalIcon,
   MailIcon,
   UserCheckIcon,
-} from "../../components/Icons";
-import { AutoDismissAlert } from "../../components/AutoDismissAlert";
+} from "@/components/ui/Icons";
+import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
+import { Modal } from "@/components/ui/Modal";
+import { Pagination } from "@/components/ui/Pagination";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -309,7 +311,7 @@ export function UsuariosPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
+      <div className="page-header-container" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
         <div>
           <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
             ADMINISTRACIÓN DE USUARIOS
@@ -322,7 +324,7 @@ export function UsuariosPage() {
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div className="page-header-actions">
           <button type="button" className="btn btn-secondary btn-sm" onClick={cargarDatos} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
             <RefreshIcon size={14} />
             <span>Actualizar</span>
@@ -349,7 +351,7 @@ export function UsuariosPage() {
       />
 
       {/* Summary KPI Badges */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "18px" }}>
+      <div className="kpi-grid-strip">
         <div className="card" style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Total Colaboradores</span>
@@ -383,7 +385,7 @@ export function UsuariosPage() {
 
       {/* Toolbar Filters */}
       <div className="toolbar-container" style={{ background: 'var(--bg-surface)', padding: '14px 18px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-default)', marginBottom: '18px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div className="search-input-wrapper" style={{ flex: 1, minWidth: '240px' }}>
+        <div className="search-input-wrapper" style={{ flex: 1, minWidth: '220px' }}>
           <span className="search-icon">
             <SearchIcon size={16} />
           </span>
@@ -401,7 +403,7 @@ export function UsuariosPage() {
           />
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div className="toolbar-filter-group" style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
           <select
             id="usuariosEstadoFiltro"
             name="estadoFiltro"
@@ -411,7 +413,6 @@ export function UsuariosPage() {
               setEstadoFiltro(e.target.value as "todos" | "activos" | "inactivos");
               setPaginaActual(1);
             }}
-            style={{ width: "150px" }}
           >
             <option value="todos">Todos los estados</option>
             <option value="activos">Activos</option>
@@ -427,7 +428,6 @@ export function UsuariosPage() {
               setProcesoFiltro(e.target.value);
               setPaginaActual(1);
             }}
-            style={{ width: "180px" }}
           >
             <option value="todos">Todos los departamentos</option>
             {procesosDisponibles.map((p) => (
@@ -485,13 +485,8 @@ export function UsuariosPage() {
                         >
                           {u.nombre.charAt(0)}{u.apellido.charAt(0)}
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "13.5px" }}>
-                            {u.nombre} {u.apellido}
-                          </div>
-                          <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
-                            @{u.usuarioRed}
-                          </div>
+                        <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "13.5px" }}>
+                          {u.nombre} {u.apellido}
                         </div>
                       </div>
                     </td>
@@ -670,40 +665,19 @@ export function UsuariosPage() {
       </div>
 
       {/* Paginación */}
-      {totalPaginas > 1 && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" }}>
-          <span style={{ fontSize: "12.5px", color: "var(--text-muted)" }}>
-            Mostrando {usuariosPaginados.length} de {usuariosFiltrados.length} usuarios
-          </span>
-          <div style={{ display: "flex", gap: "6px" }}>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => setPaginaActual((p) => Math.max(1, p - 1))}
-              disabled={paginaActual === 1}
-            >
-              ← Anterior
-            </button>
-            <span style={{ padding: "6px 12px", fontSize: "12.5px", fontWeight: 600 }}>
-              Página {paginaActual} de {totalPaginas}
-            </span>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => setPaginaActual((p) => Math.min(totalPaginas, p + 1))}
-              disabled={paginaActual === totalPaginas}
-            >
-              Siguiente →
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        currentPage={paginaActual}
+        totalPages={totalPaginas}
+        totalItems={usuariosFiltrados.length}
+        currentCount={usuariosPaginados.length}
+        itemName="usuarios"
+        onPageChange={setPaginaActual}
+      />
 
       {/* Modal Crear / Editar Usuario */}
       {modalAbierto && (
-        <div className="modal-backdrop" onClick={() => setModalAbierto(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <Modal isOpen={modalAbierto} onClose={() => setModalAbierto(false)}>
+          <div className="modal-header">
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div style={{ width: "34px", height: "34px", borderRadius: "var(--radius-md)", background: "var(--color-primary-50)", color: "var(--color-primary-700)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <UsersIcon size={18} />
@@ -758,7 +732,7 @@ export function UsuariosPage() {
                       type="text"
                       className="form-input"
                       required
-                      disabled={modoFormulario === "editar"}
+                      disabled={modoFormulario === "editar" && usuarioSeleccionado?.usuarioRed.toLowerCase() === "admin"}
                       placeholder="Ej. juan.perez"
                       value={formulario.usuarioRed}
                       onChange={(e) => setFormulario({ ...formulario, usuarioRed: e.target.value })}
@@ -841,15 +815,13 @@ export function UsuariosPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Modal Asignar Rol */}
       {rolModalAbierto && usuarioRolSeleccionado && (
-        <div className="modal-backdrop" onClick={() => setRolModalAbierto(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <Modal isOpen={rolModalAbierto} onClose={() => setRolModalAbierto(false)}>
+          <div className="modal-header">
               <div>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>SEGURIDAD RBAC</span>
                 <h2>Asignar Rol: {usuarioRolSeleccionado.nombre} {usuarioRolSeleccionado.apellido}</h2>
@@ -894,15 +866,13 @@ export function UsuariosPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Modal Restablecer Contraseña (Admin) */}
       {modalResetAbierto && usuarioReset && (
-        <div className="modal-backdrop" onClick={() => setModalResetAbierto(false)}>
-          <div className="modal-content small" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <Modal isOpen={modalResetAbierto} onClose={() => setModalResetAbierto(false)} size="small">
+          <div className="modal-header">
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div style={{ width: "34px", height: "34px", borderRadius: "var(--radius-md)", background: "var(--color-primary-50)", color: "var(--color-primary-700)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <KeyIcon size={18} />
@@ -965,8 +935,7 @@ export function UsuariosPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { API_URL } from "../../shared/config/api";
+import { apiRequest } from "../../shared/api/httpClient";
 
 export interface AuthenticatedUser {
   usuarioId?: string;
@@ -8,7 +8,7 @@ export interface AuthenticatedUser {
   correo: string;
   proceso?: string;
   rol: string;
-  permisos?: string[];
+  permisos: string[];
 }
 
 export interface LoginCredentials {
@@ -17,7 +17,7 @@ export interface LoginCredentials {
 }
 
 export interface LoginResponse {
-  token: string;
+  token?: string;
   usuario?: {
     id: number;
     nombre: string;
@@ -36,17 +36,15 @@ export interface LoginResponse {
 }
 
 export interface AuthContextValue {
-  token: string | null;
+  token?: string | null;
   user: AuthenticatedUser | null;
   isAuthenticated: boolean;
   isRestoringSession: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
+  loginGoogle: (idToken: string) => Promise<void>;
+  logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
 }
-
-export const AUTH_TOKEN_KEY = "plataforma_actas_token";
-export const AUTH_PERMISSIONS_KEY = "plataforma_actas_permissions";
 
 interface AuthenticatedUserResponse {
   usuarioId?: string;
@@ -60,56 +58,41 @@ interface AuthenticatedUserResponse {
 }
 
 export async function login(credentials: LoginCredentials): Promise<LoginResponse> {
-  const response = await fetch(`${API_URL}/auth/login`, {
+  const data = await apiRequest<LoginResponse>("/auth/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      Usuario: credentials.usuario.trim(),
-      Password: credentials.password,
+      usuario: credentials.usuario.trim(),
+      password: credentials.password,
     }),
+    errorMessage: "Usuario o contraseña incorrectos.",
   });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error("Usuario o contraseña incorrectos.");
-    }
-
-    const error = await response.json().catch(() => null);
-    throw new Error(error?.message ?? "No fue posible iniciar sesión.");
-  }
-
-  const data = (await response.json()) as LoginResponse;
-
-  if (!data.token) {
-    throw new Error("El servidor no devolvió un token de autenticación.");
-  }
-
-  if (data.permisos && Array.isArray(data.permisos)) {
-    localStorage.setItem(AUTH_PERMISSIONS_KEY, JSON.stringify(data.permisos));
-  }
 
   return data;
 }
 
-export async function getAuthenticatedUser(token: string): Promise<AuthenticatedUser> {
-  const response = await fetch(`${API_URL}/auth/me`, {
-    method: "GET",
+export async function loginWithGoogle(idToken: string): Promise<LoginResponse> {
+  const data = await apiRequest<LoginResponse>("/auth/google", {
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      IdToken: idToken.trim(),
+    }),
+    errorMessage: "No fue posible validar la cuenta corporativa con Google.",
   });
 
-  if (!response.ok) {
-    throw new Error("Sesión inválida.");
-  }
+  return data;
+}
 
-  const data = (await response.json()) as AuthenticatedUserResponse;
-
-  if (data.permisos && Array.isArray(data.permisos)) {
-    localStorage.setItem(AUTH_PERMISSIONS_KEY, JSON.stringify(data.permisos));
-  }
+export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
+  const data = await apiRequest<AuthenticatedUserResponse>("/auth/me", {
+    method: "GET",
+    errorMessage: "Sesión inválida o expirada.",
+  });
 
   return {
     usuarioId: data.usuarioId ?? "",
@@ -123,6 +106,16 @@ export async function getAuthenticatedUser(token: string): Promise<Authenticated
   };
 }
 
+export async function logoutApi(): Promise<void> {
+  try {
+    await apiRequest("/auth/logout", {
+      method: "POST",
+    });
+  } catch {
+    // Si la sesión ya expiró en el servidor, ignorar el error
+  }
+}
+
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
@@ -134,25 +127,16 @@ export interface ChangePasswordResponse {
 }
 
 export async function changePassword(request: ChangePasswordRequest): Promise<ChangePasswordResponse> {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  const response = await fetch(`${API_URL}/auth/change-password`, {
+  return apiRequest<ChangePasswordResponse>("/auth/change-password", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({
       CurrentPassword: request.currentPassword,
       NewPassword: request.newPassword,
       ConfirmPassword: request.confirmPassword,
     }),
+    errorMessage: "No fue posible actualizar la contraseña.",
   });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(data?.message ?? "No fue posible actualizar la contraseña.");
-  }
-
-  return data;
 }

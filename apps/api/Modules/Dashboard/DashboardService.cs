@@ -96,36 +96,33 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
 
     public async Task<IReadOnlyList<MessengerDeliveryItem>> GetDeliveriesByMessengerAsync(CancellationToken cancellationToken = default)
     {
-        var mensajeros = await context.Usuarios
+        var raw = await context.Actas
             .AsNoTracking()
-            .Where(u => u.Activo)
+            .Where(a => a.MensajeroUsuarioId != null && a.MensajeroUsuario != null)
+            .GroupBy(a => new
+            {
+                Id = a.MensajeroUsuarioId!.Value,
+                Nombre = a.MensajeroUsuario!.Nombre,
+                Apellido = a.MensajeroUsuario!.Apellido
+            })
+            .Select(g => new
+            {
+                g.Key.Id,
+                g.Key.Nombre,
+                g.Key.Apellido,
+                TotalAsignadas = g.Count(),
+                TotalEntregadas = g.Count(a => a.ActaEntregada)
+            })
+            .OrderByDescending(r => r.TotalAsignadas)
             .ToListAsync(cancellationToken);
 
-        var actas = await context.Actas
-            .AsNoTracking()
-            .Where(a => a.MensajeroUsuarioId != null)
-            .ToListAsync(cancellationToken);
-
-        var result = new List<MessengerDeliveryItem>();
-
-        foreach (var m in mensajeros)
-        {
-            var asignadas = actas.Count(a => a.MensajeroUsuarioId == m.Id);
-            if (asignadas == 0) continue;
-
-            var entregadas = actas.Count(a => a.MensajeroUsuarioId == m.Id && a.ActaEntregada);
-            var pendientes = asignadas - entregadas;
-
-            result.Add(new MessengerDeliveryItem(
-                m.Id,
-                $"{m.Nombre} {m.Apellido}".Trim(),
-                asignadas,
-                entregadas,
-                pendientes
-            ));
-        }
-
-        return result.OrderByDescending(r => r.TotalAsignadas).ToList();
+        return raw.Select(r => new MessengerDeliveryItem(
+            r.Id,
+            $"{r.Nombre} {r.Apellido}".Trim(),
+            r.TotalAsignadas,
+            r.TotalEntregadas,
+            r.TotalAsignadas - r.TotalEntregadas
+        )).ToList();
     }
 
     public async Task<IReadOnlyList<TimelinePointItem>> GetTimelineAsync(string? range, CancellationToken cancellationToken = default)
@@ -142,6 +139,12 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
         var actas = await context.Actas
             .AsNoTracking()
             .Where(a => a.FechaCreacion >= startDate)
+            .Select(a => new
+            {
+                a.FechaCreacion,
+                a.Estado,
+                a.TipoActa
+            })
             .ToListAsync(cancellationToken);
 
         var grouped = actas
@@ -201,29 +204,50 @@ public sealed class DashboardService(PlataformaActasDbContext context) : IDashbo
 
         var actas = await context.Actas
             .AsNoTracking()
-            .Include(a => a.Usuario)
-            .Include(a => a.DestinatarioUsuario)
-            .Include(a => a.Equipment)
             .OrderByDescending(a => a.FechaCreacion)
             .Take(take)
+            .Select(a => new
+            {
+                Id = a.Id.ToString(),
+                a.TipoActa,
+                a.NumeroActa,
+                NombreEquipo = a.Equipment != null ? a.Equipment.NombreEquipo : "Equipo",
+                UsuarioNombre = a.Usuario != null ? a.Usuario.Nombre : null,
+                UsuarioApellido = a.Usuario != null ? a.Usuario.Apellido : null,
+                a.FechaCreacion,
+                a.Estado
+            })
             .ToListAsync(cancellationToken);
 
-        return actas.Select(a => new RecentActivityItem(
-            a.Id.ToString(),
-            a.TipoActa,
-            $"Acta {a.NumeroActa ?? a.Id.ToString()[..8]}",
-            $"{a.TipoActa} - {a.Equipment?.NombreEquipo ?? "Equipo"}",
-            a.Usuario != null ? $"{a.Usuario.Nombre} {a.Usuario.Apellido}".Trim() : "Sistema",
-            a.FechaCreacion,
-            a.Estado,
-            a.Estado.ToLower() switch
+        return actas.Select(a =>
+        {
+            var responsable = string.IsNullOrWhiteSpace(a.UsuarioNombre) && string.IsNullOrWhiteSpace(a.UsuarioApellido)
+                ? "Sistema"
+                : $"{a.UsuarioNombre} {a.UsuarioApellido}".Trim();
+
+            var numActa = !string.IsNullOrWhiteSpace(a.NumeroActa)
+                ? a.NumeroActa
+                : (a.Id.Length >= 8 ? a.Id[..8] : a.Id);
+
+            var badge = a.Estado.ToLower() switch
             {
                 "firmada" or "finalizada" => "success",
                 "borrador" => "warning",
                 "anulada" => "danger",
                 _ => "info"
-            }
-        )).ToList();
+            };
+
+            return new RecentActivityItem(
+                a.Id,
+                a.TipoActa,
+                $"Acta {numActa}",
+                $"{a.TipoActa} - {a.NombreEquipo}",
+                responsable,
+                a.FechaCreacion,
+                a.Estado,
+                badge
+            );
+        }).ToList();
     }
 
     private static string GetColorForEquipmentStatus(string status) => status.ToLower() switch

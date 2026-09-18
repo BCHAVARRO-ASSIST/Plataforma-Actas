@@ -8,9 +8,9 @@ import type {
   ActaDetail,
 } from "./actaService";
 
-import { ActaDetail as ActaDetailComponent } from "../../components/ActaDetail";
-import { ActaTable } from "../../components/ActaTable";
-import { NewActaForm } from "../../components/NewActaForm";
+import { ActaDetail as ActaDetailComponent } from "./components/ActaDetail";
+import { ActaTable } from "./components/ActaTable";
+import { NewActaForm } from "./components/NewActaForm";
 import {
   ActaIcon,
   ClockIcon,
@@ -19,8 +19,8 @@ import {
   RefreshIcon,
   PlusIcon,
   SearchIcon,
-} from "../../components/Icons";
-import { AutoDismissAlert } from "../../components/AutoDismissAlert";
+} from "@/components/ui/Icons";
+import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
 
 export function ActaPage() {
   const [actas, setActas] = useState<Acta[]>([]);
@@ -123,7 +123,7 @@ export function ActaPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
+      <div className="page-header-container" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "24px", flexWrap: "wrap", gap: "14px" }}>
         <div>
           <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
             GESTIÓN DOCUMENTAL LEGAL
@@ -136,7 +136,7 @@ export function ActaPage() {
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div className="page-header-actions">
           <button
             type="button"
             className="btn btn-secondary btn-sm"
@@ -161,7 +161,7 @@ export function ActaPage() {
       </div>
 
       {/* KPI Cards Strip */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+      <div className="kpi-grid-strip">
         <div className="card" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Total Emitidas</span>
@@ -228,7 +228,7 @@ export function ActaPage() {
             />
           </div>
 
-          <div style={{ width: '180px' }}>
+          <div className="toolbar-filter-group" style={{ minWidth: '160px' }}>
             <select
               id="actas-status-filter"
               name="statusFilter"

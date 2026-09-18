@@ -14,6 +14,35 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
 {
     public static class AuthEndpoints
     {
+        public const string SessionCookieName = "actas_session_token";
+
+        public static void AppendSessionCookie(HttpContext context, string token, int expiresMinutes = 30)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = context.Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                Path = "/",
+                Expires = DateTimeOffset.UtcNow.AddMinutes(expiresMinutes)
+            };
+            context.Response.Cookies.Append(SessionCookieName, token, cookieOptions);
+        }
+
+        public static void RemoveSessionCookie(HttpContext context)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = context.Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                Path = "/",
+                Expires = DateTimeOffset.UtcNow.AddDays(-1)
+            };
+            context.Response.Cookies.Append(SessionCookieName, "", cookieOptions);
+            context.Response.Cookies.Delete(SessionCookieName, cookieOptions);
+        }
+
         public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/api/auth");
@@ -21,8 +50,10 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
             // 1. Login
             group.MapPost("/login", async (
                 [FromBody] LoginRequest request,
+                HttpContext httpContext,
                 [FromServices] IAuthService authService,
                 [FromServices] IJwtTokenService jwtTokenService,
+                [FromServices] IConfiguration configuration,
                 CancellationToken cancellationToken) =>
             {
                 if (string.IsNullOrWhiteSpace(request.Usuario) || string.IsNullOrWhiteSpace(request.Password))
@@ -37,6 +68,12 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
                 }
 
                 var token = jwtTokenService.GenerateToken(login.Usuario, login.Rol, login.Permisos);
+
+                var expiresMinutes = int.TryParse(configuration["Jwt:ExpiresMinutes"], out var minutes)
+                    ? minutes
+                    : 30;
+
+                AppendSessionCookie(httpContext, token, expiresMinutes);
 
                 return Results.Ok(new LoginResponse(
                     Token: token,
@@ -241,6 +278,13 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
                 return Results.Ok(new { message = "Tu contraseña ha sido actualizada exitosamente." });
             })
             .RequireAuthorization();
+
+            // 6. Logout (Cierre de sesión seguro y eliminación de cookie HttpOnly)
+            group.MapPost("/logout", (HttpContext httpContext) =>
+            {
+                RemoveSessionCookie(httpContext);
+                return Results.Ok(new { message = "Sesión cerrada correctamente." });
+            });
 
             return app;
         }

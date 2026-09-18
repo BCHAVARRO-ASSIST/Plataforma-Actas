@@ -52,25 +52,26 @@ public sealed class ReportesService : IReportesService
                 (e.AsignadoA != null && e.AsignadoA.ToLower().Contains(s)));
         }
 
-        var list = await query.OrderBy(e => e.InventoryKey).ToListAsync(cancellationToken);
-
-        return list.Select(e => new EquiposReportItem(
-            e.Id,
-            e.InventoryKey,
-            e.NombreEquipo,
-            e.Empresa,
-            e.AsignadoA,
-            e.Proveedor,
-            e.Marca,
-            e.Procesador,
-            e.DiscoDuro,
-            e.MemoriaRam,
-            e.Departamento,
-            e.EstatusEquipo,
-            e.ActaEntregada ?? false,
-            e.TipoMantenimiento,
-            e.FechaMantenimiento
-        )).ToList();
+        return await query
+            .OrderBy(e => e.InventoryKey)
+            .Select(e => new EquiposReportItem(
+                e.Id,
+                e.InventoryKey,
+                e.NombreEquipo,
+                e.Empresa,
+                e.AsignadoA,
+                e.Proveedor,
+                e.Marca,
+                e.Procesador,
+                e.DiscoDuro,
+                e.MemoriaRam,
+                e.Departamento,
+                e.EstatusEquipo,
+                e.ActaEntregada ?? false,
+                e.TipoMantenimiento,
+                e.FechaMantenimiento
+            ))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<ActasReportItem>> GetActasReportAsync(
@@ -79,10 +80,6 @@ public sealed class ReportesService : IReportesService
     {
         var query = _context.Actas
             .AsNoTracking()
-            .Include(a => a.Equipment)
-            .Include(a => a.Usuario)
-            .Include(a => a.DestinatarioUsuario)
-            .Include(a => a.MensajeroUsuario)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filter.Estado))
@@ -126,29 +123,30 @@ public sealed class ReportesService : IReportesService
                 (a.DestinatarioUsuario != null && (a.DestinatarioUsuario.Nombre.ToLower().Contains(s) || a.DestinatarioUsuario.Apellido.ToLower().Contains(s))));
         }
 
-        var list = await query.OrderByDescending(a => a.FechaCreacion).ToListAsync(cancellationToken);
-
-        return list.Select(a => new ActasReportItem(
-            a.Id,
-            a.NumeroActa,
-            a.TipoActa,
-            a.Estado,
-            a.EquipmentId,
-            a.Equipment?.InventoryKey,
-            a.Equipment?.NombreEquipo,
-            a.UsuarioId,
-            a.Usuario != null ? $"{a.Usuario.Nombre} {a.Usuario.Apellido}".Trim() : null,
-            a.DestinatarioUsuarioId,
-            a.DestinatarioUsuario != null ? $"{a.DestinatarioUsuario.Nombre} {a.DestinatarioUsuario.Apellido}".Trim() : null,
-            a.MensajeroUsuarioId,
-            a.MensajeroUsuario != null ? $"{a.MensajeroUsuario.Nombre} {a.MensajeroUsuario.Apellido}".Trim() : null,
-            a.ActaEntregada,
-            a.FechaCreacion,
-            a.FechaFirma,
-            a.FechaFinalizacion,
-            a.FechaAnulacion,
-            a.ActaOrigenId
-        )).ToList();
+        return await query
+            .OrderByDescending(a => a.FechaCreacion)
+            .Select(a => new ActasReportItem(
+                a.Id,
+                a.NumeroActa,
+                a.TipoActa,
+                a.Estado,
+                a.EquipmentId,
+                a.Equipment != null ? a.Equipment.InventoryKey : null,
+                a.Equipment != null ? a.Equipment.NombreEquipo : null,
+                a.UsuarioId,
+                a.Usuario != null ? (a.Usuario.Nombre + " " + a.Usuario.Apellido).Trim() : null,
+                a.DestinatarioUsuarioId,
+                a.DestinatarioUsuario != null ? (a.DestinatarioUsuario.Nombre + " " + a.DestinatarioUsuario.Apellido).Trim() : null,
+                a.MensajeroUsuarioId,
+                a.MensajeroUsuario != null ? (a.MensajeroUsuario.Nombre + " " + a.MensajeroUsuario.Apellido).Trim() : null,
+                a.ActaEntregada,
+                a.FechaCreacion,
+                a.FechaFirma,
+                a.FechaFinalizacion,
+                a.FechaAnulacion,
+                a.ActaOrigenId
+            ))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<EntregasReportItem>> GetEntregasReportAsync(
@@ -157,10 +155,6 @@ public sealed class ReportesService : IReportesService
     {
         var query = _context.Actas
             .AsNoTracking()
-            .Include(a => a.Equipment)
-            .Include(a => a.Usuario)
-            .Include(a => a.DestinatarioUsuario)
-            .Include(a => a.MensajeroUsuario)
             .Where(a => a.TipoActa == "Entrega")
             .AsQueryable();
 
@@ -180,20 +174,21 @@ public sealed class ReportesService : IReportesService
             query = query.Where(a => a.FechaCreacion <= filter.FechaFin.Value);
         }
 
-        var list = await query.OrderByDescending(a => a.FechaCreacion).ToListAsync(cancellationToken);
-
-        return list.Select(a => new EntregasReportItem(
-            a.Id,
-            a.NumeroActa,
-            a.Equipment?.InventoryKey ?? "-",
-            a.Equipment?.NombreEquipo ?? "-",
-            a.MensajeroUsuario != null ? $"{a.MensajeroUsuario.Nombre} {a.MensajeroUsuario.Apellido}".Trim() : null,
-            a.DestinatarioUsuario != null ? $"{a.DestinatarioUsuario.Nombre} {a.DestinatarioUsuario.Apellido}".Trim() : null,
-            a.Estado,
-            a.FechaFirma.HasValue,
-            a.FechaCreacion,
-            a.FechaFirma
-        )).ToList();
+        return await query
+            .OrderByDescending(a => a.FechaCreacion)
+            .Select(a => new EntregasReportItem(
+                a.Id,
+                a.NumeroActa,
+                a.Equipment != null ? a.Equipment.InventoryKey : "-",
+                a.Equipment != null ? a.Equipment.NombreEquipo : "-",
+                a.MensajeroUsuario != null ? (a.MensajeroUsuario.Nombre + " " + a.MensajeroUsuario.Apellido).Trim() : null,
+                a.DestinatarioUsuario != null ? (a.DestinatarioUsuario.Nombre + " " + a.DestinatarioUsuario.Apellido).Trim() : null,
+                a.Estado,
+                a.FechaFirma.HasValue,
+                a.FechaCreacion,
+                a.FechaFirma
+            ))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<DevolucionesReportItem>> GetDevolucionesReportAsync(
@@ -202,10 +197,6 @@ public sealed class ReportesService : IReportesService
     {
         var query = _context.Actas
             .AsNoTracking()
-            .Include(a => a.Equipment)
-            .Include(a => a.Usuario)
-            .Include(a => a.DestinatarioUsuario)
-            .Include(a => a.ActaOrigen)
             .Where(a => a.TipoActa == "Devolución" || a.TipoActa == "Devolucion")
             .AsQueryable();
 
@@ -225,19 +216,20 @@ public sealed class ReportesService : IReportesService
             query = query.Where(a => a.FechaCreacion <= filter.FechaFin.Value);
         }
 
-        var list = await query.OrderByDescending(a => a.FechaCreacion).ToListAsync(cancellationToken);
-
-        return list.Select(a => new DevolucionesReportItem(
-            a.Id,
-            a.NumeroActa,
-            a.ActaOrigenId,
-            a.ActaOrigen?.NumeroActa,
-            a.Equipment?.InventoryKey ?? "-",
-            a.Equipment?.NombreEquipo ?? "-",
-            a.DestinatarioUsuario != null ? $"{a.DestinatarioUsuario.Nombre} {a.DestinatarioUsuario.Apellido}".Trim() : null,
-            a.Estado,
-            a.FechaCreacion,
-            a.FechaFirma
-        )).ToList();
+        return await query
+            .OrderByDescending(a => a.FechaCreacion)
+            .Select(a => new DevolucionesReportItem(
+                a.Id,
+                a.NumeroActa,
+                a.ActaOrigenId,
+                a.ActaOrigen != null ? a.ActaOrigen.NumeroActa : null,
+                a.Equipment != null ? a.Equipment.InventoryKey : "-",
+                a.Equipment != null ? a.Equipment.NombreEquipo : "-",
+                a.DestinatarioUsuario != null ? (a.DestinatarioUsuario.Nombre + " " + a.DestinatarioUsuario.Apellido).Trim() : null,
+                a.Estado,
+                a.FechaCreacion,
+                a.FechaFirma
+            ))
+            .ToListAsync(cancellationToken);
     }
 }

@@ -11,10 +11,17 @@
 !.env.example
 **/appsettings.Development.json
 !**/appsettings.Development.example.json
+**/google-credentials*.json
 *.user
 *.suo
+cookies.txt
+token.txt
+*token*.txt
+*cookie*.txt
 
 # Herramientas y sistema operativo
+*.exe
+tools/*.exe
 .vs/
 .vscode/*
 !.vscode/extensions.json

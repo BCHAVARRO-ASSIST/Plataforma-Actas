@@ -17,7 +17,7 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasAnnotation("ProductVersion", "10.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -106,8 +106,7 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasColumnName("numero_acta");
 
                     b.Property<string>("RutaDocumento")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
+                        .HasColumnType("text")
                         .HasColumnName("ruta_documento");
 
                     b.Property<string>("SignatureDataJson")
@@ -117,8 +116,8 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                     b.Property<string>("TipoActa")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasDefaultValue("Entrega")
                         .HasColumnName("tipo_acta");
 
@@ -129,8 +128,7 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("actas_v2_pkey");
 
-                    b.HasIndex("ActaOrigenId")
-                        .HasDatabaseName("ix_actas_v2_acta_origen_id");
+                    b.HasIndex("ActaOrigenId");
 
                     b.HasIndex("DestinatarioUsuarioId")
                         .HasDatabaseName("ix_actas_v2_destinatario_usuario_id");
@@ -141,14 +139,15 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                     b.HasIndex("Estado")
                         .HasDatabaseName("ix_actas_v2_estado");
 
+                    b.HasIndex("FechaCreacion")
+                        .HasDatabaseName("ix_actas_v2_fecha_creacion");
+
                     b.HasIndex("MensajeroUsuarioId")
                         .HasDatabaseName("ix_actas_v2_mensajero_usuario_id");
 
                     b.HasIndex("NumeroActa")
+                        .IsUnique()
                         .HasDatabaseName("ix_actas_v2_numero_acta");
-
-                    b.HasIndex("TipoActa")
-                        .HasDatabaseName("ix_actas_v2_tipo_acta");
 
                     b.HasIndex("UsuarioId")
                         .HasDatabaseName("ix_actas_v2_usuario_id");
@@ -176,8 +175,7 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Texto")
                         .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)")
+                        .HasColumnType("text")
                         .HasColumnName("texto");
 
                     b.Property<int?>("UsuarioId")
@@ -209,7 +207,9 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasColumnName("acta_id");
 
                     b.Property<bool>("ConsentAccepted")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
+                        .HasDefaultValue(true)
                         .HasColumnName("consent_accepted");
 
                     b.Property<DateTimeOffset>("FechaCreacion")
@@ -280,63 +280,51 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasName("acta_status_history_v2_pkey");
 
                     b.HasIndex("ActaId")
-                        .HasDatabaseName("ix_acta_status_history_v2_acta_id");
+                        .HasDatabaseName("ix_acta_status_history_acta_id");
 
                     b.HasIndex("UsuarioId")
-                        .HasDatabaseName("ix_acta_status_history_v2_usuario_id");
+                        .HasDatabaseName("ix_acta_status_history_usuario_id");
 
                     b.ToTable("acta_status_history_v2", (string)null);
                 });
 
             modelBuilder.Entity("PlataformaActas.Api.Modules.Auth.Data.Entities.PasswordResetToken", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("Id");
+                        .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("FechaCreacion")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("FechaCreacion")
                         .HasDefaultValueSql("NOW()");
 
                     b.Property<DateTime>("FechaExpiracion")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("FechaExpiracion");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("FechaUso")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("FechaUso");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("TokenHash");
+                        .HasColumnType("character varying(128)");
 
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("integer")
-                        .HasColumnName("UsuarioId");
+                        .HasColumnType("integer");
 
-                    b.HasKey("Id")
-                        .HasName("PK_password_reset_tokens");
+                    b.HasKey("Id");
 
-                    b.HasIndex("FechaExpiracion")
-                        .HasDatabaseName("IX_password_reset_tokens_FechaExpiracion");
+                    b.HasIndex("TokenHash");
 
-                    b.HasIndex("TokenHash")
-                        .HasDatabaseName("IX_password_reset_tokens_TokenHash");
-
-                    b.HasIndex("UsuarioId")
-                        .HasDatabaseName("IX_password_reset_tokens_UsuarioId");
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("password_reset_tokens", (string)null);
                 });
 
-            modelBuilder.Entity("PlataformaActas.Api.Modules.Equipment.Data.Entities.Equipment", b =>
+            modelBuilder.Entity("PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -354,12 +342,13 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasColumnName("asignado_a");
 
                     b.Property<string>("Departamento")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("departamento");
 
                     b.Property<string>("Descripcion")
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("descripcion");
 
                     b.Property<string>("DiscoDuro")
@@ -373,8 +362,11 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasColumnName("empresa");
 
                     b.Property<string>("EstatusEquipo")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("Activo")
                         .HasColumnName("estatus_equipo");
 
                     b.Property<DateOnly?>("FechaMantenimiento")
@@ -416,7 +408,8 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasColumnName("nombre_equipo");
 
                     b.Property<string>("Observaciones")
-                        .HasColumnType("text")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("observaciones");
 
                     b.Property<string>("Procesador")
@@ -438,15 +431,15 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasColumnName("source_system");
 
                     b.Property<string>("TipoMantenimiento")
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("tipo_mantenimiento");
 
                     b.HasKey("Id")
                         .HasName("equipment_pkey");
 
                     b.HasIndex("EstatusEquipo")
-                        .HasDatabaseName("ix_equipment_estado");
+                        .HasDatabaseName("ix_equipment_estatus");
 
                     b.HasIndex("InventoryKey")
                         .IsUnique()
@@ -462,40 +455,30 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("Id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("Activo");
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Descripcion")
                         .HasMaxLength(250)
-                        .HasColumnType("character varying(250)")
-                        .HasColumnName("Descripcion");
+                        .HasColumnType("character varying(250)");
 
                     b.Property<string>("Modulo")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Modulo");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("Nombre");
+                        .HasColumnType("character varying(150)");
 
-                    b.HasKey("Id")
-                        .HasName("PK_permisos");
-
-                    b.HasIndex("Nombre")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_permisos_nombre");
+                    b.HasKey("Id");
 
                     b.ToTable("permisos", (string)null);
                 });
@@ -504,40 +487,33 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("Id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("Activo");
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Descripcion")
                         .HasMaxLength(250)
-                        .HasColumnType("character varying(250)")
-                        .HasColumnName("Descripcion");
+                        .HasColumnType("character varying(250)");
 
                     b.Property<DateTime>("FechaCreacion")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("FechaCreacion")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Nombre");
+                        .HasColumnType("character varying(100)");
 
-                    b.HasKey("Id")
-                        .HasName("PK_roles");
+                    b.HasKey("Id");
 
                     b.HasIndex("Nombre")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_roles_nombre");
+                        .IsUnique();
 
                     b.ToTable("roles", (string)null);
                 });
@@ -545,15 +521,12 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PlataformaActas.Api.Modules.Roles.Data.Entities.RolPermiso", b =>
                 {
                     b.Property<int>("RolId")
-                        .HasColumnType("integer")
-                        .HasColumnName("RolId");
+                        .HasColumnType("integer");
 
                     b.Property<int>("PermisoId")
-                        .HasColumnType("integer")
-                        .HasColumnName("PermisoId");
+                        .HasColumnType("integer");
 
-                    b.HasKey("RolId", "PermisoId")
-                        .HasName("PK_rol_permisos");
+                    b.HasKey("RolId", "PermisoId");
 
                     b.HasIndex("PermisoId");
 
@@ -563,21 +536,17 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PlataformaActas.Api.Modules.Roles.Data.Entities.UsuarioRol", b =>
                 {
                     b.Property<int>("UsuarioId")
-                        .HasColumnType("integer")
-                        .HasColumnName("UsuarioId");
+                        .HasColumnType("integer");
 
                     b.Property<int>("RolId")
-                        .HasColumnType("integer")
-                        .HasColumnName("RolId");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("FechaAsignacion")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("FechaAsignacion")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.HasKey("UsuarioId", "RolId")
-                        .HasName("PK_usuario_roles");
+                    b.HasKey("UsuarioId", "RolId");
 
                     b.HasIndex("RolId");
 
@@ -588,72 +557,56 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("Id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Activo")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("Activo");
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Apellido")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Apellido");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Correo")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("Correo");
+                        .HasColumnType("character varying(150)");
 
                     b.Property<DateTime>("FechaCreacion")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("FechaCreacion")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Nombre");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("PasswordHash");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Proceso")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("Proceso");
-
-                    b.Property<DateTime?>("UltimoAcceso")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("UltimoAcceso");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("UsuarioRed")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("UsuarioRed");
+                        .HasColumnType("character varying(50)");
 
-                    b.HasKey("Id")
-                        .HasName("PK_usuarios");
+                    b.HasKey("Id");
 
                     b.HasIndex("Correo")
-                        .IsUnique()
-                        .HasDatabaseName("IX_usuarios_Correo");
+                        .IsUnique();
 
                     b.HasIndex("UsuarioRed")
-                        .IsUnique()
-                        .HasDatabaseName("IX_usuarios_UsuarioRed");
+                        .IsUnique();
 
                     b.ToTable("usuarios", (string)null);
                 });
@@ -672,7 +625,7 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_actas_v2_destinatario");
 
-                    b.HasOne("PlataformaActas.Api.Modules.Equipment.Data.Entities.Equipment", "Equipment")
+                    b.HasOne("PlataformaActas.Api.Modules.Equipos.Data.Entities.Equipment", "Equipment")
                         .WithMany()
                         .HasForeignKey("EquipmentId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -742,13 +695,13 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ActaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_acta_status_history_v2_acta");
+                        .HasConstraintName("fk_acta_status_history_acta");
 
                     b.HasOne("PlataformaActas.Api.Modules.Usuarios.Data.Entities.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_acta_status_history_v2_usuario");
+                        .HasConstraintName("fk_acta_status_history_usuario");
 
                     b.Navigation("Acta");
 
@@ -758,11 +711,10 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("PlataformaActas.Api.Modules.Auth.Data.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("PlataformaActas.Api.Modules.Usuarios.Data.Entities.Usuario", "Usuario")
-                        .WithMany()
+                        .WithMany("PasswordResetTokens")
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_password_reset_tokens_usuarios");
+                        .IsRequired();
 
                     b.Navigation("Usuario");
                 });
@@ -773,15 +725,13 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .WithMany("RolPermisos")
                         .HasForeignKey("PermisoId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_rol_permisos_permiso");
+                        .IsRequired();
 
                     b.HasOne("PlataformaActas.Api.Modules.Roles.Data.Entities.Rol", "Rol")
                         .WithMany("RolPermisos")
                         .HasForeignKey("RolId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_rol_permisos_rol");
+                        .IsRequired();
 
                     b.Navigation("Permiso");
 
@@ -794,15 +744,13 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
                         .WithMany("UsuarioRoles")
                         .HasForeignKey("RolId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_usuario_roles_rol");
+                        .IsRequired();
 
                     b.HasOne("PlataformaActas.Api.Modules.Usuarios.Data.Entities.Usuario", "Usuario")
                         .WithMany("UsuarioRoles")
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_usuario_roles_usuario");
+                        .IsRequired();
 
                     b.Navigation("Rol");
 
@@ -832,6 +780,8 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("PlataformaActas.Api.Modules.Usuarios.Data.Entities.Usuario", b =>
                 {
+                    b.Navigation("PasswordResetTokens");
+
                     b.Navigation("UsuarioRoles");
                 });
 #pragma warning restore 612, 618

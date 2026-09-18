@@ -15,8 +15,9 @@ public class LocalFileStorageProviderTests
         var tempDir = Path.Combine(Path.GetTempPath(), "PlataformaActas_Test_" + Guid.NewGuid());
         Directory.CreateDirectory(tempDir);
         mockEnv.Setup(e => e.ContentRootPath).Returns(tempDir);
+        var mockConfig = new Mock<Microsoft.Extensions.Configuration.IConfiguration>();
 
-        var provider = new LocalFileStorageProvider(mockEnv.Object);
+        var provider = new LocalFileStorageProvider(mockEnv.Object, mockConfig.Object);
 
         try
         {

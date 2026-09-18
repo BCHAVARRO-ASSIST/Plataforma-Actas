@@ -6,45 +6,30 @@ import {
 } from "react";
 
 import {
-  AUTH_PERMISSIONS_KEY,
-  AUTH_TOKEN_KEY,
   getAuthenticatedUser,
   login as loginApi,
+  loginWithGoogle,
+  logoutApi,
   type AuthenticatedUser,
   type AuthContextValue,
   type LoginCredentials,
 } from "./authService";
 import { AuthContext } from "./AuthContextInstance";
+import { setUnauthorizedHandler } from "../../shared/api/httpClient";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
-  });
-
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [isRestoringSession, setIsRestoringSession] = useState(true);
 
   async function restoreSession(): Promise<void> {
-    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
-
-    if (!storedToken) {
-      setUser(null);
-      setIsRestoringSession(false);
-      return;
-    }
-
     try {
-      const authenticatedUser = await getAuthenticatedUser(storedToken);
-      setToken(storedToken);
+      const authenticatedUser = await getAuthenticatedUser();
       setUser(authenticatedUser);
     } catch {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(AUTH_PERMISSIONS_KEY);
-      setToken(null);
       setUser(null);
     } finally {
       setIsRestoringSession(false);
@@ -52,41 +37,50 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
-    void Promise.resolve().then(restoreSession);
+    // Interceptor reactivo ante 401: limpia la sesión en memoria
+    setUnauthorizedHandler(() => {
+      setUser(null);
+    });
+
+    void restoreSession();
+
+    return () => {
+      setUnauthorizedHandler(null);
+    };
   }, []);
 
   async function login(credentials: LoginCredentials): Promise<void> {
-    const data = await loginApi(credentials);
-
-    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
-    setToken(data.token);
-
-    if (data.permisos && Array.isArray(data.permisos)) {
-      localStorage.setItem(AUTH_PERMISSIONS_KEY, JSON.stringify(data.permisos));
-    }
-
-    const authenticatedUser = await getAuthenticatedUser(data.token);
+    await loginApi(credentials);
+    const authenticatedUser = await getAuthenticatedUser();
     setUser(authenticatedUser);
   }
 
-  function logout(): void {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(AUTH_PERMISSIONS_KEY);
-    setToken(null);
-    setUser(null);
+  async function loginGoogle(idToken: string): Promise<void> {
+    await loginWithGoogle(idToken);
+    const authenticatedUser = await getAuthenticatedUser();
+    setUser(authenticatedUser);
+  }
+
+  async function logout(): Promise<void> {
+    try {
+      await logoutApi();
+    } finally {
+      setUser(null);
+    }
   }
 
   const value = useMemo<AuthContextValue>(() => {
     return {
-      token,
+      token: null,
       user,
-      isAuthenticated: Boolean(token && user),
+      isAuthenticated: Boolean(user),
       isRestoringSession,
       login,
+      loginGoogle,
       logout,
       restoreSession,
     };
-  }, [token, user, isRestoringSession]);
+  }, [user, isRestoringSession]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

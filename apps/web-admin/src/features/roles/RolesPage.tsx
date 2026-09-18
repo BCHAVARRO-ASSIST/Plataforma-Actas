@@ -26,8 +26,9 @@ import {
   UsersIcon,
   TrashIcon,
   ShieldIcon,
-} from "../../components/Icons";
-import { AutoDismissAlert } from "../../components/AutoDismissAlert";
+} from "@/components/ui/Icons";
+import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
+import { Modal } from "@/components/ui/Modal";
 
 const PERMISSION_LABEL_MAP: Record<string, { label: string; desc: string }> = {
   // Actas
@@ -540,12 +541,11 @@ export function RolesPage() {
 
       {/* Modal Crear / Editar Rol */}
       {modalRolAbierto && (
-        <div className="modal-backdrop" onClick={() => setModalRolAbierto(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <Modal isOpen={modalRolAbierto} onClose={() => setModalRolAbierto(false)}>
+          <div className="modal-header">
               <div>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>CONFIGURACIÓN</span>
-                <h2>{modoFormulario === "crear" ? "Registrar Nuevo Rol" : "Editar Rol"}</h2>
+                <h2>{modoFormulario === "crear" ? "Crear Nuevo Rol" : "Editar Rol"}</h2>
               </div>
               <button type="button" className="modal-close" onClick={() => setModalRolAbierto(false)}>
                 <CloseIcon size={16} />
@@ -591,15 +591,13 @@ export function RolesPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Modal Confirmar Eliminar Rol */}
       {modalEliminarAbierto && rolAEliminar && (
-        <div className="modal-backdrop" onClick={() => setModalEliminarAbierto(false)}>
-          <div className="modal-content small" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
+        <Modal isOpen={modalEliminarAbierto} onClose={() => setModalEliminarAbierto(false)} size="small">
+          <div className="modal-header">
               <div>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-danger-600)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   ELIMINACIÓN DE ROL
@@ -634,15 +632,18 @@ export function RolesPage() {
                 {eliminandoRol ? "Eliminando..." : "Eliminar Rol"}
               </button>
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
 
       {/* Modal Matriz de Permisos */}
       {modalPermisosAbierto && rolPermisosSeleccionado && (
-        <div className="modal-backdrop" onClick={() => setModalPermisosAbierto(false)}>
-          <div className="modal-content large" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
-            <div className="modal-header">
+        <Modal
+          isOpen={modalPermisosAbierto}
+          onClose={() => setModalPermisosAbierto(false)}
+          size="large"
+          contentStyle={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        >
+          <div className="modal-header">
               <div>
                 <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-primary-600)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   MATRIZ RBAC DE PRIVILEGIOS
@@ -850,8 +851,7 @@ export function RolesPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

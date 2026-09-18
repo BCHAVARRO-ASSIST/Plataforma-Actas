@@ -1,7 +1,7 @@
 name: plataforma-actas
 
 services:
-  # 1. Base de datos PostgreSQL 17 (Imagen oficial sin Dockerfile extra)
+  # 1. Base de datos PostgreSQL 17 (Aislada en red backend-net)
   db:
     image: postgres:17-alpine
     container_name: plataforma-actas-db
@@ -9,11 +9,14 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-plataforma_actas}
       POSTGRES_USER: ${POSTGRES_USER:-plataforma_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plataforma_dev_2026}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Error: POSTGRES_PASSWORD es obligatoria}"
+    # Restringido estrictamente a localhost para herramientas de depuración local (DBeaver/pgAdmin)
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-plataforma_user} -d ${POSTGRES_DB:-plataforma_actas}"]
       interval: 5s
@@ -21,7 +24,7 @@ services:
       retries: 5
       start_period: 10s
 
-  # 2. Backend API ASP.NET Core 10 (Aplica migraciones y seed automáticamente al arrancar)
+  # 2. Backend API ASP.NET Core 10 (Conecta con backend-net y frontend-net)
   api:
     build:
       context: .
@@ -30,20 +33,33 @@ services:
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
-      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=${POSTGRES_DB:-plataforma_actas};Username=${POSTGRES_USER:-plataforma_user};Password=${POSTGRES_PASSWORD:-plataforma_dev_2026}"
-      Jwt__Key: ${JWT_KEY:-super-secret-key-32-chars-long-actas-2026-prod}
+      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=${POSTGRES_DB:-plataforma_actas};Username=${POSTGRES_USER:-plataforma_user};Password=${POSTGRES_PASSWORD}"
+      Jwt__Key: "${JWT_KEY:?Error: JWT_KEY es obligatoria y debe tener al menos 32 caracteres}"
       Jwt__Issuer: ${JWT_ISSUER:-PlataformaActas.Api}
       Jwt__Audience: ${JWT_AUDIENCE:-PlataformaActas.Web}
       Jwt__ExpiresMinutes: ${JWT_EXPIRES_MINUTES:-30}
-      Cors__AllowedOrigins__0: ${CORS_ORIGIN:-http://localhost}
-      Frontend__BaseUrl: ${FRONTEND_BASE_URL:-http://localhost}
+      Cors__AllowedOrigins__0: ${CORS_ORIGIN:-http://localhost:3000}
+      Frontend__BaseUrl: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      GoogleIntegration__ClientId: ${GOOGLE_CLIENT_ID:-}
+      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+      Smtp__UserName: ${SMTP_USERNAME:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__FromEmail: ${SMTP_FROM_EMAIL:-soporte@assist.com.co}
+      Smtp__FromName: ${SMTP_FROM_NAME:-Assist Consultores de Sistemas - Soporte IT}
+    # Expuesto únicamente en localhost para diagnóstico directo
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "127.0.0.1:${API_PORT:-8080}:8080"
     volumes:
       - storage_documentos:/app/storage/documentos
+      - ./apps/api/Resources/google-credentials.json:/app/Resources/google-credentials.json:ro
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - backend-net
+      - frontend-net
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || exit 1"]
       interval: 10s
@@ -51,18 +67,35 @@ services:
       retries: 3
       start_period: 15s
 
-  # 3. Frontend SPA (React 19 + Vite + Nginx)
+  # 3. Frontend SPA & Reverse Proxy (React 19 + Vite + Nginx)
   web:
     build:
       context: .
       dockerfile: apps/web-admin/Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     container_name: plataforma-actas-web
     restart: unless-stopped
     ports:
-      - "${WEB_PORT:-80}:80"
+      - "${WEB_PORT:-3000}:80"
     depends_on:
       api:
         condition: service_healthy
+    networks:
+      - frontend-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+    internal: true
 
 volumes:
   postgres_data:

@@ -1,5 +1,5 @@
 import type { View, NavigationItem } from "../navigation/navigationTypes";
-import { CloseIcon } from "../../components/Icons";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface SidebarProps {
   view: View;

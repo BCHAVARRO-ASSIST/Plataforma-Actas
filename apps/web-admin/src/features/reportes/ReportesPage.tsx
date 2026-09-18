@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
-import { ReportFilters } from "../../components/ReportFilters";
-import { ReportKpi } from "../../components/ReportKpi";
-import { ReportCharts } from "../../components/ReportCharts";
-import { ReportTable } from "../../components/ReportTable";
+import { ReportFilters } from "./components/ReportFilters";
+import { ReportKpi } from "./components/ReportKpi";
+import { ReportCharts } from "./components/ReportCharts";
+import { ReportTable } from "./components/ReportTable";
+import { formatDate } from "@/shared/utils/date";
 import {
   getEquiposReport,
   getActasReport,
   getEntregasReport,
   getDevolucionesReport,
   exportToCsv,
+  exportToExcel,
   exportToPdf,
 } from "./reportesService";
 import type {
@@ -25,9 +27,10 @@ import {
   MessengerIcon,
   PackageIcon,
   DocumentPdfIcon,
-  DownloadIcon,
+  FileSpreadsheetIcon,
+  FileTextIcon,
   RefreshIcon,
-} from "../../components/Icons";
+} from "@/components/ui/Icons";
 
 export function ReportesPage() {
   const [activeTab, setActiveTab] = useState<ReportTab>("equipos");
@@ -99,110 +102,170 @@ export function ReportesPage() {
 
   function handleExportExcel() {
     if (activeTab === "equipos") {
-      const headers = ["Clave Inventario", "Nombre Equipo", "Marca", "Asignado A", "Departamento", "Empresa", "Proveedor", "Estado", "Tipo Mantenimiento", "Fecha Mantenimiento"];
+      const headers = ["Clave Inventario", "Nombre Equipo", "Marca", "Asignado A", "Departamento", "Proveedor", "Estado", "Tipo Mantenimiento", "Fecha Mantenimiento"];
       const rows = equiposData.map((e) => [
         e.inventoryKey,
         e.nombreEquipo,
         e.marca,
         e.asignadoA,
         e.departamento,
-        e.empresa,
         e.proveedor,
         e.estatusEquipo,
         e.tipoMantenimiento,
-        e.fechaMantenimiento,
+        formatDate(e.fechaMantenimiento),
       ]);
-      exportToCsv("Reporte_Equipos", headers, rows);
+      exportToExcel("Reporte_Equipos_ASSIST", "Reporte Consolidado de Equipos e Inventario", headers, rows);
     } else if (activeTab === "actas") {
       const headers = ["Número Acta", "Tipo Acta", "Estado", "Clave Equipo", "Nombre Equipo", "Destinatario", "Mensajero", "Fecha Creación", "Fecha Firma", "Fecha Finalización"];
       const rows = actasData.map((a) => [
         a.numeroActa,
         a.tipoActa,
         a.estado,
-        a.equipmentInventoryKey,
-        a.equipmentNombre,
+        a.inventoryKey,
+        a.nombreEquipo,
         a.destinatarioNombre,
         a.mensajeroNombre,
-        a.fechaCreacion,
-        a.fechaFirma,
-        a.fechaFinalizacion,
+        formatDate(a.fechaCreacion),
+        formatDate(a.fechaFirma),
+        formatDate(a.fechaFinalizacion),
       ]);
-      exportToCsv("Reporte_Actas", headers, rows);
+      exportToExcel("Reporte_Actas_ASSIST", "Reporte Maestro de Actas y Trazabilidad", headers, rows);
     } else if (activeTab === "entregas") {
       const headers = ["Número Acta", "Clave Equipo", "Nombre Equipo", "Mensajero", "Destinatario", "Fecha Creación", "Fecha Firma", "Firmada", "Estado"];
       const rows = entregasData.map((e) => [
         e.numeroActa,
-        e.equipmentInventoryKey,
-        e.equipmentNombre,
+        e.inventoryKey,
+        e.nombreEquipo,
         e.mensajeroNombre,
         e.destinatarioNombre,
-        e.fechaCreacion,
-        e.fechaFirma,
+        formatDate(e.fechaCreacion),
+        formatDate(e.fechaFirma),
         e.firmado ? "Sí" : "No",
         e.estado,
       ]);
-      exportToCsv("Reporte_Entregas", headers, rows);
+      exportToExcel("Reporte_Entregas_ASSIST", "Reporte de Entregas y Custodia en Campo", headers, rows);
     } else if (activeTab === "devoluciones") {
       const headers = ["Número Acta Devolución", "Acta Origen Vinculada", "Clave Equipo", "Nombre Equipo", "Responsable Entrega", "Fecha Creación", "Fecha Firma", "Estado"];
       const rows = devolucionesData.map((d) => [
         d.numeroActa,
-        d.actaOrigenNumero || d.actaOrigenId,
-        d.equipmentInventoryKey,
-        d.equipmentNombre,
+        d.actaOrigenNumero || d.actaOrigenId || "—",
+        d.inventoryKey,
+        d.nombreEquipo,
         d.responsableEntrega,
-        d.fechaCreacion,
-        d.fechaFirma,
+        formatDate(d.fechaCreacion),
+        formatDate(d.fechaFirma),
         d.estado,
       ]);
-      exportToCsv("Reporte_Devoluciones", headers, rows);
+      exportToExcel("Reporte_Devoluciones_ASSIST", "Reporte de Devoluciones y Reingresos a Bodega", headers, rows);
+    }
+  }
+
+  function handleExportCsv() {
+    if (activeTab === "equipos") {
+      const headers = ["Clave Inventario", "Nombre Equipo", "Marca", "Procesador", "RAM", "Disco Duro", "Asignado A", "Departamento", "Proveedor", "Estatus"];
+      const rows = equiposData.map((e) => [
+        e.inventoryKey,
+        e.nombreEquipo,
+        e.marca,
+        e.procesador,
+        e.memoriaRam,
+        e.discoDuro,
+        e.asignadoA,
+        e.departamento,
+        e.proveedor,
+        e.estatusEquipo,
+      ]);
+      exportToCsv("Reporte_Equipos_ASSIST", "Reporte Consolidado de Equipos e Inventario", headers, rows);
+    } else if (activeTab === "actas") {
+      const headers = ["Número Acta", "Tipo Acta", "Estado", "Clave Equipo", "Nombre Equipo", "Destinatario", "Mensajero", "Fecha Creación", "Fecha Firma", "Fecha Finalización"];
+      const rows = actasData.map((a) => [
+        a.numeroActa,
+        a.tipoActa,
+        a.estado,
+        a.inventoryKey,
+        a.nombreEquipo,
+        a.destinatarioNombre,
+        a.mensajeroNombre,
+        formatDate(a.fechaCreacion),
+        formatDate(a.fechaFirma),
+        formatDate(a.fechaFinalizacion),
+      ]);
+      exportToCsv("Reporte_Actas_ASSIST", "Reporte Maestro de Actas y Trazabilidad", headers, rows);
+    } else if (activeTab === "entregas") {
+      const headers = ["Número Acta", "Clave Equipo", "Nombre Equipo", "Mensajero", "Destinatario", "Fecha Creación", "Fecha Firma", "Firmada", "Estado"];
+      const rows = entregasData.map((e) => [
+        e.numeroActa,
+        e.inventoryKey,
+        e.nombreEquipo,
+        e.mensajeroNombre,
+        e.destinatarioNombre,
+        formatDate(e.fechaCreacion),
+        formatDate(e.fechaFirma),
+        e.firmado ? "Sí" : "No",
+        e.estado,
+      ]);
+      exportToCsv("Reporte_Entregas_ASSIST", "Reporte de Entregas y Custodia en Campo", headers, rows);
+    } else if (activeTab === "devoluciones") {
+      const headers = ["Número Acta Devolución", "Acta Origen Vinculada", "Clave Equipo", "Nombre Equipo", "Responsable Entrega", "Fecha Creación", "Fecha Firma", "Estado"];
+      const rows = devolucionesData.map((d) => [
+        d.numeroActa,
+        d.actaOrigenNumero || d.actaOrigenId || "—",
+        d.inventoryKey,
+        d.nombreEquipo,
+        d.responsableEntrega,
+        formatDate(d.fechaCreacion),
+        formatDate(d.fechaFirma),
+        d.estado,
+      ]);
+      exportToCsv("Reporte_Devoluciones_ASSIST", "Reporte de Devoluciones y Reingresos a Bodega", headers, rows);
     }
   }
 
   function handleExportPdf() {
     if (activeTab === "equipos") {
-      const headers = ["Inventario", "Nombre Equipo", "Marca", "Asignado A", "Área", "Empresa", "Estado"];
+      const headers = ["Inventario", "Nombre Equipo", "Marca", "Asignado A", "Área / Dpto", "Proveedor", "Estado"];
       const rows = equiposData.map((e) => [
         e.inventoryKey,
         e.nombreEquipo,
         e.marca,
         e.asignadoA,
         e.departamento,
-        e.empresa,
+        e.proveedor,
         e.estatusEquipo,
       ]);
       exportToPdf("Reporte Consolidado de Equipos e Inventario", headers, rows);
     } else if (activeTab === "actas") {
-      const headers = ["N° Acta", "Tipo", "Estado", "Equipo", "Destinatario", "Mensajero", "Fecha Creación"];
+      const headers = ["N° Acta", "Tipo", "Estado", "Equipo Asociado", "Destinatario", "Mensajero / Custodia", "Fecha Emisión"];
       const rows = actasData.map((a) => [
         a.numeroActa,
         a.tipoActa,
         a.estado,
-        a.equipmentNombre || a.equipmentInventoryKey,
+        a.nombreEquipo || a.inventoryKey,
         a.destinatarioNombre,
         a.mensajeroNombre,
-        new Date(a.fechaCreacion).toLocaleDateString("es-CO"),
+        formatDate(a.fechaCreacion),
       ]);
       exportToPdf("Reporte Maestro de Actas y Trazabilidad", headers, rows);
     } else if (activeTab === "entregas") {
-      const headers = ["N° Acta", "Equipo", "Mensajero", "Destinatario", "Fecha Creación", "Firma", "Estado"];
+      const headers = ["N° Acta", "Equipo Asociado", "Mensajero Responsable", "Destinatario", "Fecha Emisión", "Firma", "Estado"];
       const rows = entregasData.map((e) => [
         e.numeroActa,
-        e.equipmentNombre,
+        e.nombreEquipo,
         e.mensajeroNombre,
         e.destinatarioNombre,
-        new Date(e.fechaCreacion).toLocaleDateString("es-CO"),
+        formatDate(e.fechaCreacion),
         e.firmado ? "Firmada" : "Pendiente",
         e.estado,
       ]);
       exportToPdf("Reporte de Entregas y Custodia en Campo", headers, rows);
     } else if (activeTab === "devoluciones") {
-      const headers = ["N° Devolución", "Acta Origen", "Equipo", "Responsable", "Fecha Creación", "Estado"];
+      const headers = ["N° Devolución", "Acta Origen", "Equipo Asociado", "Responsable Entrega", "Fecha Creación", "Estado"];
       const rows = devolucionesData.map((d) => [
         d.numeroActa,
         d.actaOrigenNumero || "—",
-        d.equipmentNombre,
+        d.nombreEquipo,
         d.responsableEntrega,
-        new Date(d.fechaCreacion).toLocaleDateString("es-CO"),
+        formatDate(d.fechaCreacion),
         d.estado,
       ]);
       exportToPdf("Reporte de Devoluciones y Reingresos a Bodega", headers, rows);
@@ -260,9 +323,22 @@ export function ReportesPage() {
             onClick={handleExportExcel}
             disabled={loading || activeData.length === 0}
             style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            title="Descargar libro Excel estructurado con membrete corporativo y formato oficial"
           >
-            <DownloadIcon size={14} />
-            <span>Exportar CSV / Excel</span>
+            <FileSpreadsheetIcon size={15} style={{ color: "#16a34a" }} />
+            <span>Exportar Excel (.xls)</span>
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleExportCsv}
+            disabled={loading || activeData.length === 0}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            title="Descargar archivo CSV estándar con cabecera de metadatos ASSIST"
+          >
+            <FileTextIcon size={15} style={{ color: "var(--color-primary-600)" }} />
+            <span>Exportar CSV</span>
           </button>
 
           <button
@@ -271,8 +347,9 @@ export function ReportesPage() {
             onClick={handleExportPdf}
             disabled={loading || activeData.length === 0}
             style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            title="Generar reporte oficial en PDF con logo institucional ASSIST para guardar o imprimir"
           >
-            <DocumentPdfIcon size={14} />
+            <DocumentPdfIcon size={15} />
             <span>Exportar PDF</span>
           </button>
         </div>

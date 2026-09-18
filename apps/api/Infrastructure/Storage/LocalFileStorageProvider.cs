@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace PlataformaActas.Api.Infrastructure.Storage;
 
@@ -6,17 +7,27 @@ public sealed class LocalFileStorageProvider : IFileStorageProvider
 {
     private readonly string _storageRoot;
 
-    public LocalFileStorageProvider(IWebHostEnvironment environment)
+    public LocalFileStorageProvider(IWebHostEnvironment environment, IConfiguration configuration)
     {
-        // Root path is either local project root storage/ or content root storage/
-        var solutionStorage = Path.GetFullPath(Path.Combine(environment.ContentRootPath, "..", "..", "storage", "documentos"));
-        if (Directory.Exists(Path.GetFullPath(Path.Combine(environment.ContentRootPath, "..", "..", "storage"))))
+        var configuredRoot = configuration["Storage:RootPath"];
+        if (!string.IsNullOrWhiteSpace(configuredRoot))
         {
-            _storageRoot = solutionStorage;
+            _storageRoot = Path.IsPathRooted(configuredRoot)
+                ? configuredRoot
+                : Path.Combine(environment.ContentRootPath, configuredRoot);
         }
         else
         {
-            _storageRoot = Path.Combine(environment.ContentRootPath, "storage", "documentos");
+            // Root path is either local project root storage/ or content root storage/
+            var solutionStorage = Path.GetFullPath(Path.Combine(environment.ContentRootPath, "..", "..", "storage", "documentos"));
+            if (Directory.Exists(Path.GetFullPath(Path.Combine(environment.ContentRootPath, "..", "..", "storage"))))
+            {
+                _storageRoot = solutionStorage;
+            }
+            else
+            {
+                _storageRoot = Path.Combine(environment.ContentRootPath, "storage", "documentos");
+            }
         }
 
         Directory.CreateDirectory(_storageRoot);

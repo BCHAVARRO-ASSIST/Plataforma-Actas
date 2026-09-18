@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -76,9 +77,17 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
             endpoints.MapPut("/api/usuarios/{id:int}", async (
                 int id,
                 UsuarioUpdateRequest request,
+                HttpContext httpContext,
                 IUsuarioService service,
                 CancellationToken cancellationToken) =>
             {
+                var currentUserIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? httpContext.User.FindFirst("sub")?.Value;
+                if (!request.Activo && int.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
+                {
+                    return Results.BadRequest(new { message = "No puedes desactivar o revocar tu propia cuenta de administrador en sesión." });
+                }
+
                 if (string.IsNullOrWhiteSpace(request.Nombre) ||
                     string.IsNullOrWhiteSpace(request.Apellido) ||
                     string.IsNullOrWhiteSpace(request.UsuarioRed) ||
@@ -113,9 +122,17 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
             // 5. Desactivar usuario
             endpoints.MapDelete("/api/usuarios/{id:int}", async (
                 int id,
+                HttpContext httpContext,
                 IUsuarioService service,
                 CancellationToken cancellationToken) =>
             {
+                var currentUserIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? httpContext.User.FindFirst("sub")?.Value;
+                if (int.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
+                {
+                    return Results.BadRequest(new { message = "No puedes desactivar o revocar tu propia cuenta de administrador en sesión." });
+                }
+
                 try
                 {
                     var ok = await service.DeleteAsync(id, cancellationToken);
@@ -132,9 +149,17 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
             endpoints.MapPut("/api/usuarios/{id:int}/rol", async (
                 int id,
                 UsuarioRolRequest request,
+                HttpContext httpContext,
                 IUsuarioService service,
                 CancellationToken cancellationToken) =>
             {
+                var currentUserIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? httpContext.User.FindFirst("sub")?.Value;
+                if (int.TryParse(currentUserIdStr, out var currentUserId) && currentUserId == id)
+                {
+                    return Results.BadRequest(new { message = "No puedes modificar tu propio rol en sesión." });
+                }
+
                 try
                 {
                     var usuario = await service.AssignRoleAsync(id, request.RolId, cancellationToken);

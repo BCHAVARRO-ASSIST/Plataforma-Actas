@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import type { AuthenticatedUser } from "../../features/auth/authService";
-import { LogoutIcon, MenuIcon, ChevronDownIcon } from "../../components/Icons";
+import type { AuthenticatedUser } from "@/features/auth/authService";
+import { LogoutIcon, MenuIcon, ChevronDownIcon } from "@/components/ui/Icons";
 
 interface HeaderProps {
   user: AuthenticatedUser | null;
@@ -66,7 +66,7 @@ export function Header({
         )}
 
         <div className="header-title-block">
-          <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.8px', color: 'var(--color-primary-600)', textTransform: 'uppercase' }}>
+          <span className="header-subtitle">
             Plataforma Corporativa
           </span>
           <div className="header-title">Control de Actas e Inventario</div>

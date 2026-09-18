@@ -445,11 +445,13 @@
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-default);
   background: var(--bg-surface);
   box-shadow: var(--shadow-xs);
   transition: box-shadow 0.2s ease;
+  position: relative;
 }
 
 .table-wrapper:hover {
@@ -458,6 +460,7 @@
 
 .data-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
   text-align: left;
   font-size: 13px;
@@ -564,7 +567,7 @@
 }
 
 .modal-content.large {
-  max-width: 780px;
+  max-width: 860px;
 }
 
 .modal-content.small {
@@ -865,5 +868,124 @@
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
+}
+
+/* ==========================================================================
+   8. RESPONSIVE COMPONENT RULES (MOBILE & TABLET)
+   ========================================================================== */
+
+/* Utility class for 2-column responsive form grids */
+.form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .toolbar-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .search-input-wrapper {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .table-wrapper {
+    box-shadow: none;
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (max-width: 640px) {
+  /* Page Header Actions */
+  .page-header-container {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 14px !important;
+  }
+
+  .page-header-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .page-header-actions .btn,
+  .page-header-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Modals Mobile Adaptation */
+  .modal-backdrop {
+    padding: 8px;
+    align-items: center;
+  }
+
+  .modal-content {
+    max-height: 96vh;
+    border-radius: var(--radius-lg);
+    width: 100%;
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .modal-header-badge {
+    width: 34px;
+    height: 34px;
+  }
+
+  .modal-body {
+    padding: 16px 14px;
+    gap: 14px;
+  }
+
+  .modal-footer {
+    padding: 12px 14px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-footer .btn,
+  .modal-footer button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Auto-collapse 2-column form grids inside modal bodies on mobile */
+  .modal-body [style*="gridTemplateColumns"],
+  .modal-body [style*="grid-template-columns"],
+  .form-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Form Elements Touch-Sizing */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 14.5px;
+    padding: 10px 12px;
+  }
+
+  /* Toolbar Filters on Mobile */
+  .toolbar-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .toolbar-filter-group select,
+  .toolbar-filter-group .form-select {
+    flex: 1 1 calc(50% - 4px) !important;
+    width: auto !important;
+    min-width: 120px;
+  }
 }
 

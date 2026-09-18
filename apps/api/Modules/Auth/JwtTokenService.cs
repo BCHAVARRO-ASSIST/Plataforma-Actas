@@ -24,6 +24,11 @@ public sealed class JwtTokenService : IJwtTokenService
         var key = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException("No está configurada la clave JWT.");
 
+        if (Encoding.UTF8.GetByteCount(key) < 32)
+        {
+            throw new InvalidOperationException("La clave secreta JWT ('Jwt:Key') debe tener una longitud mínima de 256 bits (al menos 32 caracteres criptográficos).");
+        }
+
         var issuer = _configuration["Jwt:Issuer"] ?? "PlataformaActas.Api";
         var audience = _configuration["Jwt:Audience"] ?? "PlataformaActas.Web";
 
