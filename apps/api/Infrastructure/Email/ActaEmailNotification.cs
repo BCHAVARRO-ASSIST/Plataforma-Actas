@@ -9,5 +9,6 @@ public sealed record ActaEmailNotification(
     string TipoActa,
     string EquipoSerial,
     string EquipoMarca,
-    byte[] PdfBytes
+    byte[] PdfBytes,
+    DateTime? FechaFirmaUtc = null
 );

@@ -17,6 +17,7 @@ import { hasPermission, PERMISSIONS } from "@/features/auth/permissions";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { useAuth } from "@/features/auth/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ThemeProvider } from "@/app/theme";
 
 import { AppShell } from "@/app/layout/AppShell";
 import { Sidebar } from "@/app/layout/Sidebar";
@@ -243,8 +244,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

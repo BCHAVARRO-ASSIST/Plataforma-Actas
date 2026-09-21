@@ -601,7 +601,7 @@ export function ActaDetail({
           <div className="acta-info-grid">
             {/* INVENTARIO */}
             <div className="acta-info-item">
-              <span>Inventario (SKU / Serial)</span>
+              <span>Placa / Serial (S/N)</span>
               <strong>
                 <span className="acta-code-pill" style={{ color: "var(--color-primary-700)", background: "var(--color-primary-50)", borderColor: "var(--color-primary-200)" }}>
                   {equipo.inventoryKey}

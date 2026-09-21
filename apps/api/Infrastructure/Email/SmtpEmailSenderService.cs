@@ -201,28 +201,43 @@ public sealed class SmtpEmailSenderService : IEmailSenderService
         }
     }
 
-    private static string BuildHtmlTemplate(ActaEmailNotification notification)
+    public static string BuildHtmlTemplate(ActaEmailNotification notification)
     {
+        string fechaFirmaStr;
+        try
+        {
+            var tzId = OperatingSystem.IsWindows() ? "SA Pacific Standard Time" : "America/Bogota";
+            var tzColombia = TimeZoneInfo.FindSystemTimeZoneById(tzId);
+            var utcTime = DateTime.SpecifyKind(notification.FechaFirmaUtc ?? DateTime.UtcNow, DateTimeKind.Utc);
+            var fechaLocal = TimeZoneInfo.ConvertTimeFromUtc(utcTime, tzColombia);
+            fechaFirmaStr = fechaLocal.ToString("dd/MM/yyyy hh:mm:ss tt", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        catch
+        {
+            var utcTime = DateTime.SpecifyKind(notification.FechaFirmaUtc ?? DateTime.UtcNow, DateTimeKind.Utc);
+            fechaFirmaStr = utcTime.AddHours(-5).ToString("dd/MM/yyyy hh:mm:ss tt", System.Globalization.CultureInfo.InvariantCulture);
+        }
+
         return $$"""
         <!DOCTYPE html>
         <html lang="es">
         <head>
           <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f6f8; color: #1e293b; }
             .container { max-width: 600px; margin: 24px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-            .header { background-color: #4B88BE; padding: 24px 32px; text-align: left; color: #ffffff; }
+            .header { background-color: #1e5ba8; padding: 24px 32px; text-align: left; color: #ffffff; }
             .header h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.025em; }
             .header p { margin: 4px 0 0 0; font-size: 13px; opacity: 0.9; }
             .content { padding: 32px; }
             .greeting { font-size: 16px; font-weight: 600; margin-bottom: 12px; }
             .intro { font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 24px; }
-            .details-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px; background-color: #f8fafc; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
+            .details-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 13px; background-color: #f8fafc; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
             .details-table td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; }
             .details-table tr:last-child td { border-bottom: none; }
             .details-label { font-weight: 600; color: #64748b; width: 38%; }
             .details-value { color: #0f172a; font-weight: 500; }
-            .notice-box { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 14px; border-radius: 4px; font-size: 13px; line-height: 1.5; color: #1e40af; margin-bottom: 24px; }
             .footer { background-color: #f8fafc; padding: 20px 32px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; }
             .footer p { margin: 4px 0; }
           </style>
@@ -258,17 +273,9 @@ public sealed class SmtpEmailSenderService : IEmailSenderService
                 </tr>
                 <tr>
                   <td class="details-label">Fecha y Hora de Firma:</td>
-                  <td class="details-value">{{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture)}} UTC</td>
+                  <td class="details-value">{{fechaFirmaStr}}</td>
                 </tr>
               </table>
-
-              <div class="notice-box">
-                📎 <strong>Documento Oficial Adjunto:</strong> Se adjunta a este correo el documento PDF oficial con membrete corporativo, firma digital manuscrita y sello criptográfico SHA-256 de conformidad.
-              </div>
-
-              <p class="intro" style="font-size: 12px; color: #64748b; margin-bottom: 0;">
-                Por favor conserve este documento como constancia legal de custodia de los activos tecnológicos suministrados conforme a las políticas corporativas y la Ley 603 del 2000.
-              </p>
             </div>
             <div class="footer">
               <p><strong>Assist Consultores de Sistemas S.A.</strong> &bull; Soporte de Tecnología e Infraestructura</p>

@@ -104,6 +104,71 @@
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(255, 255, 255, 0.6);
   --glass-blur: blur(12px);
+  --bg-header: rgba(255, 255, 255, 0.94);
+}
+
+/* ==========================================================================
+   DARK THEME TOKENS & OVERRIDES
+   Aesthetic: Ultra-modern Deep Slate (Linear / Vercel / GitHub Dark)
+   ========================================================================== */
+
+[data-theme="dark"] {
+  /* Semantic UI Surfaces */
+  --bg-app: #080c14;
+  --bg-surface: #0f172a;
+  --bg-surface-elevated: #1e293b;
+  --bg-surface-hover: #1e293b;
+  --bg-header: rgba(15, 23, 42, 0.88);
+  --bg-sidebar: #060910;
+  --bg-sidebar-hover: #0f172a;
+  --bg-sidebar-active: #1e293b;
+
+  /* Borders & Dividers */
+  --border-subtle: #162032;
+  --border-default: #1e293b;
+  --border-strong: #334155;
+  --border-focus: #818cf8;
+
+  /* Text Hierarchy */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-disabled: #475569;
+  --text-inverse: #0f172a;
+
+  /* Refined Shadows for Dark Surface Layering */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 25px -3px rgba(99, 102, 241, 0.35);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Primary Palettes for Dark Mode */
+  --color-primary-50: rgba(99, 102, 241, 0.12);
+  --color-primary-100: rgba(99, 102, 241, 0.22);
+  --color-primary-200: rgba(99, 102, 241, 0.35);
+
+  /* Semantic Palettes for Dark Mode */
+  --color-success-50: rgba(16, 185, 129, 0.12);
+  --color-success-100: rgba(16, 185, 129, 0.22);
+  --color-warning-50: rgba(245, 158, 11, 0.12);
+  --color-warning-100: rgba(245, 158, 11, 0.22);
+  --color-danger-50: rgba(244, 63, 94, 0.12);
+  --color-danger-100: rgba(244, 63, 94, 0.22);
+  --color-info-50: rgba(14, 165, 233, 0.12);
+  --color-info-100: rgba(14, 165, 233, 0.22);
+
+  /* Slate Grayscale */
+  --color-slate-50: #0d1526;
+  --color-slate-100: #1e293b;
+  --color-slate-200: #334155;
+  --color-slate-300: #475569;
+  --bg-surface-secondary: #0b1120;
 }
 
 /* Base Reset & Box Sizing */
@@ -122,6 +187,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 #root {
@@ -144,4 +210,56 @@ html, body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-slate-400);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--color-slate-700);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-slate-600);
+}
+
+/* Theme Toggle Button Component */
+.theme-toggle-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  padding: 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-xs);
+  outline: none;
+}
+
+.theme-toggle-button:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-primary-500);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.theme-toggle-button:active {
+  transform: translateY(0);
+}
+
+.theme-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-normal);
+}
+
+.theme-toggle-button:hover .theme-toggle-icon {
+  transform: rotate(15deg);
+}
+
+.theme-toggle-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
 }

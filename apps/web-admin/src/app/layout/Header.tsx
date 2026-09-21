@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { AuthenticatedUser } from "@/features/auth/authService";
 import { LogoutIcon, MenuIcon, ChevronDownIcon } from "@/components/ui/Icons";
+import { ThemeToggle } from "@/app/theme";
 
 interface HeaderProps {
   user: AuthenticatedUser | null;
@@ -74,6 +75,9 @@ export function Header({
       </div>
 
       <div className="header-right">
+        {/* Interruptor de Modo Claro / Oscuro */}
+        <ThemeToggle />
+
         {/* Menú Desplegable de Perfil de Usuario */}
         <div className="user-menu-wrapper" ref={menuRef}>
           <button

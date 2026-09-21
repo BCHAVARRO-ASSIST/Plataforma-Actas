@@ -480,6 +480,9 @@ namespace PlataformaActas.Api.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
                     b.ToTable("permisos", (string)null);
                 });
 

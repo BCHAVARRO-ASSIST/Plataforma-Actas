@@ -117,6 +117,7 @@ public sealed class EquiposRepository : IEquiposRepository
     {
         return await _context.Equipos
             .AsNoTracking()
+            .OrderBy(e => e.InventoryKey)
             .Select(e => new EquipmentMaintenanceItem(
                 e.Id,
                 e.InventoryKey,
@@ -129,7 +130,6 @@ public sealed class EquiposRepository : IEquiposRepository
                 e.FechaMantenimiento,
                 e.MantenimientoRealizado ?? false
             ))
-            .OrderBy(e => e.InventoryKey)
             .ToListAsync(cancellationToken);
     }
 

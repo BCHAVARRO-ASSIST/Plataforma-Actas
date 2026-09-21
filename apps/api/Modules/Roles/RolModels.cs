@@ -98,6 +98,9 @@ namespace PlataformaActas.Api.Modules.Roles.Data.Configurations
                 .HasMaxLength(150)
                 .IsRequired();
 
+            builder.HasIndex(p => p.Nombre)
+                .IsUnique();
+
             builder.Property(p => p.Descripcion)
                 .HasMaxLength(250);
 

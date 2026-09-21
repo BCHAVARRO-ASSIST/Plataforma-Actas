@@ -36,7 +36,6 @@ public sealed class ActaService(
     IDocumentoActaService documentoActaService,
     IFileStorageProvider fileStorageProvider,
     IEmailNotificationQueue emailQueue,
-    IOptions<SmtpOptions> smtpOptions,
     ILogger<ActaService> logger,
     PlataformaActasDbContext context) : IActaService
 {
@@ -292,29 +291,8 @@ public sealed class ActaService(
                     }
                 }
 
-                var ccList = new List<string>();
-                if (!string.IsNullOrWhiteSpace(acta.Usuario?.Correo) && !toList.Any(e => string.Equals(e, acta.Usuario.Correo.Trim(), StringComparison.OrdinalIgnoreCase)))
-                {
-                    ccList.Add(acta.Usuario.Correo.Trim());
-                }
-
-                if (!string.IsNullOrWhiteSpace(acta.MensajeroUsuario?.Correo) &&
-                    !toList.Any(e => string.Equals(e, acta.MensajeroUsuario.Correo.Trim(), StringComparison.OrdinalIgnoreCase)) &&
-                    !ccList.Any(e => string.Equals(e, acta.MensajeroUsuario.Correo.Trim(), StringComparison.OrdinalIgnoreCase)))
-                {
-                    ccList.Add(acta.MensajeroUsuario.Correo.Trim());
-                }
-
-                var bccList = new List<string>();
-                var smtpOpt = smtpOptions.Value;
-                if (smtpOpt.SoporteNotificationEmails != null)
-                {
-                    bccList.AddRange(smtpOpt.SoporteNotificationEmails.Where(e => !string.IsNullOrWhiteSpace(e)));
-                }
-                if (smtpOpt.ApsNotificationEmails != null)
-                {
-                    bccList.AddRange(smtpOpt.ApsNotificationEmails.Where(e => !string.IsNullOrWhiteSpace(e)));
-                }
+                var ccList = Array.Empty<string>();
+                var bccList = Array.Empty<string>();
 
                 byte[] pdfBytes = Array.Empty<byte>();
                 if (!string.IsNullOrWhiteSpace(acta.RutaDocumento))
@@ -339,7 +317,8 @@ public sealed class ActaService(
                     TipoActa: acta.TipoActa ?? "Entrega",
                     EquipoSerial: equipo?.InventoryKey ?? "—",
                     EquipoMarca: equipo?.Marca ?? (equipo?.NombreEquipo ?? "Activo TI"),
-                    PdfBytes: pdfBytes
+                    PdfBytes: pdfBytes,
+                    FechaFirmaUtc: DateTime.UtcNow
                 );
 
                 await emailQueue.EnqueueAsync(notification, cancellationToken);

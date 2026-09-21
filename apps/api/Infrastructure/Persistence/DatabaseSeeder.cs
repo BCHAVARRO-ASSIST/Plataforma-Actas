@@ -48,7 +48,7 @@ public static class DatabaseSeeder
                     ('MENSAJERO_ACTAS_FIRMAR', 'Mensajero', 'Permite registrar firmas en entregas', true),
                     ('MENSAJERO_ACTAS_ENTREGAR', 'Mensajero', 'Permite completar entrega de actas', true),
                     ('MENSAJERO_ACTAS_DEVOLVER', 'Mensajero', 'Permite registrar devolución de actas', true)
-                ON CONFLICT DO NOTHING;
+                ON CONFLICT ("Nombre") DO NOTHING;
                 """);
 
             // 3. Asociar todos los permisos al rol Administrador
