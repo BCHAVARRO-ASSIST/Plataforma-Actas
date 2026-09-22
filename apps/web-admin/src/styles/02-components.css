@@ -172,6 +172,56 @@
   background: var(--color-slate-400);
 }
 
+/* Refinamiento de Badges en Modo Oscuro (Alto Contraste y Legibilidad) */
+[data-theme="dark"] .badge-success {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+[data-theme="dark"] .badge-success .badge-dot {
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.7);
+}
+
+[data-theme="dark"] .badge-neutral {
+  background: rgba(100, 116, 139, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+[data-theme="dark"] .badge-neutral .badge-dot {
+  background: #94a3b8;
+}
+
+[data-theme="dark"] .badge-info {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+[data-theme="dark"] .badge-info .badge-dot {
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
+}
+
+[data-theme="dark"] .badge-warning {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+[data-theme="dark"] .badge-warning .badge-dot {
+  background: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.7);
+}
+
+[data-theme="dark"] .badge-danger {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+[data-theme="dark"] .badge-danger .badge-dot {
+  background: #f87171;
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.7);
+}
+
 @keyframes badgeDotPulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.35); opacity: 0.7; }
@@ -184,6 +234,12 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .table-wrapper,
+[data-theme="dark"] .stat-card {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
 }
 
 .card:hover {
@@ -492,6 +548,15 @@
 
 .data-table tbody tr:hover {
   background: var(--color-slate-50);
+}
+
+[data-theme="dark"] .data-table thead {
+  background: rgba(11, 17, 30, 0.75);
+  border-bottom: 1px solid var(--border-default);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover {
+  background: var(--bg-surface-hover);
 }
 
 .data-table td {

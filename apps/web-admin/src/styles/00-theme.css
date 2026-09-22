@@ -115,18 +115,18 @@
 [data-theme="dark"] {
   /* Semantic UI Surfaces */
   --bg-app: #080c14;
-  --bg-surface: #0f172a;
-  --bg-surface-elevated: #1e293b;
-  --bg-surface-hover: #1e293b;
-  --bg-header: rgba(15, 23, 42, 0.88);
-  --bg-sidebar: #060910;
-  --bg-sidebar-hover: #0f172a;
-  --bg-sidebar-active: #1e293b;
+  --bg-sidebar: #0b111e;
+  --bg-sidebar-hover: #111a2e;
+  --bg-sidebar-active: #18233c;
+  --bg-surface: #111a2e;
+  --bg-surface-elevated: #18233c;
+  --bg-surface-hover: #1e2c4a;
+  --bg-header: rgba(17, 26, 46, 0.88);
 
   /* Borders & Dividers */
-  --border-subtle: #162032;
-  --border-default: #1e293b;
-  --border-strong: #334155;
+  --border-subtle: #16243b;
+  --border-default: #1e2e4a;
+  --border-strong: #2d4268;
   --border-focus: #818cf8;
 
   /* Text Hierarchy */
@@ -137,15 +137,15 @@
   --text-inverse: #0f172a;
 
   /* Refined Shadows for Dark Surface Layering */
-  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.5), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 30px -5px rgba(0, 0, 0, 0.85);
   --shadow-glow: 0 0 25px -3px rgba(99, 102, 241, 0.35);
 
   /* Glassmorphism */
-  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-bg: rgba(17, 26, 46, 0.85);
   --glass-border: rgba(255, 255, 255, 0.08);
 
   /* Primary Palettes for Dark Mode */
@@ -165,10 +165,10 @@
 
   /* Slate Grayscale */
   --color-slate-50: #0d1526;
-  --color-slate-100: #1e293b;
-  --color-slate-200: #334155;
+  --color-slate-100: #18233c;
+  --color-slate-200: #2d4268;
   --color-slate-300: #475569;
-  --bg-surface-secondary: #0b1120;
+  --bg-surface-secondary: #0b111e;
 }
 
 /* Base Reset & Box Sizing */

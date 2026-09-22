@@ -8,6 +8,7 @@ import {
   ShieldIcon,
   UserIcon,
 } from "@/components/ui/Icons";
+import { ThemeToggle, useTheme } from "@/app/theme";
 
 declare global {
   interface Window {
@@ -68,6 +69,7 @@ export default function LoginPage({
   const [showLocalAdmin, setShowLocalAdmin] = useState(false);
 
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  const { theme: currentTheme } = useTheme();
 
   useEffect(() => {
     activeGoogleLoginHandler = onGoogleLogin || null;
@@ -102,7 +104,7 @@ export default function LoginPage({
           googleBtnContainerRef.current.innerHTML = "";
           window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
             type: "standard",
-            theme: "outline",
+            theme: currentTheme === "dark" ? "filled_black" : "outline",
             size: "large",
             text: "continue_with",
             shape: "rectangular",
@@ -126,10 +128,15 @@ export default function LoginPage({
       }, 100);
       return () => clearInterval(interval);
     }
-  }, [googleClientId, showLocalAdmin]);
+  }, [googleClientId, showLocalAdmin, currentTheme]);
 
   return (
     <main className="auth-container">
+      {/* Selector de Modo Claro / Oscuro en pantalla de autenticación */}
+      <div className="auth-theme-toggle-slot">
+        <ThemeToggle />
+      </div>
+
       {/* Luces ambientales de profundidad */}
       <div className="auth-ambient-light auth-ambient-1" aria-hidden="true" />
       <div className="auth-ambient-light auth-ambient-2" aria-hidden="true" />

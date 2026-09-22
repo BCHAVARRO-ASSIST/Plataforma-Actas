@@ -21,19 +21,19 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
     <div className="dashboard-kpi-grid">
       {/* 1. INVENTARIO */}
       <div
-        className="stat-card"
+        className="stat-card kpi-card-inventario"
         onClick={() => onNavigate("equipment")}
         style={{ cursor: "pointer" }}
       >
         <div className="stat-info" style={{ width: "100%" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "var(--radius-sm)", background: "var(--color-primary-50)", color: "var(--color-primary-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="kpi-icon-box">
                 <EquipmentIcon size={18} />
               </div>
               <span className="stat-label" style={{ margin: 0 }}>Equipos en Inventario</span>
             </div>
-            <span style={{ fontSize: "12px", color: "var(--color-primary-600)", fontWeight: 600 }}>Ver catálogo →</span>
+            <span className="kpi-action-link">Ver catálogo →</span>
           </div>
 
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px", margin: "8px 0 12px" }}>
@@ -47,26 +47,29 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
               {kpis.equiposActivos} operativos ({activosPct}%)
             </span>
             <span style={{ color: "var(--text-muted)" }}>•</span>
-            <span>{kpis.equiposInactivos} inactivos</span>
+            <span className="badge badge-neutral">
+              <span className="badge-dot" />
+              {kpis.equiposInactivos} inactivos
+            </span>
           </div>
         </div>
       </div>
 
       {/* 2. ACTAS */}
       <div
-        className="stat-card"
+        className="stat-card kpi-card-actas"
         onClick={() => onNavigate("actas")}
         style={{ cursor: "pointer" }}
       >
         <div className="stat-info" style={{ width: "100%" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "var(--radius-sm)", background: "var(--color-success-50)", color: "var(--color-success-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="kpi-icon-box">
                 <ActaIcon size={18} />
               </div>
               <span className="stat-label" style={{ margin: 0 }}>Gestión Documental</span>
             </div>
-            <span style={{ fontSize: "12px", color: "var(--color-success-600)", fontWeight: 600 }}>Supervisar →</span>
+            <span className="kpi-action-link">Supervisar →</span>
           </div>
 
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px", margin: "8px 0 12px" }}>
@@ -81,6 +84,7 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
             </span>
             <span style={{ color: "var(--text-muted)" }}>•</span>
             <span className={kpis.actasBorrador > 0 ? "badge badge-warning" : "badge badge-neutral"}>
+              <span className="badge-dot" />
               {kpis.actasBorrador} borradores
             </span>
           </div>
@@ -89,19 +93,19 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
 
       {/* 3. LOGÍSTICA */}
       <div
-        className="stat-card"
+        className="stat-card kpi-card-operacion"
         onClick={() => onNavigate("reportes")}
         style={{ cursor: "pointer" }}
       >
         <div className="stat-info" style={{ width: "100%" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "var(--radius-sm)", background: "var(--color-info-50)", color: "var(--color-info-600)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="kpi-icon-box">
                 <MessengerIcon size={18} />
               </div>
               <span className="stat-label" style={{ margin: 0 }}>Operación y Traslados</span>
             </div>
-            <span style={{ fontSize: "12px", color: "var(--color-info-600)", fontWeight: 600 }}>Ver informes →</span>
+            <span className="kpi-action-link">Ver informes →</span>
           </div>
 
           <div style={{ display: "flex", alignItems: "baseline", gap: "8px", margin: "8px 0 12px" }}>
@@ -111,10 +115,12 @@ export function ExecutiveSummaryCards({ kpis, onNavigate }: ExecutiveSummaryCard
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "var(--text-secondary)", paddingTop: "10px", borderTop: "1px solid var(--border-subtle)" }}>
             <span className="badge badge-info">
+              <span className="badge-dot" />
               {kpis.entregasPendientes} entregas activas
             </span>
             <span style={{ color: "var(--text-muted)" }}>•</span>
             <span className="badge badge-neutral">
+              <span className="badge-dot" />
               {kpis.devolucionesPendientes} devoluciones
             </span>
           </div>

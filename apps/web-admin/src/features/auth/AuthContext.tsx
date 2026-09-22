@@ -7,6 +7,8 @@ import {
 
 import {
   getAuthenticatedUser,
+  getStoredToken,
+  clearStoredToken,
   login as loginApi,
   loginWithGoogle,
   logoutApi,
@@ -26,10 +28,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isRestoringSession, setIsRestoringSession] = useState(true);
 
   async function restoreSession(): Promise<void> {
+    // Condición previa: si no existe token en localStorage, no invocar /api/auth/me
+    const token = getStoredToken();
+    if (!token) {
+      setUser(null);
+      setIsRestoringSession(false);
+      return;
+    }
+
     try {
       const authenticatedUser = await getAuthenticatedUser();
       setUser(authenticatedUser);
+      if (!authenticatedUser) {
+        clearStoredToken();
+      }
     } catch {
+      clearStoredToken();
       setUser(null);
     } finally {
       setIsRestoringSession(false);
@@ -37,8 +51,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   useEffect(() => {
-    // Interceptor reactivo ante 401: limpia la sesión en memoria
+    // Interceptor reactivo ante 401: limpia la sesión en memoria y storage
     setUnauthorizedHandler(() => {
+      clearStoredToken();
       setUser(null);
     });
 
@@ -65,13 +80,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await logoutApi();
     } finally {
+      clearStoredToken();
       setUser(null);
     }
   }
 
   const value = useMemo<AuthContextValue>(() => {
     return {
-      token: null,
+      token: getStoredToken(),
       user,
       isAuthenticated: Boolean(user),
       isRestoringSession,

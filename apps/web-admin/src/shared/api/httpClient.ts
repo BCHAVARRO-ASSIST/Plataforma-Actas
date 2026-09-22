@@ -1,5 +1,42 @@
 import { API_URL } from "../config/api";
 
+export class ApiError extends Error {
+  status: number;
+  response?: Response;
+
+  constructor(status: number, message: string, response?: Response) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.response = response;
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
+}
+
+const TOKEN_KEYS = ["auth_token", "token", "actas_session_token"];
+
+export function getStoredToken(): string | null {
+  if (typeof window === "undefined" || !window.localStorage) return null;
+  for (const key of TOKEN_KEYS) {
+    const val = localStorage.getItem(key);
+    if (val && val.trim()) return val.trim();
+  }
+  return null;
+}
+
+export function setStoredToken(token: string): void {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  localStorage.setItem("auth_token", token);
+  localStorage.setItem("token", token);
+}
+
+export function clearStoredToken(): void {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  for (const key of TOKEN_KEYS) {
+    localStorage.removeItem(key);
+  }
+}
+
 type UnauthorizedHandler = () => void;
 type ForbiddenHandler = (message: string) => void;
 
@@ -18,6 +55,11 @@ export function getAuthHeaders(includeJson: boolean = false, customHeaders?: Hea
   const headers: Record<string, string> = {
     "X-Requested-With": "XMLHttpRequest", // Mitigación CSRF en llamadas cross-origin / browser
   };
+
+  const token = getStoredToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   if (includeJson) {
     headers["Content-Type"] = "application/json";
@@ -98,15 +140,17 @@ export async function apiRequest<T = unknown>(
     const message = await getApiErrorMessage(response, errorMessage);
 
     if (response.status === 401) {
+      clearStoredToken();
       // Notificar reactivamente a AuthContext para limpiar la sesión si expiró
-      if (!endpoint.includes("/auth/login") && !endpoint.includes("/auth/google")) {
+      // Se excluye /auth/me para permitir chequeo inicial de sesión defensivo y silencioso
+      if (!endpoint.includes("/auth/login") && !endpoint.includes("/auth/google") && !endpoint.includes("/auth/me")) {
         onUnauthorizedHandler?.();
       }
     } else if (response.status === 403) {
       onForbiddenHandler?.(message);
     }
 
-    throw new Error(message);
+    throw new ApiError(response.status, message, response);
   }
 
   if (response.status === 204) {
@@ -172,7 +216,7 @@ export async function apiGetBlob(endpoint: string, options?: RequestOptions): Pr
     } else if (response.status === 403) {
       onForbiddenHandler?.(message);
     }
-    throw new Error(message);
+    throw new ApiError(response.status, message, response);
   }
 
   return response.blob();

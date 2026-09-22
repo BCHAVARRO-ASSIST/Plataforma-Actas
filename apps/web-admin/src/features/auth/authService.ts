@@ -1,4 +1,12 @@
-import { apiRequest } from "../../shared/api/httpClient";
+import {
+  apiRequest,
+  ApiError,
+  getStoredToken,
+  setStoredToken,
+  clearStoredToken,
+} from "../../shared/api/httpClient";
+
+export { getStoredToken, setStoredToken, clearStoredToken };
 
 export interface AuthenticatedUser {
   usuarioId?: string;
@@ -70,6 +78,10 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
     errorMessage: "Usuario o contraseña incorrectos.",
   });
 
+  if (data.token) {
+    setStoredToken(data.token);
+  }
+
   return data;
 }
 
@@ -85,25 +97,58 @@ export async function loginWithGoogle(idToken: string): Promise<LoginResponse> {
     errorMessage: "No fue posible validar la cuenta corporativa con Google.",
   });
 
+  if (data.token) {
+    setStoredToken(data.token);
+  }
+
   return data;
 }
 
-export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
-  const data = await apiRequest<AuthenticatedUserResponse>("/auth/me", {
-    method: "GET",
-    errorMessage: "Sesión inválida o expirada.",
-  });
+export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
+  // Verificación defensiva previa: si no existe token almacenado, no ejecutar petición HTTP
+  const token = getStoredToken();
+  if (!token) {
+    return null;
+  }
 
-  return {
-    usuarioId: data.usuarioId ?? "",
-    nombre: data.nombre ?? "",
-    apellido: data.apellido ?? "",
-    usuarioRed: data.usuarioRed ?? "",
-    correo: data.correo ?? "",
-    proceso: data.proceso ?? "",
-    rol: data.rol ?? "",
-    permisos: data.permisos ?? [],
-  };
+  try {
+    const data = await apiRequest<AuthenticatedUserResponse>("/auth/me", {
+      method: "GET",
+      errorMessage: "Sesión no iniciada.",
+    });
+
+    if (!data) {
+      clearStoredToken();
+      return null;
+    }
+
+    return {
+      usuarioId: data.usuarioId ?? "",
+      nombre: data.nombre ?? "",
+      apellido: data.apellido ?? "",
+      usuarioRed: data.usuarioRed ?? "",
+      correo: data.correo ?? "",
+      proceso: data.proceso ?? "",
+      rol: data.rol ?? "",
+      permisos: data.permisos ?? [],
+    };
+  } catch (error) {
+    // 401 Unauthorized es el estado normal cuando el token almacenado expiró
+    if (error instanceof ApiError && error.status === 401) {
+      clearStoredToken();
+      return null;
+    }
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "status" in error &&
+      (error as { status: number }).status === 401
+    ) {
+      clearStoredToken();
+      return null;
+    }
+    throw error;
+  }
 }
 
 export async function logoutApi(): Promise<void> {
@@ -113,6 +158,8 @@ export async function logoutApi(): Promise<void> {
     });
   } catch {
     // Si la sesión ya expiró en el servidor, ignorar el error
+  } finally {
+    clearStoredToken();
   }
 }
 
