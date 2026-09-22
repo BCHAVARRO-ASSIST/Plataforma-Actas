@@ -21,20 +21,7 @@ export function ActaTypeSelector({
   return (
     <div className="card" style={{ padding: "22px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-        <div
-          style={{
-            width: "28px",
-            height: "28px",
-            borderRadius: "50%",
-            background: "var(--color-primary-100)",
-            color: "var(--color-primary-700)",
-            fontWeight: 800,
-            fontSize: "12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <div className="form-step-badge">
           1
         </div>
         <div>
@@ -48,47 +35,19 @@ export function ActaTypeSelector({
       </div>
 
       {/* Selector Visual Segmentado */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "12px",
-          marginBottom: "16px",
-        }}
-      >
+      <div className="tramite-selector-grid">
         <div
           onClick={() => !disabled && onTypeChange("Entrega")}
-          style={{
-            border: actaType === "Entrega" ? "2px solid var(--color-primary-600)" : "1px solid var(--border-default)",
-            borderRadius: "var(--radius-md)",
-            padding: "14px 16px",
-            background: actaType === "Entrega" ? "var(--color-primary-50)" : "var(--bg-surface)",
-            cursor: disabled ? "not-allowed" : "pointer",
-            transition: "all var(--transition-fast)",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-          }}
+          className={`tramite-card ${actaType === "Entrega" ? "active" : ""} ${disabled ? "disabled" : ""}`}
         >
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "var(--radius-md)",
-              background: actaType === "Entrega" ? "var(--color-primary-600)" : "var(--color-slate-100)",
-              color: actaType === "Entrega" ? "#ffffff" : "var(--text-muted)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <div className="tramite-icon-box">
             <PackageIcon size={18} />
           </div>
-          <div>
-            <strong style={{ fontSize: "14px", color: actaType === "Entrega" ? "var(--color-primary-900)" : "var(--text-primary)" }}>
+          <div className="tramite-info">
+            <strong className="tramite-title">
               Acta de Entrega
             </strong>
-            <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block" }}>
+            <span className="tramite-desc">
               Asignación inicial o recambio de equipo.
             </span>
           </div>
@@ -96,37 +55,16 @@ export function ActaTypeSelector({
 
         <div
           onClick={() => !disabled && onTypeChange("Devolución")}
-          style={{
-            border: actaType === "Devolución" ? "2px solid var(--color-primary-600)" : "1px solid var(--border-default)",
-            borderRadius: "var(--radius-md)",
-            padding: "14px 16px",
-            background: actaType === "Devolución" ? "var(--color-primary-50)" : "var(--bg-surface)",
-            cursor: disabled ? "not-allowed" : "pointer",
-            transition: "all var(--transition-fast)",
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-          }}
+          className={`tramite-card ${actaType === "Devolución" ? "active" : ""} ${disabled ? "disabled" : ""}`}
         >
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "var(--radius-md)",
-              background: actaType === "Devolución" ? "var(--color-primary-600)" : "var(--color-slate-100)",
-              color: actaType === "Devolución" ? "#ffffff" : "var(--text-muted)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <div className="tramite-icon-box">
             <MessengerIcon size={18} />
           </div>
-          <div>
-            <strong style={{ fontSize: "14px", color: actaType === "Devolución" ? "var(--color-primary-900)" : "var(--text-primary)" }}>
+          <div className="tramite-info">
+            <strong className="tramite-title">
               Acta de Devolución
             </strong>
-            <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block" }}>
+            <span className="tramite-desc">
               Reingreso de equipo vinculado a entrega previa.
             </span>
           </div>
@@ -135,15 +73,7 @@ export function ActaTypeSelector({
 
       {/* Si es Devolución, selector de acta previa */}
       {actaType === "Devolución" && (
-        <div
-          style={{
-            background: "var(--color-slate-50)",
-            border: "1px solid var(--border-default)",
-            borderRadius: "var(--radius-md)",
-            padding: "14px 16px",
-            marginTop: "12px",
-          }}
-        >
+        <div className="acta-devolucion-origen-card">
           <label
             className="form-label"
             htmlFor="acta-origen"
@@ -160,7 +90,6 @@ export function ActaTypeSelector({
             onChange={(e) => onActaOrigenChange(e.target.value)}
             disabled={disabled}
             required
-            style={{ background: "#ffffff" }}
           >
             <option value="">
               {actasEntrega.length === 0
@@ -173,7 +102,7 @@ export function ActaTypeSelector({
               </option>
             ))}
           </select>
-          <span style={{ fontSize: "11.5px", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
+          <span className="acta-devolucion-helper">
             El equipo y el responsable se vincularán automáticamente del acta original.
           </span>
         </div>

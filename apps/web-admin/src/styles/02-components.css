@@ -410,6 +410,32 @@
   cursor: not-allowed;
 }
 
+/* ==========================================================================
+   Estandarización de Desplegables (Select & Dropdown) - Dark Mode
+   ========================================================================== */
+[data-theme="dark"] select,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .select-dropdown,
+[data-theme="dark"] .custom-select-menu {
+  background-color: var(--bg-surface-elevated, #18233c) !important;
+  color: var(--text-primary, #f8fafc) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] select option {
+  background-color: #111a2e !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .form-input:disabled,
+[data-theme="dark"] .form-select:disabled,
+[data-theme="dark"] .form-textarea:disabled {
+  background: rgba(15, 23, 42, 0.5) !important;
+  color: var(--text-disabled) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+
 /* Inputs con Iconos */
 .input-with-icon {
   position: relative;
