@@ -5,7 +5,6 @@ import {
   EyeIcon,
   EyeOffIcon,
   LockIcon,
-  ShieldIcon,
   UserIcon,
 } from "@/components/ui/Icons";
 import { ThemeToggle, useTheme } from "@/app/theme";
@@ -146,14 +145,32 @@ export default function LoginPage({
         <div className="auth-card-aura" aria-hidden="true" />
 
         <div className="auth-card">
-          {/* Encabezado limpio y directo */}
-          <header className="auth-header">
-            <div className="auth-logo">
-              <ShieldIcon size={26} />
+          {/* Encabezado moderno con Isotipo Vectorial del Producto */}
+          <div className="login-header">
+            <div className="login-product-badge">
+              <svg 
+                className="login-product-icon" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="1.8" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                {/* Documento base */}
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                {/* Líneas de acta y firma */}
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+                {/* Sello o pluma de validación */}
+                <path d="m15 15 3-3 3 3-3 3z" fill="currentColor" fillOpacity="0.2" />
+              </svg>
             </div>
-            <h1 className="auth-title">Plataforma de Actas</h1>
-            <span className="auth-badge">ASSIST CONSULTORES</span>
-          </header>
+            <h1 className="login-title">Plataforma de Actas</h1>
+            <p className="login-subtitle">Gestión Documental y Custodia de Activos</p>
+          </div>
 
           {/* Notificación de error si existe */}
           {error && (

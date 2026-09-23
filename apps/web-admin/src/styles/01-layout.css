@@ -46,42 +46,51 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 22px 20px;
+  padding: 20px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .app-brand-mark {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700));
-  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-primary-500, #6366f1), var(--color-primary-700, #4338ca));
+  color: #ffffff;
   font-weight: 800;
   font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
   letter-spacing: -0.5px;
+  flex-shrink: 0;
 }
 
 .app-brand-text {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
+.brand-title,
 .app-brand-text strong {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
+  color: #f8fafc !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
   letter-spacing: -0.3px;
-  line-height: 1.2;
+  line-height: 1.25;
+  white-space: nowrap;
 }
 
+.brand-subtitle,
 .app-brand-text span {
-  font-size: 12px;
-  color: var(--color-slate-400);
-  font-weight: 500;
+  color: #94a3b8 !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .sidebar-close-button {
@@ -177,20 +186,23 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
 .sidebar-version span {
-  font-size: 10.5px;
-  color: var(--color-slate-500);
+  font-size: 9.5px;
+  color: var(--text-muted, #64748b);
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.35px;
+  text-transform: uppercase;
+  line-height: 1.25;
 }
 
 .sidebar-version strong {
-  font-size: 12px;
-  color: var(--color-slate-400);
+  font-size: 11px;
+  color: var(--color-slate-400, #94a3b8);
   font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 /* App Main & Top Header */
@@ -202,20 +214,36 @@
   overflow-x: clip;
 }
 
+/* Encabezado fijo y 100% opaco */
+header.app-header,
 .app-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9999 !important; /* Prioridad absoluta de apilamiento */
+  width: 100% !important;
   height: 64px;
-  background: var(--bg-header);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  box-sizing: border-box;
   border-bottom: 1px solid var(--border-default);
+  /* Colores sólidos sin ninguna transparencia */
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="dark"] header.app-header,
+[data-theme="dark"] .app-header {
+  background-color: #111a2e !important;
+  box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Si el header contiene un div contenedor interno, forzar que herede o mantenga el fondo */
+.app-header > div,
+.app-header .header-inner,
+.app-header .header-content {
+  background-color: inherit;
 }
 
 .header-left {
@@ -467,6 +495,7 @@
   max-width: 1440px;
   margin: 0 auto;
   width: 100%;
+  position: relative;
 }
 
 /* Responsive Mobile Layout */
@@ -482,7 +511,7 @@
     max-width: 85vw;
     transform: translateX(-100%);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-    z-index: 50;
+    z-index: 10001 !important;
   }
 
   .app-sidebar.open {
@@ -507,7 +536,7 @@
     inset: 0;
     background: rgba(15, 23, 42, 0.65);
     backdrop-filter: blur(4px);
-    z-index: 45;
+    z-index: 10000 !important;
   }
 
   .app-header {

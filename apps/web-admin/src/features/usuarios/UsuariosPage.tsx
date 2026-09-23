@@ -552,11 +552,12 @@ export function UsuariosPage() {
                         {/* Menú flotante de acciones */}
                         {esMenuAbierto && (
                           <div
+                            className="dropdown-menu actions-dropdown context-menu"
                             style={{
                               position: "absolute",
                               right: 0,
                               top: "calc(100% + 4px)",
-                              background: "#ffffff",
+                              background: "var(--bg-surface-elevated, #ffffff)",
                               border: "1px solid var(--border-default)",
                               borderRadius: "var(--radius-md)",
                               boxShadow: "0 10px 25px -5px rgba(0,0,0,0.12), 0 0 1px rgba(0,0,0,0.1)",
@@ -572,6 +573,7 @@ export function UsuariosPage() {
                           >
                             <button
                               type="button"
+                              className="dropdown-item action-item"
                               onClick={() => {
                                 setMenuAbiertoId(null);
                                 abrirModalRol(u);
@@ -590,8 +592,6 @@ export function UsuariosPage() {
                                 color: "var(--text-primary)",
                                 transition: "background 0.15s ease",
                               }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-slate-100)")}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                             >
                               <ShieldIcon size={14} style={{ color: "var(--color-primary-600)" }} />
                               <span>Asignar / Cambiar Rol</span>
@@ -599,6 +599,7 @@ export function UsuariosPage() {
 
                             <button
                               type="button"
+                              className="dropdown-item action-item"
                               onClick={() => {
                                 setMenuAbiertoId(null);
                                 abrirModalReset(u);
@@ -617,8 +618,6 @@ export function UsuariosPage() {
                                 color: "var(--text-primary)",
                                 transition: "background 0.15s ease",
                               }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-slate-100)")}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                             >
                               <KeyIcon size={14} style={{ color: "var(--color-warning-600)" }} />
                               <span>Restablecer Clave</span>
@@ -628,6 +627,7 @@ export function UsuariosPage() {
 
                             <button
                               type="button"
+                              className={`dropdown-item action-item ${u.activo ? "danger action-item-danger" : ""}`}
                               onClick={() => {
                                 setMenuAbiertoId(null);
                                 handleToggleActivo(u);
@@ -646,8 +646,6 @@ export function UsuariosPage() {
                                 color: u.activo ? "var(--color-danger-700)" : "var(--color-success-700)",
                                 transition: "background 0.15s ease",
                               }}
-                              onMouseEnter={(e) => (e.currentTarget.style.background = u.activo ? "var(--color-danger-50)" : "var(--color-success-50)")}
-                              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
                             >
                               <UserCheckIcon size={14} />
                               <span>{u.activo ? "Desactivar Colaborador" : "Activar Colaborador"}</span>
@@ -921,7 +919,7 @@ export function UsuariosPage() {
                   />
                 </div>
 
-                <div style={{ background: "var(--color-slate-50)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", padding: "10px 12px", fontSize: "11.5px", color: "var(--text-secondary)" }}>
+                <div style={{ background: "var(--bg-muted, rgba(255, 255, 255, 0.04))", border: "1px solid var(--border-default)", borderRadius: "var(--radius-md)", padding: "10px 12px", fontSize: "11.5px", color: "var(--text-secondary)" }}>
                   La contraseña debe tener al menos 8 caracteres e incluir mayúsculas, minúsculas, números y un símbolo.
                 </div>
               </div>

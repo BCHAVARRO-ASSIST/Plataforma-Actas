@@ -54,6 +54,8 @@ services:
     volumes:
       - storage_documentos:/app/storage/documentos
       - ./apps/api/Resources/google-credentials.json:/app/Resources/google-credentials.json:ro
+      - ./apps/api/Resources/assist-logo.png:/app/Resources/assist-logo.png:ro
+      - ./apps/api/Resources/andres-trujillo-signature.png:/app/Resources/andres-trujillo-signature.png:ro
     depends_on:
       db:
         condition: service_healthy

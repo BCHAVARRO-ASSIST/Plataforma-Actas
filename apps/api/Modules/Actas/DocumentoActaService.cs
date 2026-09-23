@@ -64,20 +64,57 @@ public sealed class DocumentoActaService : IDocumentoActaService
     private readonly PlataformaActasDbContext _context;
     private readonly IFileStorageProvider _fileStorageProvider;
 
-    // 1. CACHÉ EN MEMORIA DEL LOGOTIPO CORPORATIVO (0 I/O recurrente)
-    private static readonly Lazy<byte[]?> CachedLogo = new(() =>
+    // 1. CARGA MULTI-CAPA Y CACHÉ EN MEMORIA DE ACTIVOS INSTITUCIONALES (LOGO Y FIRMA DE SOPORTE)
+    private static byte[]? LoadAssetBytes(string filename)
     {
-        var logoPath = Path.Combine(AppContext.BaseDirectory, "Resources", "assist-logo.png");
-        if (File.Exists(logoPath))
+        // Capa 1: AppContext.BaseDirectory / Resources
+        try
         {
-            try
-            {
-                return File.ReadAllBytes(logoPath);
-            }
-            catch { /* Fallback a texto vectorial si el archivo no está accesible */ }
+            var p1 = Path.Combine(AppContext.BaseDirectory, "Resources", filename);
+            if (File.Exists(p1)) return File.ReadAllBytes(p1);
         }
+        catch { }
+
+        // Capa 2: Directory.GetCurrentDirectory() / Resources
+        try
+        {
+            var p2 = Path.Combine(Directory.GetCurrentDirectory(), "Resources", filename);
+            if (File.Exists(p2)) return File.ReadAllBytes(p2);
+        }
+        catch { }
+
+        // Capa 3: Directory.GetCurrentDirectory() / apps / api / Resources
+        try
+        {
+            var p3 = Path.Combine(Directory.GetCurrentDirectory(), "apps", "api", "Resources", filename);
+            if (File.Exists(p3)) return File.ReadAllBytes(p3);
+        }
+        catch { }
+
+        // Capa 4: EmbeddedResource compilado directamente en el ensamblado (resiliencia absoluta en contenedores)
+        try
+        {
+            var assembly = typeof(DocumentoActaService).Assembly;
+            var resourceName = assembly.GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith(filename, StringComparison.OrdinalIgnoreCase));
+            if (resourceName != null)
+            {
+                using var stream = assembly.GetManifestResourceStream(resourceName);
+                if (stream != null)
+                {
+                    using var ms = new MemoryStream();
+                    stream.CopyTo(ms);
+                    return ms.ToArray();
+                }
+            }
+        }
+        catch { }
+
         return null;
-    });
+    }
+
+    private static readonly Lazy<byte[]?> CachedLogo = new(() => LoadAssetBytes("assist-logo.png"));
+    private static readonly Lazy<byte[]?> CachedSoporteSignature = new(() => LoadAssetBytes("andres-trujillo-signature.png"));
 
     // 2. ZONA HORARIA OFICIAL COLOMBIA (UTC-5)
     private static readonly TimeZoneInfo ColombiaTimeZone = ResolveColombiaTimeZone();
@@ -130,7 +167,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
     public byte[] GenerarPdfBytes(ActaDetailResponse acta)
     {
         var data = ParseAssistData(acta.FormDataJson, acta);
-        var signatureImageBytes = ParseSignature(acta.SignatureDataJson);
+        var (colaboradorSignatureBytes, soporteSignatureBytes) = ParseSignaturePair(acta.SignatureDataJson);
 
         var isDevolucion = string.Equals(acta.TipoActa, "Devolución", StringComparison.OrdinalIgnoreCase) ||
                            string.Equals(acta.TipoActa, "Devolucion", StringComparison.OrdinalIgnoreCase);
@@ -183,18 +220,12 @@ public sealed class DocumentoActaService : IDocumentoActaService
                             {
                                 if (assistLogoBytes is { Length: > 0 })
                                 {
-                                    el.MaxHeight(32).Image(assistLogoBytes).FitArea();
+                                    el.MaxHeight(32).MaxWidth(160).Image(assistLogoBytes).FitArea();
                                 }
                                 else
                                 {
-                                    el.Row(logoRow =>
-                                    {
-                                        logoRow.AutoItem().Width(24).Height(24).Background(Colors.Red.Medium)
-                                            .AlignCenter().AlignMiddle().Text("A").Bold().FontColor(Colors.White).FontSize(13);
-
-                                        logoRow.AutoItem().PaddingLeft(6).AlignMiddle().Text("ASSIST")
-                                            .FontSize(15).Bold().FontColor(Colors.BlueGrey.Darken4);
-                                    });
+                                    el.AlignCenter().AlignMiddle().Text("ASSIST")
+                                        .FontSize(16).Bold().FontColor(Colors.BlueGrey.Darken4);
                                 }
                             });
 
@@ -432,12 +463,6 @@ public sealed class DocumentoActaService : IDocumentoActaService
                                 t.Span("ASSIST CONSULTORES DE SISTEMAS S.A ").Bold().FontSize(6.4f);
                                 t.Span("para que, previa investigación interna, se descuente el valor de los elementos de mi salario, prestaciones o liquidación final.").FontSize(6.4f);
                             });
-
-                            obsCol.Item().PaddingTop(3).Border(0.5f).BorderColor(Colors.Black).Padding(2.5f).Row(vRow =>
-                            {
-                                vRow.AutoItem().Text("Valor de los Elementos: ").Bold().FontSize(7.2f);
-                                vRow.RelativeItem().Text(data.ValorElementos).FontSize(7.2f);
-                            });
                         });
                     });
 
@@ -455,11 +480,27 @@ public sealed class DocumentoActaService : IDocumentoActaService
                                 er.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(3).Column(sc =>
                                 {
                                     sc.Item().Text("Entrega:").Bold().FontSize(6.8f);
-                                    sc.Item().Height(34).AlignMiddle().AlignCenter()
-                                        .Text("Andrés Trujillo").FontFamily("Courier").FontSize(9.5f).Bold().FontColor(Colors.Blue.Darken3);
+                                    if (!isDevolucion)
+                                    {
+                                        sc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
+                                        {
+                                            if (soporteSignatureBytes is { Length: > 0 })
+                                            {
+                                                el.MaxHeight(34).MaxWidth(130).Image(soporteSignatureBytes).FitArea();
+                                            }
+                                            else
+                                            {
+                                                el.Text("Andrés Trujillo").FontFamily("Courier").FontSize(9.5f).Bold().FontColor(Colors.Blue.Darken3);
+                                            }
+                                        });
+                                    }
+                                    else
+                                    {
+                                        sc.Item().Height(34);
+                                    }
                                     sc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                                    sc.Item().PaddingTop(2).Text("Nombre: Andrés Trujillo").FontSize(6.5f);
-                                    sc.Item().Text("Cargo: Mesa de ayuda").FontSize(6.5f);
+                                    sc.Item().PaddingTop(2).Text(!isDevolucion ? "Nombre: Andrés Trujillo" : "Nombre: _________________").FontSize(6.5f);
+                                    sc.Item().Text("Cargo: Ingeniero Soporte").FontSize(6.5f);
                                 });
 
                                 er.ConstantItem(5);
@@ -467,20 +508,30 @@ public sealed class DocumentoActaService : IDocumentoActaService
                                 er.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(3).Column(rc =>
                                 {
                                     rc.Item().Text("Recibe:").Bold().FontSize(6.8f);
-                                    rc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
+                                    if (!isDevolucion)
                                     {
-                                        if (signatureImageBytes is { Length: > 0 })
+                                        rc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
                                         {
-                                            el.Image(signatureImageBytes).FitArea();
-                                        }
-                                        else
-                                        {
-                                            el.Text("Pendiente de firma").FontSize(6.8f).Italic().FontColor(Colors.Grey.Medium);
-                                        }
-                                    });
-                                    rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                                    rc.Item().PaddingTop(2).Text($"Nombre: {nombreDestinatario}").Bold().FontSize(6.5f);
-                                    rc.Item().Text($"Cargo: {proyectoProceso}").FontSize(6.5f);
+                                            if (colaboradorSignatureBytes is { Length: > 0 })
+                                            {
+                                                el.MaxHeight(34).MaxWidth(130).Image(colaboradorSignatureBytes).FitArea();
+                                            }
+                                            else
+                                            {
+                                                el.Text("Pendiente de firma").FontSize(6.8f).Italic().FontColor(Colors.Grey.Medium);
+                                            }
+                                        });
+                                        rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                        rc.Item().PaddingTop(2).Text($"Nombre: {nombreDestinatario}").Bold().FontSize(6.5f);
+                                        rc.Item().Text($"Cargo: {proyectoProceso}").FontSize(6.5f);
+                                    }
+                                    else
+                                    {
+                                        rc.Item().Height(34);
+                                        rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                        rc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.5f);
+                                        rc.Item().Text("Cargo: _________________").FontSize(6.5f);
+                                    }
                                 });
                             });
                         });
@@ -488,17 +539,37 @@ public sealed class DocumentoActaService : IDocumentoActaService
                         signGrid.RelativeItem().PaddingLeft(6).Column(devCol =>
                         {
                             devCol.Item().Text("Firmas de Devolución:").Bold().FontSize(7.2f);
-                            devCol.Item().Text("Soporte recibe a conformidad:  Si [   ]   No [   ]").FontSize(6.5f);
+                            devCol.Item().Text(isDevolucion ? "Soporte recibe a conformidad:  Si [ X ]   No [   ]" : "Soporte recibe a conformidad:  Si [   ]   No [   ]").FontSize(6.5f);
 
                             devCol.Item().PaddingTop(2).Row(dr =>
                             {
                                 dr.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(3).Column(sc =>
                                 {
                                     sc.Item().Text("Entrega:").Bold().FontSize(6.8f);
-                                    sc.Item().Height(34);
-                                    sc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                                    sc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.5f);
-                                    sc.Item().Text("Cargo: _________________").FontSize(6.5f);
+                                    if (isDevolucion)
+                                    {
+                                        sc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
+                                        {
+                                            if (colaboradorSignatureBytes is { Length: > 0 })
+                                            {
+                                                el.MaxHeight(34).MaxWidth(130).Image(colaboradorSignatureBytes).FitArea();
+                                            }
+                                            else
+                                            {
+                                                el.Text("Pendiente de firma").FontSize(6.8f).Italic().FontColor(Colors.Grey.Medium);
+                                            }
+                                        });
+                                        sc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                        sc.Item().PaddingTop(2).Text($"Nombre: {nombreDestinatario}").Bold().FontSize(6.5f);
+                                        sc.Item().Text($"Cargo: {proyectoProceso}").FontSize(6.5f);
+                                    }
+                                    else
+                                    {
+                                        sc.Item().Height(34);
+                                        sc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                        sc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.5f);
+                                        sc.Item().Text("Cargo: _________________").FontSize(6.5f);
+                                    }
                                 });
 
                                 dr.ConstantItem(5);
@@ -506,10 +577,30 @@ public sealed class DocumentoActaService : IDocumentoActaService
                                 dr.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(3).Column(rc =>
                                 {
                                     rc.Item().Text("Recibe:").Bold().FontSize(6.8f);
-                                    rc.Item().Height(34);
-                                    rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                                    rc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.5f);
-                                    rc.Item().Text("Cargo: _________________").FontSize(6.5f);
+                                    if (isDevolucion)
+                                    {
+                                        rc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
+                                        {
+                                            if (soporteSignatureBytes is { Length: > 0 })
+                                            {
+                                                el.MaxHeight(34).MaxWidth(130).Image(soporteSignatureBytes).FitArea();
+                                            }
+                                            else
+                                            {
+                                                el.Text("Andrés Trujillo").FontFamily("Courier").FontSize(9.5f).Bold().FontColor(Colors.Blue.Darken3);
+                                            }
+                                        });
+                                        rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                        rc.Item().PaddingTop(2).Text("Nombre: Andrés Trujillo").FontSize(6.5f);
+                                        rc.Item().Text("Cargo: Ingeniero Soporte").FontSize(6.5f);
+                                    }
+                                    else
+                                    {
+                                        rc.Item().Height(34);
+                                        rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                        rc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.5f);
+                                        rc.Item().Text("Cargo: Ingeniero Soporte").FontSize(6.5f);
+                                    }
                                 });
                             });
                         });
@@ -759,70 +850,78 @@ public sealed class DocumentoActaService : IDocumentoActaService
     }
 
     /// <summary>
-    /// Extrae y valida rigurosamente la rúbrica manuscrita en Base64 verificando firmas mágicas binarias.
+    /// Decodifica una cadena Base64 o Data URI validando las firmas mágicas de cabecera binaria PNG o JPEG.
     /// </summary>
-    /// <param name="signatureDataJson">Payload JSON o cadena Data-URI con la imagen capturada en el canvas.</param>
-    /// <returns>Arreglo de bytes del gráfico validado o <c>null</c> si el contenido no es una imagen válida.</returns>
-    /// <remarks>
-    /// <para>
-    /// <b>Defensa en Profundidad y Verificación de Cabeceras Mágicas:</b>
-    /// Por seguridad y estabilidad del renderizador de documentos, no basta con decodificar Base64.
-    /// Se valida que la carga útil posea al menos 64 bytes (descartando trazos vacíos) y que sus primeros bytes
-    /// correspondan inequívocamente a los números mágicos de formato PNG (<c>0x89 50 4E 47</c>) o JPEG (<c>0xFF D8</c>).
-    /// Esto previene excepciones de renderizado en QuestPDF o inyecciones de payloads arbitrarios.
-    /// </para>
-    /// </remarks>
-    private static byte[]? ParseSignature(string? signatureDataJson)
+    private static byte[]? ExtractBytesFromBase64(string? raw)
     {
-        if (string.IsNullOrWhiteSpace(signatureDataJson))
-        {
-            return null;
-        }
+        if (string.IsNullOrWhiteSpace(raw)) return null;
 
         try
         {
-            using var doc = JsonDocument.Parse(signatureDataJson);
-            var root = doc.RootElement;
-
-            string? base64 = null;
-            if (root.TryGetProperty("firma", out var firmaProp) && firmaProp.ValueKind == JsonValueKind.String)
-            {
-                base64 = firmaProp.GetString();
-            }
-            else if (root.TryGetProperty("signature", out var sigProp) && sigProp.ValueKind == JsonValueKind.String)
-            {
-                base64 = sigProp.GetString();
-            }
-
-            if (string.IsNullOrWhiteSpace(base64))
-            {
-                return null;
-            }
-
-            var commaIndex = base64.IndexOf(',');
-            if (commaIndex >= 0)
-            {
-                base64 = base64[(commaIndex + 1)..];
-            }
+            var commaIndex = raw.IndexOf(',');
+            var base64 = commaIndex >= 0 ? raw[(commaIndex + 1)..] : raw;
+            base64 = base64.Trim();
 
             var bytes = Convert.FromBase64String(base64);
+            if (bytes.Length < 64) return null;
 
-            // Mínimo de bytes para evitar artefactos vacíos o rotos
-            if (bytes.Length < 64)
-            {
-                return null;
-            }
-
-            // Validar cabecera mágica PNG (0x89 0x50 0x4E 0x47) o JPEG (0xFF 0xD8)
             var isPng = bytes.Length > 4 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47;
             var isJpeg = bytes.Length > 2 && bytes[0] == 0xFF && bytes[1] == 0xD8;
-
             return (isPng || isJpeg) ? bytes : null;
         }
         catch
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Extrae las rúbricas digitales del colaborador y del ingeniero de soporte desde el payload del acta.
+    /// Si la firma de soporte no está en el payload, inyecta la firma institucional registrada de Andrés Trujillo.
+    /// </summary>
+    private static (byte[]? Colaborador, byte[]? Soporte) ParseSignaturePair(string? signatureDataJson)
+    {
+        byte[]? colaboradorBytes = null;
+        byte[]? soporteBytes = null;
+
+        if (!string.IsNullOrWhiteSpace(signatureDataJson))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(signatureDataJson);
+                var root = doc.RootElement;
+
+                // 1. Firma del colaborador
+                if (root.TryGetProperty("firma", out var f1) && f1.ValueKind == JsonValueKind.String)
+                    colaboradorBytes = ExtractBytesFromBase64(f1.GetString());
+                else if (root.TryGetProperty("signature", out var f2) && f2.ValueKind == JsonValueKind.String)
+                    colaboradorBytes = ExtractBytesFromBase64(f2.GetString());
+                else if (root.TryGetProperty("firmaDigital", out var f3) && f3.ValueKind == JsonValueKind.String)
+                    colaboradorBytes = ExtractBytesFromBase64(f3.GetString());
+                else if (root.TryGetProperty("firmaUsuario", out var f4) && f4.ValueKind == JsonValueKind.String)
+                    colaboradorBytes = ExtractBytesFromBase64(f4.GetString());
+                else if (root.TryGetProperty("signatureBase64", out var f5) && f5.ValueKind == JsonValueKind.String)
+                    colaboradorBytes = ExtractBytesFromBase64(f5.GetString());
+
+                // 2. Firma de soporte en JSON si existe
+                if (root.TryGetProperty("firmaSoporte", out var s1) && s1.ValueKind == JsonValueKind.String)
+                    soporteBytes = ExtractBytesFromBase64(s1.GetString());
+                else if (root.TryGetProperty("signatureSoporte", out var s2) && s2.ValueKind == JsonValueKind.String)
+                    soporteBytes = ExtractBytesFromBase64(s2.GetString());
+                else if (root.TryGetProperty("firmaIngeniero", out var s3) && s3.ValueKind == JsonValueKind.String)
+                    soporteBytes = ExtractBytesFromBase64(s3.GetString());
+            }
+            catch
+            {
+                // Si no es JSON válido, verificar si es un string raw Base64 / data-URI
+                colaboradorBytes = ExtractBytesFromBase64(signatureDataJson);
+            }
+        }
+
+        // Si la firma de soporte no vino en el payload del acta, inyectar la firma registrada oficial de Andrés Trujillo
+        soporteBytes ??= CachedSoporteSignature.Value;
+
+        return (colaboradorBytes, soporteBytes);
     }
 
     private static string SanitizeFileName(string fileName)

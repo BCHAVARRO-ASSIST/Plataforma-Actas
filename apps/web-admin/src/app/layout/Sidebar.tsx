@@ -42,8 +42,8 @@ export function Sidebar({
           <div className="app-brand-mark">PA</div>
 
           <div className="app-brand-text">
-            <strong>Plataforma</strong>
-            <span>de Actas</span>
+            <span className="brand-title">Plataforma de Actas</span>
+            <span className="brand-subtitle">Assist Consultores</span>
           </div>
 
           {onClose && (
@@ -79,9 +79,9 @@ export function Sidebar({
           ))}
         </nav>
 
-        {/* Footer */}
+        {/* Footer Institucional */}
         <div className="sidebar-version">
-          <span>PLATAFORMA DE ACTAS</span>
+          <span>ASSIST CONSULTORES DE SISTEMAS S.A.</span>
           <strong>v2.0 · Enterprise</strong>
         </div>
       </aside>

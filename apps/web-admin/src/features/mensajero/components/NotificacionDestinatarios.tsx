@@ -123,6 +123,7 @@ export function NotificacionDestinatarios({
 
       {/* Correo Principal Informativo */}
       <div
+        className="notification-recipient-box recipient-field"
         style={{
           display: "flex",
           alignItems: "center",
@@ -192,32 +193,14 @@ export function NotificacionDestinatarios({
               {emails.map((email) => (
                 <span
                   key={email}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    padding: "3px 8px",
-                    backgroundColor: "var(--bg-hover, #f1f5f9)",
-                    border: "1px solid var(--border-default, #cbd5e1)",
-                    borderRadius: "14px",
-                    fontSize: "12px",
-                    color: "var(--text-primary)",
-                  }}
+                  className="email-chip email-tag recipient-badge"
                 >
                   <span>{email}</span>
                   {!disabled && (
                     <button
                       type="button"
+                      className="email-chip-remove email-tag-remove"
                       onClick={() => handleRemoveEmail(email)}
-                      style={{
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        padding: "0 2px",
-                        fontSize: "14px",
-                        lineHeight: 1,
-                        color: "var(--text-muted)",
-                      }}
                       title="Quitar destinatario"
                     >
                       &times;

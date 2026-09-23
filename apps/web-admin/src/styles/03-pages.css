@@ -101,28 +101,29 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
+.login-header,
 .auth-header {
   text-align: center;
-  margin-bottom: 26px;
 }
 
-.auth-logo {
-  width: 52px;
-  height: 52px;
+.login-product-badge {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px auto;
   border-radius: 14px;
-  background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-  color: #ffffff;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 16px;
-  box-shadow: 0 10px 25px -4px rgba(79, 70, 229, 0.48), inset 0 1px 1px rgba(255, 255, 255, 0.35);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  color: #ffffff;
+  box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease;
 }
 
-.auth-card-wrapper:hover .auth-logo {
-  transform: scale(1.06) translateY(-2px);
-  box-shadow: 0 14px 28px -4px rgba(79, 70, 229, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+.login-product-icon {
+  width: 28px;
+  height: 28px;
 }
 
 .auth-theme-toggle-slot {
@@ -132,12 +133,29 @@
   z-index: 50;
 }
 
+.login-title,
 .auth-title {
-  font-size: 21px;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.4px;
-  margin: 0 0 8px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.login-subtitle {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0 0 24px 0;
+}
+
+[data-theme="dark"] .login-title,
+[data-theme="dark"] .auth-title {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .login-subtitle {
+  color: #94a3b8;
 }
 
 .auth-badge {
@@ -1557,7 +1575,7 @@
   position: fixed;
   inset: 0;
   background: var(--bg-app);
-  z-index: 1200;
+  z-index: 20000;
   overflow-y: auto;
   padding: 24px 16px;
   display: flex;
@@ -1949,5 +1967,83 @@
     padding: 24px 16px;
   }
 }
+
+/* ==========================================================================
+   DARK MODE OVERRIDES - ACTAS & DETAIL VIEW
+   ========================================================================== */
+
+[data-theme="dark"] .acta-detail-hero,
+[data-theme="dark"] .detail-header-card,
+[data-theme="dark"] .page-hero-card,
+[data-theme="dark"] .acta-detail-header {
+  background: var(--bg-surface-elevated, #18233c) !important;
+  background-image: none !important;
+  border: 1px solid var(--border-default, #1e2e4a) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .acta-detail-hero h1,
+[data-theme="dark"] .page-hero-card h1,
+[data-theme="dark"] .acta-header-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .acta-detail-hero p,
+[data-theme="dark"] .page-hero-card p,
+[data-theme="dark"] .acta-header-subtitle {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .detail-card::before,
+[data-theme="dark"] .info-card::before,
+[data-theme="dark"] .acta-detail-card::before,
+[data-theme="dark"] .card-glow-overlay {
+  display: none !important;
+  background: none !important;
+}
+
+[data-theme="dark"] .detail-card,
+[data-theme="dark"] .info-card,
+[data-theme="dark"] .acta-detail-card {
+  background: var(--bg-surface, #111a2e) !important;
+  border: 1px solid var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .detail-card-header,
+[data-theme="dark"] .info-card-header,
+[data-theme="dark"] .acta-card-header {
+  background: transparent !important;
+  background-image: none !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .acta-info-item {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .acta-observation {
+  background: rgba(30, 41, 59, 0.4) !important;
+  color: var(--text-secondary, #94a3b8) !important;
+}
+
+[data-theme="dark"] .acta-signature-card {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .badge-devolucion,
+[data-theme="dark"] .badge-tipo-acta {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-theme="dark"] .badge-tipo-acta:not(.badge-devolucion) {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.35) !important;
+}
+
 
 

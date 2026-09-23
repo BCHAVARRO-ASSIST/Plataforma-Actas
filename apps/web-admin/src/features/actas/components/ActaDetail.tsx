@@ -251,17 +251,15 @@ export function ActaDetail({
 
         <div className="acta-topbar-meta">
           <span
+            className={`badge-tipo-acta ${acta.tipoActa === "Devolución" ? "badge-devolucion" : ""}`}
             style={{
               fontSize: "12px",
               fontWeight: 600,
-              color: "var(--text-muted)",
-              background: "var(--color-slate-100)",
               padding: "4px 10px",
               borderRadius: "var(--radius-pill)",
-              border: "1px solid var(--border-default)",
             }}
           >
-            Tipo: <strong style={{ color: "var(--text-primary)" }}>{acta.tipoActa}</strong>
+            Tipo: <strong>{acta.tipoActa}</strong>
           </span>
         </div>
       </div>
@@ -285,7 +283,7 @@ export function ActaDetail({
           ENCABEZADO HERO
       ================================================== */}
 
-      <div className="acta-detail-header">
+      <div className="acta-detail-header acta-detail-hero detail-header-card page-hero-card">
         <div className="acta-header-info">
           <span className="acta-header-eyebrow">
             <span className="acta-header-eyebrow-dot" />
@@ -404,8 +402,8 @@ export function ActaDetail({
             TARJETA 1: INFORMACIÓN DEL ACTA
         ================================================== */}
 
-        <section className="acta-detail-card">
-          <div className="acta-card-header">
+        <section className="acta-detail-card detail-card info-card">
+          <div className="acta-card-header detail-card-header info-card-header">
             <div className="acta-card-title-group">
               <div className="acta-card-icon-wrap acta-icon-blue">
                 <ActaIcon size={18} />
@@ -473,17 +471,7 @@ export function ActaDetail({
               <span>Tipo de Acta</span>
               <strong>
                 <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "5px",
-                    background: acta.tipoActa === "Entrega" ? "var(--color-primary-50)" : "#fffbeb",
-                    color: acta.tipoActa === "Entrega" ? "var(--color-primary-700)" : "#b45309",
-                    padding: "2px 8px",
-                    borderRadius: "var(--radius-sm)",
-                    fontSize: "12.5px",
-                    fontWeight: 700,
-                  }}
+                  className={`badge-tipo-acta ${acta.tipoActa === "Devolución" ? "badge-devolucion" : ""}`}
                 >
                   {acta.tipoActa}
                 </span>
@@ -579,8 +567,8 @@ export function ActaDetail({
             TARJETA 2: EQUIPO ASOCIADO
         ================================================== */}
 
-        <section className="acta-detail-card">
-          <div className="acta-card-header">
+        <section className="acta-detail-card detail-card info-card">
+          <div className="acta-card-header detail-card-header info-card-header">
             <div className="acta-card-title-group">
               <div className="acta-card-icon-wrap acta-icon-teal">
                 <EquipmentIcon size={18} />
@@ -692,8 +680,8 @@ export function ActaDetail({
             TARJETA 3: OBSERVACIONES
         ================================================== */}
 
-        <section className="acta-detail-card acta-detail-full">
-          <div className="acta-card-header">
+        <section className="acta-detail-card detail-card info-card acta-detail-full">
+          <div className="acta-card-header detail-card-header info-card-header">
             <div className="acta-card-title-group">
               <div className="acta-card-icon-wrap acta-icon-purple">
                 <ActaIcon size={18} />
@@ -721,8 +709,8 @@ export function ActaDetail({
             (Sección de SHA-256 e ISO eliminada conforme a solicitud)
         ================================================== */}
 
-        <section className="acta-detail-card acta-detail-full">
-          <div className="acta-card-header">
+        <section className="acta-detail-card detail-card info-card acta-detail-full">
+          <div className="acta-card-header detail-card-header info-card-header">
             <div className="acta-card-title-group">
               <div className="acta-card-icon-wrap acta-icon-emerald">
                 <DocumentPdfIcon size={20} />
@@ -902,7 +890,7 @@ export function ActaDetail({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 9999,
+            zIndex: 20000,
             padding: "20px",
             animation: "actaFadeIn 0.2s ease",
           }}

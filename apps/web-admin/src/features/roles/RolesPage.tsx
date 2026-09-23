@@ -610,10 +610,10 @@ export function RolesPage() {
             </div>
 
             <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "20px 24px" }}>
-              <p style={{ fontSize: "13.5px", color: "var(--text-primary)", margin: 0, lineHeight: 1.5 }}>
+              <p className="modal-confirm-text" style={{ fontSize: "13.5px", color: "var(--text-primary)", margin: 0, lineHeight: 1.5 }}>
                 ¿Estás seguro de que deseas eliminar permanentemente el rol <strong>"{rolAEliminar.nombre}"</strong>?
               </p>
-              <div style={{ background: "var(--color-warning-50)", border: "1px solid var(--color-warning-200)", borderRadius: "var(--radius-md)", padding: "12px", fontSize: "12px", color: "var(--color-warning-900)" }}>
+              <div className="alert-warning rbac-warning notice-box" style={{ background: "var(--color-warning-50)", border: "1px solid var(--color-warning-200)", borderRadius: "var(--radius-md)", padding: "12px", fontSize: "12px", color: "var(--color-warning-900)" }}>
                 <strong>Regla de integridad RBAC:</strong> Si este rol tiene usuarios asociados actualmente, el sistema rechazará la eliminación para no dejar usuarios sin permisos. Primero deberás reasignar sus colaboradores a otro rol.
               </div>
             </div>
@@ -657,7 +657,7 @@ export function RolesPage() {
 
             <form onSubmit={handleGuardarPermisos} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
               {/* Barra de estado y acciones rápidas */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px", background: "var(--color-slate-100)", borderBottom: "1px solid var(--border-default)", flexWrap: "wrap", gap: "10px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px", background: "var(--bg-muted, var(--color-slate-100))", borderBottom: "1px solid var(--border-default)", flexWrap: "wrap", gap: "10px" }}>
                 <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
                   Asignados: <strong style={{ color: "var(--color-primary-700)" }}>{permisosSeleccionados.length}</strong> de <strong>{permisos.length}</strong> permisos disponibles
                 </span>
@@ -682,6 +682,7 @@ export function RolesPage() {
               <div className="modal-body" style={{ flex: 1, overflowY: "auto", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                 {rolPermisosSeleccionado?.nombre.toLowerCase().includes("admin") && (
                   <div
+                    className="alert-warning rbac-warning notice-box"
                     style={{
                       background: "var(--color-warning-50)",
                       border: "1px solid var(--color-warning-200)",
@@ -712,8 +713,9 @@ export function RolesPage() {
                     return (
                       <div
                         key={modulo}
+                        className="rbac-card permission-group-card"
                         style={{
-                          background: "#ffffff",
+                          background: "var(--bg-card, var(--bg-surface))",
                           border: "1px solid var(--border-default)",
                           borderRadius: "var(--radius-lg)",
                           padding: "16px 18px",
@@ -767,12 +769,13 @@ export function RolesPage() {
                             return (
                               <label
                                 key={p.id}
+                                className={`permission-box ${checked ? (esCritico ? "is-critico" : "is-checked") : ""}`}
                                 style={{
                                   display: "flex",
                                   alignItems: "flex-start",
                                   gap: "10px",
                                   padding: "10px 12px",
-                                  background: checked ? (esCritico ? "var(--color-warning-50)" : "var(--color-primary-50)") : "#ffffff",
+                                  background: checked ? (esCritico ? "var(--color-warning-50)" : "var(--color-primary-50)") : "var(--bg-surface, #ffffff)",
                                   border: `1.5px solid ${checked ? (esCritico ? "var(--color-warning-400)" : "var(--color-primary-500)") : "var(--border-default)"}`,
                                   borderRadius: "var(--radius-md)",
                                   cursor: esCritico ? "not-allowed" : "pointer",

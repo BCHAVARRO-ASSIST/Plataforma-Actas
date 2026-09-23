@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -48,9 +49,9 @@ export const Modal: React.FC<ModalProps> = ({
       ? contentClassName
       : `modal-content ${sizeClass} ${contentClassName}`.trim();
 
-  return (
+  const modalElement = (
     <div
-      className={`modal-backdrop ${className}`.trim()}
+      className={`modal-backdrop modal-overlay ${className}`.trim()}
       style={backdropStyle}
       onClick={closeOnBackdrop ? onClose : undefined}
       role="dialog"
@@ -66,4 +67,8 @@ export const Modal: React.FC<ModalProps> = ({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined"
+    ? createPortal(modalElement, document.body)
+    : modalElement;
 };

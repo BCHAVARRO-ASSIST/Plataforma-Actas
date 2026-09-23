@@ -628,37 +628,43 @@
 }
 
 /* 7. MODALS */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+.modal-backdrop,
+.modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 20000 !important; /* Por encima de app-header y sidebar */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
-  z-index: 1000;
+  padding: 24px;
+  overflow-y: auto;
   animation: fadeIn 180ms ease-out;
 }
 
-.modal-content {
-  background: var(--bg-surface);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.15);
+.modal-content,
+.modal-dialog,
+.acta-preview-modal {
+  position: relative !important;
+  z-index: 20001 !important;
   width: 100%;
-  max-width: 580px;
-  max-height: min(92vh, 850px);
+  max-width: 900px;
+  max-height: 92vh;
+  background-color: var(--bg-surface, #ffffff);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
   animation: modalSpringIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  position: relative;
 }
 
 .modal-content.large {
-  max-width: 860px;
+  max-width: 900px;
 }
 
 .modal-content.small {
@@ -719,8 +725,9 @@
   border-color: var(--border-default);
 }
 
-.modal-body {
-  padding: 22px 24px;
+.modal-body,
+.acta-preview-body {
+  padding: 24px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -988,7 +995,353 @@
 }
 
 /* ==========================================================================
-   8. RESPONSIVE COMPONENT RULES (MOBILE & TABLET)
+   8. DARK MODE STANDARDIZATION & COMPONENT OVERRIDES
+   ========================================================================== */
+
+/* 8.1 Contenedores Centrales de Modales */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-dialog,
+[data-theme="dark"] .modal-body,
+[data-theme="dark"] .form-section-body,
+[data-theme="dark"] .form-container {
+  background-color: var(--bg-surface, #111a2e) !important;
+  color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+  background-color: var(--bg-surface, #111a2e) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+  color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .form-section-card {
+  background-color: var(--bg-surface-elevated, #18233c) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+  color: var(--text-primary, #f8fafc) !important;
+}
+
+[data-theme="dark"] .form-section-tinted {
+  background-color: rgba(24, 35, 60, 0.6) !important;
+}
+
+/* 8.2 Menús Flotantes y Dropdowns */
+.dropdown-menu,
+.actions-dropdown,
+.context-menu {
+  background-color: var(--bg-surface-elevated, #ffffff);
+  border: 1px solid var(--border-default, #e2e8f0);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.1);
+  z-index: 60;
+  min-width: 190px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.dropdown-item,
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-item:hover,
+.action-item:hover {
+  background-color: var(--bg-surface-hover, var(--color-slate-100));
+}
+
+.dropdown-item.danger,
+.action-item-danger {
+  color: var(--color-danger-600) !important;
+}
+
+.dropdown-item.danger:hover,
+.action-item-danger:hover {
+  background-color: var(--color-danger-50) !important;
+}
+
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .actions-dropdown,
+[data-theme="dark"] .context-menu {
+  background-color: var(--bg-surface-elevated, #1e293b) !important;
+  border: 1px solid var(--border-color, #334155) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .dropdown-item,
+[data-theme="dark"] .action-item {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .action-item:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .dropdown-item.danger,
+[data-theme="dark"] .action-item-danger {
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .dropdown-item.danger:hover,
+[data-theme="dark"] .action-item-danger:hover {
+  background-color: rgba(244, 63, 94, 0.18) !important;
+}
+
+/* 8.3 Matriz RBAC y Tarjetas de Permisos */
+.rbac-card,
+.permission-group-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.permission-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background-color: var(--bg-surface);
+  border: 1.5px solid var(--border-default);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.permission-box label,
+.permission-box span {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .rbac-card,
+[data-theme="dark"] .permission-box,
+[data-theme="dark"] .permission-group-card {
+  background-color: rgba(30, 41, 59, 0.7) !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .permission-box label,
+[data-theme="dark"] .permission-box span {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .permission-box.is-checked {
+  background-color: rgba(99, 102, 241, 0.18) !important;
+  border-color: var(--color-primary-400, #818cf8) !important;
+}
+
+[data-theme="dark"] .permission-box.is-critico {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+
+/* 8.4 Banners de Alerta y Reglas de Integridad */
+.alert-warning,
+.rbac-warning,
+.notice-box {
+  background-color: var(--color-warning-50);
+  border: 1px solid var(--color-warning-200);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  color: var(--color-warning-900);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+[data-theme="dark"] .alert-warning,
+[data-theme="dark"] .rbac-warning,
+[data-theme="dark"] .notice-box {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  color: #fcd34d !important;
+}
+
+[data-theme="dark"] .modal-confirm-text {
+  color: #cbd5e1 !important;
+}
+
+/* 8.5 Campos de Notificación y Badges en Formulario de Firma */
+.notification-recipient-box,
+.recipient-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--bg-surface);
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+  font-size: 12px;
+}
+
+[data-theme="dark"] .notification-recipient-box,
+[data-theme="dark"] .recipient-field {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* Estilo base del Chip de Correo */
+.email-tag,
+.recipient-badge,
+.email-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background-color: var(--bg-surface-elevated, #e2e8f0);
+  color: var(--text-primary, #1e293b);
+  border: 1px solid var(--border-color, #cbd5e1);
+  transition: all 0.15s ease;
+}
+
+/* Ajuste específico para Dark Mode */
+[data-theme="dark"] .email-tag,
+[data-theme="dark"] .recipient-badge,
+[data-theme="dark"] .email-chip {
+  background-color: rgba(30, 41, 59, 0.85) !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+/* Botón de eliminar (X) */
+.email-tag-remove,
+.email-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  margin-left: 2px;
+  border-radius: 50%;
+  padding: 2px;
+  line-height: 1;
+}
+
+.email-tag-remove:hover,
+.email-chip-remove:hover {
+  color: #f87171 !important;
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+/* 8.6 Vista Detalle del Acta (Banner Hero, Tarjetas y Badges) */
+.badge-tipo-acta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 12.5px;
+  font-weight: 700;
+  background-color: var(--color-primary-50, #eff6ff);
+  color: var(--color-primary-700, #1d4ed8);
+  border: 1px solid var(--color-primary-200, #bfdbfe);
+  transition: all 0.15s ease;
+}
+
+.badge-tipo-acta.badge-devolucion {
+  background-color: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+[data-theme="dark"] .acta-detail-hero,
+[data-theme="dark"] .detail-header-card,
+[data-theme="dark"] .page-hero-card,
+[data-theme="dark"] .acta-detail-header {
+  background: var(--bg-surface-elevated, #18233c) !important;
+  background-image: none !important;
+  border: 1px solid var(--border-default, #1e2e4a) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .acta-detail-hero h1,
+[data-theme="dark"] .page-hero-card h1,
+[data-theme="dark"] .acta-header-title {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .acta-detail-hero p,
+[data-theme="dark"] .page-hero-card p,
+[data-theme="dark"] .acta-header-subtitle {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .detail-card::before,
+[data-theme="dark"] .info-card::before,
+[data-theme="dark"] .acta-detail-card::before,
+[data-theme="dark"] .card-glow-overlay {
+  display: none !important;
+  background: none !important;
+}
+
+[data-theme="dark"] .detail-card,
+[data-theme="dark"] .info-card,
+[data-theme="dark"] .acta-detail-card {
+  background: var(--bg-surface, #111a2e) !important;
+  border: 1px solid var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .detail-card-header,
+[data-theme="dark"] .info-card-header,
+[data-theme="dark"] .acta-card-header {
+  background: transparent !important;
+  background-image: none !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .acta-info-item {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .acta-observation {
+  background: rgba(30, 41, 59, 0.4) !important;
+  color: var(--text-secondary, #94a3b8) !important;
+}
+
+[data-theme="dark"] .acta-signature-card {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .badge-devolucion,
+[data-theme="dark"] .badge-tipo-acta {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-theme="dark"] .badge-tipo-acta:not(.badge-devolucion) {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(59, 130, 246, 0.35) !important;
+}
+
+/* ==========================================================================
+   9. RESPONSIVE COMPONENT RULES (MOBILE & TABLET)
    ========================================================================== */
 
 /* Utility class for 2-column responsive form grids */

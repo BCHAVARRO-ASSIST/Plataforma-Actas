@@ -20,6 +20,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
   if (!isOpen) return null;
 
   const equipo = acta.equipo;
+  const isDevolucion = acta.tipoActa === "Devolución" || acta.tipoActa?.toLowerCase().includes("devoluci");
 
   // Extraer firma en base64
   let signatureImage: string | null = null;
@@ -101,42 +102,48 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
       isOpen={isOpen}
       onClose={onClose}
       size="custom"
+      className="modal-overlay"
+      contentClassName="modal-dialog acta-preview-modal"
       backdropStyle={{
-        background: "rgba(15, 23, 42, 0.8)",
-        backdropFilter: "blur(6px)",
+        backgroundColor: "rgba(15, 23, 42, 0.75)",
+        backdropFilter: "blur(4px)",
+        WebkitBackdropFilter: "blur(4px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 99999,
-        padding: "16px",
+        zIndex: 20000,
+        padding: "24px",
       }}
       contentStyle={{
         background: "#ffffff",
-        borderRadius: "16px",
+        borderRadius: "12px",
         width: "100%",
-        maxWidth: "960px",
-        height: "92vh",
+        maxWidth: "900px",
+        maxHeight: "92vh",
         display: "flex",
         flexDirection: "column",
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
         overflow: "hidden",
+        position: "relative",
+        zIndex: 20001,
       }}
     >
       {/* BARRA DE HERRAMIENTAS SUPERIOR (NO SE IMPRIME) */}
       <div
-        className="no-print"
-          style={{
-            padding: "14px 24px",
-            background: "#0f172a",
-            color: "#ffffff",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderBottom: "1px solid #334155",
-            flexWrap: "wrap",
-            gap: "12px",
-          }}
-        >
+        className="no-print modal-header acta-preview-header"
+        style={{
+          padding: "14px 24px",
+          background: "#0f172a",
+          color: "#ffffff",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          borderBottom: "1px solid #334155",
+          flexWrap: "wrap",
+          gap: "12px",
+          flexShrink: 0,
+        }}
+      >
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(99, 102, 241, 0.2)", color: "#818cf8", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <DocumentPdfIcon size={20} />
@@ -200,7 +207,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
         </div>
 
         {/* CUERPO DEL MODAL (DOCUMENTO OFICIAL SOBRE ESCRITORIO DIGITAL) */}
-        <div style={{ flex: 1, overflowY: "auto", background: "#f1f5f9", padding: "24px 16px" }}>
+        <div className="modal-body acta-preview-body" style={{ flex: 1, overflowY: "auto", background: "#f1f5f9", padding: "24px" }}>
           <div
             ref={printRef}
             style={{
@@ -534,12 +541,9 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                   <p style={{ margin: "0 0 4px 0" }}>
                     Reconozco que estos elementos son propiedad de <strong>ASSIST CONSULTORES DE SISTEMAS S.A</strong> y que han sido entregados para el desarrollo de mis funciones laborales. Me comprometo a mantener en buen estado y hacer uso adecuado de dichos elementos.
                   </p>
-                  <p style={{ margin: "0 0 4px 0" }}>
+                  <p style={{ margin: "0 0 6px 0" }}>
                     En caso de la no devolución, pérdida, hurto fuera de las instalaciones del cliente, oficina u hogar de los elementos entregados, daño o deterioro que no sea atribuible al desgaste normal por el uso, autorizo expresamente a <strong>ASSIST CONSULTORES DE SISTEMAS S.A</strong> para que, después de realizar una investigación interna que determine mi responsabilidad, se proceda a realizar el descuento correspondiente del valor de los elementos de mi salario, prestaciones sociales, liquidación final de prestaciones, o cualquier otro pago que me deba la empresa.
                   </p>
-                  <div style={{ border: "1px solid #0f172a", padding: "4px 8px", margin: "5px 0", fontWeight: 700, fontSize: "9.5px", background: "#ffffff" }}>
-                    Valor de los Elementos: $ 3.500.000 COP (Valor estimado en inventario)
-                  </div>
                   <p style={{ margin: 0, fontSize: "8.5px", fontStyle: "italic", color: "#64748b" }}>
                     Esta autorización se hace en cumplimiento de las normas laborales vigentes y es válida durante el tiempo que dure mi relación laboral con ASSIST CONSULTORES DE SISTEMAS S.A. He sido informado y entiendo completamente las condiciones establecidas en esta cláusula.
                   </p>
@@ -559,27 +563,31 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                   <div style={{ border: "1px solid #e2e8f0", padding: "6px", textAlign: "center", borderRadius: "3px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Entrega:</div>
                     <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "cursive", fontSize: "15px", color: "#1e3a8a" }}>
-                      Andrés Trujillo
+                      {!isDevolucion ? "Andrés Trujillo" : ""}
                     </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>
-                      <div><strong>Nombre:</strong> Andrés Trujillo</div>
-                      <div><strong>Cargo:</strong> Mesa de ayuda</div>
+                      <div><strong>Nombre:</strong> {!isDevolucion ? "Andrés Trujillo" : "_________________"}</div>
+                      <div><strong>Cargo:</strong> Ingeniero Soporte</div>
                     </div>
                   </div>
 
                   <div style={{ border: "1px solid #e2e8f0", padding: "6px", textAlign: "center", borderRadius: "3px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Recibe:</div>
                     <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {signatureImage ? (
-                        <img src={signatureImage} alt="Firma" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
+                      {!isDevolucion ? (
+                        signatureImage ? (
+                          <img src={signatureImage} alt="Firma" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
+                        ) : (
+                          <span style={{ fontSize: "10px", color: "#94a3b8", fontStyle: "italic" }}>Pendiente de firma</span>
+                        )
                       ) : (
-                        <span style={{ fontSize: "10px", color: "#94a3b8", fontStyle: "italic" }}>Pendiente de firma</span>
+                        <div style={{ height: "42px" }} />
                       )}
                     </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>
-                      <div><strong>Nombre:</strong> {acta.destinatarioNombre || equipo.asignadoA || "Colaborador"}</div>
-                      <div><strong>Cargo:</strong> {acta.destinatarioCargo || equipo.departamento || "Tecnología"}</div>
-                      <div style={{ fontSize: "8.5px", color: "#64748b" }}>Fecha firma: {fechaFirmaFmt}</div>
+                      <div><strong>Nombre:</strong> {!isDevolucion ? (acta.destinatarioNombre || equipo.asignadoA || "Colaborador") : "_________________"}</div>
+                      <div><strong>Cargo:</strong> {!isDevolucion ? (acta.destinatarioCargo || equipo.departamento || "Tecnología") : "_________________"}</div>
+                      {!isDevolucion && <div style={{ fontSize: "8.5px", color: "#64748b" }}>Fecha firma: {fechaFirmaFmt}</div>}
                     </div>
                   </div>
                 </div>
@@ -591,25 +599,38 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                   Firmas de Devolución:
                 </div>
                 <div style={{ fontSize: "9.5px", color: "#475569", marginBottom: "6px" }}>
-                  El equipo de soporte de la organización recibe a conformidad el equipo devuelto: Si [   ] &nbsp; No [   ]
+                  El equipo de soporte de la organización recibe a conformidad el equipo devuelto: Si {isDevolucion ? "[ X ]" : "[   ]"} &nbsp; No [   ]
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                   <div style={{ border: "1px solid #e2e8f0", padding: "6px", textAlign: "center", borderRadius: "3px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Entrega:</div>
-                    <div style={{ height: "42px" }} />
+                    <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {isDevolucion ? (
+                        signatureImage ? (
+                          <img src={signatureImage} alt="Firma" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
+                        ) : (
+                          <span style={{ fontSize: "10px", color: "#94a3b8", fontStyle: "italic" }}>Pendiente de firma</span>
+                        )
+                      ) : (
+                        <div style={{ height: "42px" }} />
+                      )}
+                    </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>
-                      <div><strong>Nombre:</strong> _________________</div>
-                      <div><strong>Cargo:</strong> _________________</div>
+                      <div><strong>Nombre:</strong> {isDevolucion ? (acta.destinatarioNombre || equipo.asignadoA || "Colaborador") : "_________________"}</div>
+                      <div><strong>Cargo:</strong> {isDevolucion ? (acta.destinatarioCargo || equipo.departamento || "Consultoría") : "_________________"}</div>
+                      {isDevolucion && <div style={{ fontSize: "8.5px", color: "#64748b" }}>Fecha firma: {fechaFirmaFmt}</div>}
                     </div>
                   </div>
 
                   <div style={{ border: "1px solid #e2e8f0", padding: "6px", textAlign: "center", borderRadius: "3px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Recibe:</div>
-                    <div style={{ height: "42px" }} />
+                    <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "cursive", fontSize: "15px", color: "#1e3a8a" }}>
+                      {isDevolucion ? "Andrés Trujillo" : ""}
+                    </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>
-                      <div><strong>Nombre:</strong> _________________</div>
-                      <div><strong>Cargo:</strong> Mesa de ayuda</div>
+                      <div><strong>Nombre:</strong> {isDevolucion ? "Andrés Trujillo" : "_________________"}</div>
+                      <div><strong>Cargo:</strong> Ingeniero Soporte</div>
                     </div>
                   </div>
                 </div>
