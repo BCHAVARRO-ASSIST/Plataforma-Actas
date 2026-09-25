@@ -20,6 +20,9 @@
 
 # Claves de cuentas de servicio y certificados
 **/google-credentials.json
+**/google-credentials*.json
+**/Secrets/
+**/Secrets/*.json
 **/*.pfx
 **/*.key
 **/*.pem

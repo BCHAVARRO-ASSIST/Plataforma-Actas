@@ -30,7 +30,9 @@ public static class ActaMappingExtensions
             DeviceId: acta.DeviceId,
             FormDataJson: acta.FormDataJson ?? "{}",
             HashSha256: acta.HashSha256,
-            MotivoAnulacion: acta.MotivoAnulacion
+            MotivoAnulacion: acta.MotivoAnulacion,
+            ObservacionesEntrega: acta.ObservacionesEntrega,
+            ObservacionesDevolucion: acta.ObservacionesDevolucion
         );
     }
 
@@ -56,6 +58,7 @@ public static class ActaMappingExtensions
             );
 
         string? destinatarioCargo = null;
+        string? destinatarioDocumento = null;
         if (!string.IsNullOrWhiteSpace(acta.FormDataJson))
         {
             try
@@ -65,11 +68,37 @@ public static class ActaMappingExtensions
                 {
                     destinatarioCargo = cargoElem.GetString();
                 }
+
+                // Prioridad 1: Valor manual guardado en el acta específica
+                if (doc.RootElement.TryGetProperty("numeroDocumento", out var ndElem) && ndElem.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(ndElem.GetString()))
+                {
+                    destinatarioDocumento = ndElem.GetString()?.Trim();
+                }
+                else if (doc.RootElement.TryGetProperty("cedula", out var cElem) && cElem.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(cElem.GetString()))
+                {
+                    destinatarioDocumento = cElem.GetString()?.Trim();
+                }
+                else if (doc.RootElement.TryGetProperty("documento", out var dElem) && dElem.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(dElem.GetString()))
+                {
+                    destinatarioDocumento = dElem.GetString()?.Trim();
+                }
             }
             catch
             {
-                // Ignorar error de deserialización de cargo
+                // Ignorar error de deserialización
             }
+        }
+
+        // Prioridad 2: Perfil de usuario registrado
+        if (string.IsNullOrWhiteSpace(destinatarioDocumento))
+        {
+            destinatarioDocumento = acta.DestinatarioUsuario?.NumeroDocumento?.Trim();
+        }
+
+        // Prioridad 3: Fallback a "—"
+        if (string.IsNullOrWhiteSpace(destinatarioDocumento))
+        {
+            destinatarioDocumento = "—";
         }
 
         return new ActaDetailResponse(
@@ -89,6 +118,7 @@ public static class ActaMappingExtensions
             DestinatarioNombre: acta.DestinatarioUsuario != null ? $"{acta.DestinatarioUsuario.Nombre} {acta.DestinatarioUsuario.Apellido}" : null,
             DestinatarioCorreo: acta.DestinatarioUsuario?.Correo,
             DestinatarioCargo: destinatarioCargo ?? acta.DestinatarioUsuario?.Proceso,
+            DestinatarioDocumento: destinatarioDocumento,
             MensajeroUsuarioId: acta.MensajeroUsuarioId,
             MensajeroNombre: acta.MensajeroUsuario != null ? $"{acta.MensajeroUsuario.Nombre} {acta.MensajeroUsuario.Apellido}" : null,
             MensajeroCorreo: acta.MensajeroUsuario?.Correo,
@@ -97,7 +127,9 @@ public static class ActaMappingExtensions
             SignatureDataJson: acta.SignatureDataJson,
             HashSha256: acta.HashSha256,
             MotivoAnulacion: acta.MotivoAnulacion,
-            Equipo: equipoResponse
+            Equipo: equipoResponse,
+            ObservacionesEntrega: acta.ObservacionesEntrega,
+            ObservacionesDevolucion: acta.ObservacionesDevolucion
         );
     }
 }

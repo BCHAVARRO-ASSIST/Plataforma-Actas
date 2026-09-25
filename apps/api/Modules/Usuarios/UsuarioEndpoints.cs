@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using PlataformaActas.Api.Authorization;
+using PlataformaActas.Api.Common.Security;
 using PlataformaActas.Api.Modules.Usuarios.Data;
 using PlataformaActas.Api.Modules.Usuarios.Endpoints;
 using PlataformaActas.Api.Modules.Usuarios.Models.Dto;
@@ -61,6 +62,16 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
                     return Results.BadRequest(new { message = "Uno o más campos exceden la longitud máxima permitida." });
                 }
 
+                // Prevención estricta de SQL Injection en datos de entrada
+                if (InputSanitizationValidator.ContainsSqlInjection(request.Nombre) ||
+                    InputSanitizationValidator.ContainsSqlInjection(request.Apellido) ||
+                    InputSanitizationValidator.ContainsSqlInjection(request.UsuarioRed) ||
+                    InputSanitizationValidator.ContainsSqlInjection(request.Proceso) ||
+                    !InputSanitizationValidator.IsValidDocumentNumber(request.NumeroDocumento))
+                {
+                    return Results.BadRequest(new { message = "Se detectaron caracteres o patrones maliciosos no permitidos en los datos de entrada." });
+                }
+
                 try
                 {
                     var usuario = await service.CreateAsync(request, cancellationToken);
@@ -105,6 +116,16 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
                 if (request.Nombre.Length > 100 || request.Apellido.Length > 100 || request.UsuarioRed.Length > 50 || request.Correo.Length > 150)
                 {
                     return Results.BadRequest(new { message = "Uno o más campos exceden la longitud máxima permitida." });
+                }
+
+                // Prevención estricta de SQL Injection en actualización de usuario
+                if (InputSanitizationValidator.ContainsSqlInjection(request.Nombre) ||
+                    InputSanitizationValidator.ContainsSqlInjection(request.Apellido) ||
+                    InputSanitizationValidator.ContainsSqlInjection(request.UsuarioRed) ||
+                    InputSanitizationValidator.ContainsSqlInjection(request.Proceso) ||
+                    !InputSanitizationValidator.IsValidDocumentNumber(request.NumeroDocumento))
+                {
+                    return Results.BadRequest(new { message = "Se detectaron caracteres o patrones maliciosos no permitidos en los datos de entrada." });
                 }
 
                 try

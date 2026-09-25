@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using PlataformaActas.Api.Authorization;
+using PlataformaActas.Api.Common.Security;
 using PlataformaActas.Api.Infrastructure.Security;
 using PlataformaActas.Api.Modules.Actas.Data;
 using PlataformaActas.Api.Modules.Actas.Endpoints;
@@ -85,6 +86,12 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
                 IActaService actaService,
                 CancellationToken cancellationToken) =>
             {
+                if (InputSanitizationValidator.ContainsSqlInjection(request.ObservacionesEntrega) ||
+                    InputSanitizationValidator.ContainsSqlInjection(request.ObservacionesDevolucion))
+                {
+                    return Results.BadRequest(new { message = "Se detectaron caracteres o patrones maliciosos no permitidos en las observaciones del acta." });
+                }
+
                 try
                 {
                     int creatorUserId = request.UsuarioId;
@@ -235,6 +242,11 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
                 IActaService actaService,
                 CancellationToken cancellationToken) =>
             {
+                if (InputSanitizationValidator.ContainsSqlInjection(request.Motivo))
+                {
+                    return Results.BadRequest(new { message = "Se detectaron caracteres o patrones maliciosos no permitidos en el motivo de anulación." });
+                }
+
                 try
                 {
                     var userIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

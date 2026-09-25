@@ -25,7 +25,9 @@ public sealed record ActaResponse(
     string? DeviceId,
     string FormDataJson,
     string? HashSha256,
-    string? MotivoAnulacion
+    string? MotivoAnulacion,
+    string? ObservacionesEntrega = null,
+    string? ObservacionesDevolucion = null
 );
 
 public sealed record EquipmentActaResponse(
@@ -68,7 +70,10 @@ public sealed record ActaDetailResponse(
     string? SignatureDataJson,
     string? HashSha256,
     string? MotivoAnulacion,
-    EquipmentActaResponse Equipo
+    EquipmentActaResponse Equipo,
+    string? ObservacionesEntrega = null,
+    string? ObservacionesDevolucion = null,
+    string? DestinatarioDocumento = null
 );
 
 public sealed record CreateActaRequest(
@@ -80,13 +85,17 @@ public sealed record CreateActaRequest(
     string? DeviceId,
     string FormDataJson,
     string TipoActa,
-    Guid? ActaOrigenId
+    Guid? ActaOrigenId,
+    string? ObservacionesEntrega = null,
+    string? ObservacionesDevolucion = null
 );
 
 public sealed record FirmarActaRequest(
     string SignatureDataJson,
     string? Observacion = null,
-    List<string>? CorreosNotificacionAdicionales = null
+    List<string>? CorreosNotificacionAdicionales = null,
+    string? ObservacionesDevolucion = null,
+    string? ObservacionesEntrega = null
 );
 
 public sealed record AnularActaRequest(
@@ -110,3 +119,42 @@ public sealed record GenerarDocumentoResponse(
     DateTimeOffset FechaGeneracion,
     long TamanoBytes
 );
+
+public sealed record AccesorioEstadoDto(
+    bool Entregado = false,
+    bool Devuelto = false
+);
+
+public static class AccesoriosConstantes
+{
+    public const string Mouse = "Mouse";
+    public const string Teclado = "Teclado";
+    public const string Base = "Base";
+    public const string Monitor = "Monitor";
+    public const string Guaya = "Guaya";
+    public const string Maletin = "Maletín";
+    public const string DiscoDuroExterno = "Disco duro externo";
+
+    public static readonly string[] Todos =
+    [
+        Mouse,
+        Teclado,
+        Base,
+        Monitor,
+        Guaya,
+        Maletin,
+        DiscoDuroExterno
+    ];
+
+    public static string NormalizarClave(string? clave) => (clave?.Trim().ToLowerInvariant()) switch
+    {
+        "mouse" => Mouse,
+        "teclado" => Teclado,
+        "base" => Base,
+        "monitor" => Monitor,
+        "guaya" => Guaya,
+        "maletin" or "maletín" => Maletin,
+        "discoduroexterno" or "disco duro externo" or "discoduro" or "disco_duro_externo" => DiscoDuroExterno,
+        _ => clave ?? string.Empty
+    };
+}

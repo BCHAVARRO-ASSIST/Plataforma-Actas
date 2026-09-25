@@ -13,27 +13,45 @@ export class ApiError extends Error {
   }
 }
 
-const TOKEN_KEYS = ["auth_token", "token", "actas_session_token"];
+export const AUTH_TOKEN_KEY = "auth_token";
 
+export const SESSION_STORAGE_KEYS = [
+  "auth_token",
+  "token",
+  "plataforma_actas_token",
+  "plataforma_actas_permissions",
+  "actas_session_token",
+] as const;
+
+/**
+ * Blindaje OWASP A01/A07:
+ * La autenticación se maneja exclusivamente mediante cookies HttpOnly seguras (actas_session_token).
+ * getStoredToken() purga proactivamente cualquier almacenamiento local y retorna null.
+ */
 export function getStoredToken(): string | null {
-  if (typeof window === "undefined" || !window.localStorage) return null;
-  for (const key of TOKEN_KEYS) {
-    const val = localStorage.getItem(key);
-    if (val && val.trim()) return val.trim();
-  }
+  clearStoredToken();
   return null;
 }
 
-export function setStoredToken(token: string): void {
-  if (typeof window === "undefined" || !window.localStorage) return;
-  localStorage.setItem("auth_token", token);
-  localStorage.setItem("token", token);
+export function setStoredToken(_token: string): void {
+  // Blindaje OWASP A01/A07: No persistir JWT en localStorage ni sessionStorage.
+  // Purga atómica de cualquier clave de almacenamiento para prevenir ataques XSS.
+  clearStoredToken();
 }
 
 export function clearStoredToken(): void {
-  if (typeof window === "undefined" || !window.localStorage) return;
-  for (const key of TOKEN_KEYS) {
-    localStorage.removeItem(key);
+  if (typeof window === "undefined") return;
+  for (const key of SESSION_STORAGE_KEYS) {
+    try {
+      if (window.localStorage) {
+        localStorage.removeItem(key);
+      }
+      if (window.sessionStorage) {
+        sessionStorage.removeItem(key);
+      }
+    } catch {
+      // Ignorar excepciones de storage
+    }
   }
 }
 
@@ -55,11 +73,6 @@ export function getAuthHeaders(includeJson: boolean = false, customHeaders?: Hea
   const headers: Record<string, string> = {
     "X-Requested-With": "XMLHttpRequest", // Mitigación CSRF en llamadas cross-origin / browser
   };
-
-  const token = getStoredToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
 
   if (includeJson) {
     headers["Content-Type"] = "application/json";

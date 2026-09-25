@@ -37,20 +37,35 @@ public sealed class JwtTokenService : IJwtTokenService
                 ? minutes
                 : 30;
 
-        // El token contiene ÚNICAMENTE la referencia del identificador del usuario (nameid)
+        // Claims del token corporativo: NameIdentifier, Name, Role y permission por cada código
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, usuario.Id.ToString())
+            new(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+            new(ClaimTypes.Name, usuario.UsuarioRed ?? usuario.Nombre),
+            new(ClaimTypes.Role, rol?.Nombre ?? "Sin rol")
         };
+
+        if (permisos != null)
+        {
+            foreach (var permiso in permisos)
+            {
+                if (!string.IsNullOrWhiteSpace(permiso))
+                {
+                    claims.Add(new Claim("permission", permiso));
+                    claims.Add(new Claim("permiso", permiso));
+                }
+            }
+        }
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+        // Expiración fija sincronizada con la cookie de sesión: 8 horas
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expiresMinutes),
+            expires: DateTime.UtcNow.AddHours(8),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

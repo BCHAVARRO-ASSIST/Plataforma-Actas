@@ -166,11 +166,11 @@ public sealed class DocumentoActaService : IDocumentoActaService
     /// </remarks>
     public byte[] GenerarPdfBytes(ActaDetailResponse acta)
     {
-        var data = ParseAssistData(acta.FormDataJson, acta);
-        var (colaboradorSignatureBytes, soporteSignatureBytes) = ParseSignaturePair(acta.SignatureDataJson);
-
         var isDevolucion = string.Equals(acta.TipoActa, "Devolución", StringComparison.OrdinalIgnoreCase) ||
                            string.Equals(acta.TipoActa, "Devolucion", StringComparison.OrdinalIgnoreCase);
+
+        var data = ParseAssistData(acta.FormDataJson, acta);
+        var signatures = ParseCumulativeSignatures(acta.SignatureDataJson, isDevolucion);
 
         // Fechas normalizadas en hora colombiana (UTC-5)
         var fechaEmisionCo = TimeZoneInfo.ConvertTime(acta.FechaCreacion, ColombiaTimeZone);
@@ -186,7 +186,9 @@ public sealed class DocumentoActaService : IDocumentoActaService
         }
 
         var nombreDestinatario = acta.DestinatarioNombre ?? acta.Equipo.AsignadoA ?? "Colaborador Asignado";
-        var documentoCc = !string.IsNullOrWhiteSpace(data.DocumentoIdentidad) ? data.DocumentoIdentidad : "—";
+        var documentoCc = !string.IsNullOrWhiteSpace(data.DocumentoIdentidad) && data.DocumentoIdentidad != "—"
+            ? data.DocumentoIdentidad
+            : (!string.IsNullOrWhiteSpace(acta.DestinatarioDocumento) ? acta.DestinatarioDocumento : "—");
         var ciudad = !string.IsNullOrWhiteSpace(data.Ciudad) ? data.Ciudad : (acta.Equipo.Empresa ?? "Bogotá D.C.");
         var proyectoProceso = !string.IsNullOrWhiteSpace(data.ProyectoProceso)
             ? data.ProyectoProceso
@@ -259,7 +261,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
                 {
                     col.Item().PaddingBottom(6).Text(txt =>
                     {
-                        txt.Span("El área de soporte de Assist Consultores de Sistemas S.A.: ");
+                        txt.Span("El área de soporte de Assist Consultores de Sistemas S.A. ");
                         txt.Span("Entrega ").Bold();
                         txt.Span(isDevolucion ? "[   ]  " : "[ X ]  ").Bold().FontColor(isDevolucion ? Colors.Grey.Darken1 : Colors.Blue.Darken3);
                         txt.Span("Recibe ").Bold();
@@ -350,13 +352,13 @@ public sealed class DocumentoActaService : IDocumentoActaService
                                 accTable.Cell().Background(assistBlue).Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f)
                                     .AlignCenter().Text("Devuelto").Bold().FontColor(Colors.White).FontSize(7.2f);
 
-                                var items = new[] { "Mouse", "Teclado", "Base", "Monitor", "Guaya", "Maletín", "Disco duro externo" };
+                                var items = AccesoriosConstantes.Todos;
                                 for (int i = 0; i < items.Length; i++)
                                 {
                                     var item = items[i];
                                     var bg = (i % 2 == 1) ? assistBlueLight : Colors.White;
-                                    var isEntregado = data.AccesoriosEntregados.Contains(item) || (!isDevolucion && data.AccesoriosEntregados.Count == 0 && (item == "Cargador" || item == "Maletín"));
-                                    var isDevuelto = data.AccesoriosDevueltos.Contains(item) || (isDevolucion && isEntregado);
+                                    var isEntregado = data.AccesoriosEntregados.Contains(item);
+                                    var isDevuelto = data.AccesoriosDevueltos.Contains(item);
 
                                     accTable.Cell().Background(bg).Border(0.5f).BorderColor(assistGreyBorder).Padding(2f)
                                         .Text(item).FontSize(7.2f);
@@ -466,7 +468,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
                         });
                     });
 
-                    col.Item().PaddingTop(6);
+                    col.Item().PaddingTop(4);
 
                     // CONTENCIÓN ESTRICTA DE SALTOS: Asegura que el bloque de firmas no se fracture
                     col.Item().ShowEntire().Row(signGrid =>
@@ -474,64 +476,49 @@ public sealed class DocumentoActaService : IDocumentoActaService
                         signGrid.RelativeItem().PaddingRight(6).Column(entCol =>
                         {
                             entCol.Item().Text("Firmas de Entrega:").Bold().FontSize(7.2f);
+                            entCol.Item().PaddingBottom(2).Text("Esta autorización se hace en cumplimiento de las normas laborales vigentes y es válida durante el tiempo que dure mi relación laboral con ASSIST CONSULTORES DE SISTEMAS S.A. He sido informado y entiendo completamente las condiciones establecidas en esta cláusula.")
+                                .FontSize(6.5f).FontColor(Color.FromHex("#1E293B"));
 
                             entCol.Item().PaddingTop(2).Row(er =>
                             {
-                                er.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(3).Column(sc =>
+                                er.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f).Column(sc =>
                                 {
                                     sc.Item().Text("Entrega:").Bold().FontSize(6.8f);
-                                    if (!isDevolucion)
+                                    sc.Item().Height(26).AlignMiddle().AlignCenter().Element(el =>
                                     {
-                                        sc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
+                                        if (signatures.FirmaEntregaSoporte is { Length: > 0 })
                                         {
-                                            if (soporteSignatureBytes is { Length: > 0 })
-                                            {
-                                                el.MaxHeight(34).MaxWidth(130).Image(soporteSignatureBytes).FitArea();
-                                            }
-                                            else
-                                            {
-                                                el.Text("Andrés Trujillo").FontFamily("Courier").FontSize(9.5f).Bold().FontColor(Colors.Blue.Darken3);
-                                            }
-                                        });
-                                    }
-                                    else
-                                    {
-                                        sc.Item().Height(34);
-                                    }
+                                            el.MaxHeight(26).MaxWidth(130).Image(signatures.FirmaEntregaSoporte).FitArea();
+                                        }
+                                        else
+                                        {
+                                            el.Text("Andrés Trujillo").FontFamily("Courier").FontSize(9.5f).Bold().FontColor(Colors.Blue.Darken3);
+                                        }
+                                    });
                                     sc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                                    sc.Item().PaddingTop(2).Text(!isDevolucion ? "Nombre: Andrés Trujillo" : "Nombre: _________________").FontSize(6.5f);
+                                    sc.Item().PaddingTop(2).Text("Nombre: Andrés Trujillo").FontSize(6.5f);
                                     sc.Item().Text("Cargo: Ingeniero Soporte").FontSize(6.5f);
                                 });
 
                                 er.ConstantItem(5);
 
-                                er.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(3).Column(rc =>
+                                er.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f).Column(rc =>
                                 {
                                     rc.Item().Text("Recibe:").Bold().FontSize(6.8f);
-                                    if (!isDevolucion)
+                                    rc.Item().Height(26).AlignMiddle().AlignCenter().Element(el =>
                                     {
-                                        rc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
+                                        if (signatures.FirmaEntregaConsultor is { Length: > 0 })
                                         {
-                                            if (colaboradorSignatureBytes is { Length: > 0 })
-                                            {
-                                                el.MaxHeight(34).MaxWidth(130).Image(colaboradorSignatureBytes).FitArea();
-                                            }
-                                            else
-                                            {
-                                                el.Text("Pendiente de firma").FontSize(6.8f).Italic().FontColor(Colors.Grey.Medium);
-                                            }
-                                        });
-                                        rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                                        rc.Item().PaddingTop(2).Text($"Nombre: {nombreDestinatario}").Bold().FontSize(6.5f);
-                                        rc.Item().Text($"Cargo: {proyectoProceso}").FontSize(6.5f);
-                                    }
-                                    else
-                                    {
-                                        rc.Item().Height(34);
-                                        rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
-                                        rc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.5f);
-                                        rc.Item().Text("Cargo: _________________").FontSize(6.5f);
-                                    }
+                                            el.MaxHeight(26).MaxWidth(130).Image(signatures.FirmaEntregaConsultor).FitArea();
+                                        }
+                                        else
+                                        {
+                                            el.Text(isDevolucion ? "Firma registrada en entrega" : "Pendiente de firma").FontSize(6.8f).Italic().FontColor(Colors.Grey.Medium);
+                                        }
+                                    });
+                                    rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
+                                    rc.Item().PaddingTop(2).Text($"Nombre: {nombreDestinatario}").Bold().FontSize(6.5f);
+                                    rc.Item().Text($"Cargo: {proyectoProceso}").FontSize(6.5f);
                                 });
                             });
                         });
@@ -539,20 +526,22 @@ public sealed class DocumentoActaService : IDocumentoActaService
                         signGrid.RelativeItem().PaddingLeft(6).Column(devCol =>
                         {
                             devCol.Item().Text("Firmas de Devolución:").Bold().FontSize(7.2f);
-                            devCol.Item().Text(isDevolucion ? "Soporte recibe a conformidad:  Si [ X ]   No [   ]" : "Soporte recibe a conformidad:  Si [   ]   No [   ]").FontSize(6.5f);
+                            devCol.Item().Text("El equipo de soporte de la organización recibe a conformidad el equipo de cómputo devuelto por el colaborador:")
+                                .FontSize(6.5f).FontColor(Color.FromHex("#1E293B"));
+                            devCol.Item().PaddingBottom(2).Text(isDevolucion ? "Soporte recibe a conformidad:  Si [ X ]   No [   ]" : "Soporte recibe a conformidad:  Si [   ]   No [   ]").FontSize(6.5f);
 
                             devCol.Item().PaddingTop(2).Row(dr =>
                             {
-                                dr.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(3).Column(sc =>
+                                dr.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f).Column(sc =>
                                 {
                                     sc.Item().Text("Entrega:").Bold().FontSize(6.8f);
                                     if (isDevolucion)
                                     {
-                                        sc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
+                                        sc.Item().Height(26).AlignMiddle().AlignCenter().Element(el =>
                                         {
-                                            if (colaboradorSignatureBytes is { Length: > 0 })
+                                            if (signatures.FirmaDevolucionConsultor is { Length: > 0 })
                                             {
-                                                el.MaxHeight(34).MaxWidth(130).Image(colaboradorSignatureBytes).FitArea();
+                                                el.MaxHeight(26).MaxWidth(130).Image(signatures.FirmaDevolucionConsultor).FitArea();
                                             }
                                             else
                                             {
@@ -565,7 +554,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
                                     }
                                     else
                                     {
-                                        sc.Item().Height(34);
+                                        sc.Item().Height(26);
                                         sc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
                                         sc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.5f);
                                         sc.Item().Text("Cargo: _________________").FontSize(6.5f);
@@ -574,16 +563,16 @@ public sealed class DocumentoActaService : IDocumentoActaService
 
                                 dr.ConstantItem(5);
 
-                                dr.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(3).Column(rc =>
+                                dr.RelativeItem().Border(0.5f).BorderColor(assistGreyBorder).Padding(2.5f).Column(rc =>
                                 {
                                     rc.Item().Text("Recibe:").Bold().FontSize(6.8f);
                                     if (isDevolucion)
                                     {
-                                        rc.Item().Height(34).AlignMiddle().AlignCenter().Element(el =>
+                                        rc.Item().Height(26).AlignMiddle().AlignCenter().Element(el =>
                                         {
-                                            if (soporteSignatureBytes is { Length: > 0 })
+                                            if (signatures.FirmaDevolucionSoporte is { Length: > 0 })
                                             {
-                                                el.MaxHeight(34).MaxWidth(130).Image(soporteSignatureBytes).FitArea();
+                                                el.MaxHeight(26).MaxWidth(130).Image(signatures.FirmaDevolucionSoporte).FitArea();
                                             }
                                             else
                                             {
@@ -596,7 +585,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
                                     }
                                     else
                                     {
-                                        rc.Item().Height(34);
+                                        rc.Item().Height(26);
                                         rc.Item().LineHorizontal(0.5f).LineColor(Colors.Grey.Medium);
                                         rc.Item().PaddingTop(2).Text("Nombre: _________________").FontSize(6.5f);
                                         rc.Item().Text("Cargo: Ingeniero Soporte").FontSize(6.5f);
@@ -614,9 +603,15 @@ public sealed class DocumentoActaService : IDocumentoActaService
 
     private static AssistActaData ParseAssistData(string? formDataJson, ActaDetailResponse acta)
     {
-        var obsEntrega = "Pendiente inspección física en laboratorio.";
-        var obsDevolucion = "—";
-        var docCc = "—";
+        var obsEntrega = !string.IsNullOrWhiteSpace(acta.ObservacionesEntrega)
+            ? acta.ObservacionesEntrega
+            : "Pendiente inspección física en laboratorio.";
+        var obsDevolucion = !string.IsNullOrWhiteSpace(acta.ObservacionesDevolucion)
+            ? acta.ObservacionesDevolucion
+            : "—";
+        var docCc = !string.IsNullOrWhiteSpace(acta.DestinatarioDocumento)
+            ? acta.DestinatarioDocumento
+            : "—";
         var ciudad = "Bogotá D.C.";
         var proyecto = acta.DestinatarioCargo ?? acta.Equipo.Departamento ?? "Tecnología";
         var serialMonitor = "—";
@@ -635,27 +630,45 @@ public sealed class DocumentoActaService : IDocumentoActaService
                 using var doc = JsonDocument.Parse(formDataJson);
                 var root = doc.RootElement;
 
-                if (root.TryGetProperty("observacion", out var o1) && o1.ValueKind == JsonValueKind.String)
+                if (string.IsNullOrWhiteSpace(acta.ObservacionesEntrega))
                 {
-                    obsEntrega = o1.GetString() ?? obsEntrega;
-                }
-                else if (root.TryGetProperty("observaciones", out var o2) && o2.ValueKind == JsonValueKind.String)
-                {
-                    obsEntrega = o2.GetString() ?? obsEntrega;
+                    if (root.TryGetProperty("observacionesEntrega", out var oe) && oe.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(oe.GetString()))
+                    {
+                        obsEntrega = oe.GetString()!;
+                    }
+                    else if (root.TryGetProperty("observacion", out var o1) && o1.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(o1.GetString()))
+                    {
+                        obsEntrega = o1.GetString()!;
+                    }
+                    else if (root.TryGetProperty("observaciones", out var o2) && o2.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(o2.GetString()))
+                    {
+                        obsEntrega = o2.GetString()!;
+                    }
                 }
 
-                if (root.TryGetProperty("observacionDevolucion", out var od) && od.ValueKind == JsonValueKind.String)
+                if (string.IsNullOrWhiteSpace(acta.ObservacionesDevolucion))
                 {
-                    obsDevolucion = od.GetString() ?? obsDevolucion;
+                    if (root.TryGetProperty("observacionesDevolucion", out var od1) && od1.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(od1.GetString()))
+                    {
+                        obsDevolucion = od1.GetString()!;
+                    }
+                    else if (root.TryGetProperty("observacionDevolucion", out var od2) && od2.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(od2.GetString()))
+                    {
+                        obsDevolucion = od2.GetString()!;
+                    }
                 }
 
-                if (root.TryGetProperty("cedula", out var c1) && c1.ValueKind == JsonValueKind.String)
+                if (root.TryGetProperty("numeroDocumento", out var nd) && nd.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(nd.GetString()))
                 {
-                    docCc = c1.GetString() ?? docCc;
+                    docCc = nd.GetString()!.Trim();
                 }
-                else if (root.TryGetProperty("documento", out var c2) && c2.ValueKind == JsonValueKind.String)
+                else if (root.TryGetProperty("cedula", out var c1) && c1.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(c1.GetString()))
                 {
-                    docCc = c2.GetString() ?? docCc;
+                    docCc = c1.GetString()!.Trim();
+                }
+                else if (root.TryGetProperty("documento", out var c2) && c2.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(c2.GetString()))
+                {
+                    docCc = c2.GetString()!.Trim();
                 }
 
                 if (root.TryGetProperty("ciudad", out var ci) && ci.ValueKind == JsonValueKind.String)
@@ -698,13 +711,50 @@ public sealed class DocumentoActaService : IDocumentoActaService
                     valor = val.GetString() ?? valor;
                 }
 
-                if (root.TryGetProperty("accesorios", out var acc) && acc.ValueKind == JsonValueKind.Array)
+                var isDevolucionActa = string.Equals(acta.TipoActa, "Devolución", StringComparison.OrdinalIgnoreCase) ||
+                                       string.Equals(acta.TipoActa, "Devolucion", StringComparison.OrdinalIgnoreCase);
+
+                if (root.TryGetProperty("accesorios", out var acc))
                 {
-                    foreach (var item in acc.EnumerateArray())
+                    if (acc.ValueKind == JsonValueKind.Object)
                     {
-                        if (item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()))
+                        foreach (var prop in acc.EnumerateObject())
                         {
-                            accEntregados.Add(item.GetString()!);
+                            var canonical = AccesoriosConstantes.NormalizarClave(prop.Name);
+                            if (prop.Value.ValueKind == JsonValueKind.Object)
+                            {
+                                if (prop.Value.TryGetProperty("entregado", out var ent) && ent.GetBoolean())
+                                {
+                                    accEntregados.Add(canonical);
+                                }
+                                if (prop.Value.TryGetProperty("devuelto", out var dev) && dev.GetBoolean())
+                                {
+                                    accDevueltos.Add(canonical);
+                                }
+                            }
+                            else if (prop.Value.ValueKind == JsonValueKind.True)
+                            {
+                                accEntregados.Add(canonical);
+                                if (isDevolucionActa)
+                                {
+                                    accDevueltos.Add(canonical);
+                                }
+                            }
+                        }
+                    }
+                    else if (acc.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in acc.EnumerateArray())
+                        {
+                            if (item.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(item.GetString()))
+                            {
+                                var canonical = AccesoriosConstantes.NormalizarClave(item.GetString()!);
+                                accEntregados.Add(canonical);
+                                if (isDevolucionActa)
+                                {
+                                    accDevueltos.Add(canonical);
+                                }
+                            }
                         }
                     }
                 }
@@ -875,14 +925,23 @@ public sealed class DocumentoActaService : IDocumentoActaService
         }
     }
 
+    private sealed record CumulativeSignatures(
+        byte[]? FirmaEntregaSoporte,
+        byte[]? FirmaEntregaConsultor,
+        byte[]? FirmaDevolucionConsultor,
+        byte[]? FirmaDevolucionSoporte
+    );
+
     /// <summary>
-    /// Extrae las rúbricas digitales del colaborador y del ingeniero de soporte desde el payload del acta.
-    /// Si la firma de soporte no está en el payload, inyecta la firma institucional registrada de Andrés Trujillo.
+    /// Extrae las rúbricas digitales acumulativas de entrega y devolución.
+    /// Para actas de devolución, preserva la firma original de entrega y estampa la devolución simultáneamente.
     /// </summary>
-    private static (byte[]? Colaborador, byte[]? Soporte) ParseSignaturePair(string? signatureDataJson)
+    private static CumulativeSignatures ParseCumulativeSignatures(string? signatureDataJson, bool isDevolucion)
     {
-        byte[]? colaboradorBytes = null;
-        byte[]? soporteBytes = null;
+        byte[]? firmaEntregaSoporte = CachedSoporteSignature.Value;
+        byte[]? firmaEntregaConsultor = null;
+        byte[]? firmaDevolucionConsultor = null;
+        byte[]? firmaDevolucionSoporte = isDevolucion ? CachedSoporteSignature.Value : null;
 
         if (!string.IsNullOrWhiteSpace(signatureDataJson))
         {
@@ -891,37 +950,80 @@ public sealed class DocumentoActaService : IDocumentoActaService
                 using var doc = JsonDocument.Parse(signatureDataJson);
                 var root = doc.RootElement;
 
-                // 1. Firma del colaborador
-                if (root.TryGetProperty("firma", out var f1) && f1.ValueKind == JsonValueKind.String)
-                    colaboradorBytes = ExtractBytesFromBase64(f1.GetString());
-                else if (root.TryGetProperty("signature", out var f2) && f2.ValueKind == JsonValueKind.String)
-                    colaboradorBytes = ExtractBytesFromBase64(f2.GetString());
-                else if (root.TryGetProperty("firmaDigital", out var f3) && f3.ValueKind == JsonValueKind.String)
-                    colaboradorBytes = ExtractBytesFromBase64(f3.GetString());
-                else if (root.TryGetProperty("firmaUsuario", out var f4) && f4.ValueKind == JsonValueKind.String)
-                    colaboradorBytes = ExtractBytesFromBase64(f4.GetString());
-                else if (root.TryGetProperty("signatureBase64", out var f5) && f5.ValueKind == JsonValueKind.String)
-                    colaboradorBytes = ExtractBytesFromBase64(f5.GetString());
+                // 1. Firma Entrega Consultor
+                if (root.TryGetProperty("firmaEntregaConsultor", out var fec) && fec.ValueKind == JsonValueKind.String)
+                    firmaEntregaConsultor = ExtractBytesFromBase64(fec.GetString());
 
-                // 2. Firma de soporte en JSON si existe
-                if (root.TryGetProperty("firmaSoporte", out var s1) && s1.ValueKind == JsonValueKind.String)
-                    soporteBytes = ExtractBytesFromBase64(s1.GetString());
-                else if (root.TryGetProperty("signatureSoporte", out var s2) && s2.ValueKind == JsonValueKind.String)
-                    soporteBytes = ExtractBytesFromBase64(s2.GetString());
-                else if (root.TryGetProperty("firmaIngeniero", out var s3) && s3.ValueKind == JsonValueKind.String)
-                    soporteBytes = ExtractBytesFromBase64(s3.GetString());
+                // 2. Firma Entrega Soporte
+                if (root.TryGetProperty("firmaEntregaSoporte", out var fes) && fes.ValueKind == JsonValueKind.String)
+                {
+                    var customSoporte = ExtractBytesFromBase64(fes.GetString());
+                    if (customSoporte is { Length: > 0 })
+                        firmaEntregaSoporte = customSoporte;
+                }
+
+                // 3. Firma Devolución Consultor
+                if (root.TryGetProperty("firmaDevolucionConsultor", out var fdc) && fdc.ValueKind == JsonValueKind.String)
+                    firmaDevolucionConsultor = ExtractBytesFromBase64(fdc.GetString());
+
+                // 4. Firma Devolución Soporte
+                if (root.TryGetProperty("firmaDevolucionSoporte", out var fds) && fds.ValueKind == JsonValueKind.String)
+                {
+                    var customDevSoporte = ExtractBytesFromBase64(fds.GetString());
+                    if (customDevSoporte is { Length: > 0 })
+                        firmaDevolucionSoporte = customDevSoporte;
+                }
+
+                // Fallbacks para estructuras legacy o mono-firma
+                byte[]? legacyFirma = null;
+                if (root.TryGetProperty("firma", out var f1) && f1.ValueKind == JsonValueKind.String)
+                    legacyFirma = ExtractBytesFromBase64(f1.GetString());
+                else if (root.TryGetProperty("signature", out var f2) && f2.ValueKind == JsonValueKind.String)
+                    legacyFirma = ExtractBytesFromBase64(f2.GetString());
+                else if (root.TryGetProperty("firmaDigital", out var f3) && f3.ValueKind == JsonValueKind.String)
+                    legacyFirma = ExtractBytesFromBase64(f3.GetString());
+                else if (root.TryGetProperty("firmaUsuario", out var f4) && f4.ValueKind == JsonValueKind.String)
+                    legacyFirma = ExtractBytesFromBase64(f4.GetString());
+                else if (root.TryGetProperty("signatureBase64", out var f5) && f5.ValueKind == JsonValueKind.String)
+                    legacyFirma = ExtractBytesFromBase64(f5.GetString());
+
+                if (legacyFirma is { Length: > 0 })
+                {
+                    if (isDevolucion)
+                    {
+                        firmaDevolucionConsultor ??= legacyFirma;
+                        firmaEntregaConsultor ??= legacyFirma;
+                    }
+                    else
+                    {
+                        firmaEntregaConsultor ??= legacyFirma;
+                    }
+                }
             }
             catch
             {
-                // Si no es JSON válido, verificar si es un string raw Base64 / data-URI
-                colaboradorBytes = ExtractBytesFromBase64(signatureDataJson);
+                var rawBytes = ExtractBytesFromBase64(signatureDataJson);
+                if (rawBytes is { Length: > 0 })
+                {
+                    if (isDevolucion)
+                    {
+                        firmaDevolucionConsultor = rawBytes;
+                        firmaEntregaConsultor = rawBytes;
+                    }
+                    else
+                    {
+                        firmaEntregaConsultor = rawBytes;
+                    }
+                }
             }
         }
 
-        // Si la firma de soporte no vino en el payload del acta, inyectar la firma registrada oficial de Andrés Trujillo
-        soporteBytes ??= CachedSoporteSignature.Value;
-
-        return (colaboradorBytes, soporteBytes);
+        return new CumulativeSignatures(
+            firmaEntregaSoporte,
+            firmaEntregaConsultor,
+            firmaDevolucionConsultor,
+            firmaDevolucionSoporte
+        );
     }
 
     private static string SanitizeFileName(string fileName)

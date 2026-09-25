@@ -2,8 +2,12 @@ using System.Net;
 using System.Net.Mail;
 using System.Security.Cryptography;
 using System.Text;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Gmail.v1;
+using Google.Apis.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using MimeKit;
 using PlataformaActas.Api.Infrastructure.Persistence;
 using PlataformaActas.Api.Modules.Auth.Data.Entities;
 using PlataformaActas.Api.Modules.Auth.Models.Dto;
@@ -192,35 +196,19 @@ public interface IEmailService
 
 public sealed class EmailService(IConfiguration configuration) : IEmailService
 {
-    public async Task SendPasswordResetEmailAsync(
+    public static MailMessage CreatePasswordResetMessage(
         string toEmail,
         string resetUrl,
-        CancellationToken cancellationToken = default)
+        string senderEmail,
+        string senderName)
     {
-        var host = configuration["Email:SmtpHost"];
-        if (string.IsNullOrWhiteSpace(host))
-        {
-            return;
-        }
+        var resolvedSenderEmail = !string.IsNullOrWhiteSpace(senderEmail) ? senderEmail.Trim() : "soporte@assist.com.co";
+        var resolvedSenderName = !string.IsNullOrWhiteSpace(senderName) ? senderName.Trim() : "Soporte - Assist Consultores";
 
-        var port = int.TryParse(configuration["Email:SmtpPort"], out var p) ? p : 587;
-        var username = configuration["Email:Username"];
-        var password = configuration["Email:Password"];
-        var from = configuration["Email:From"] ?? "noreply@plataformaactas.local";
-        var fromName = configuration["Email:FromName"] ?? "Plataforma de Actas";
-        var enableSsl = bool.TryParse(configuration["Email:EnableSsl"], out var ssl) && ssl;
-
-        using var client = new SmtpClient(host, port)
-        {
-            EnableSsl = enableSsl,
-            Credentials = !string.IsNullOrWhiteSpace(username)
-                ? new NetworkCredential(username, password)
-                : null
-        };
-
+        var mailAddress = new MailAddress(resolvedSenderEmail, resolvedSenderName);
         var message = new MailMessage
         {
-            From = new MailAddress(from, fromName),
+            From = mailAddress,
             Subject = "Recuperación de Contraseña - Plataforma de Actas",
             Body = $@"
                 <h2>Restablecimiento de Contraseña</h2>
@@ -232,7 +220,142 @@ public sealed class EmailService(IConfiguration configuration) : IEmailService
             IsBodyHtml = true
         };
 
+        message.ReplyToList.Add(mailAddress);
         message.To.Add(toEmail);
+        return message;
+    }
+
+    public async Task SendPasswordResetEmailAsync(
+        string toEmail,
+        string resetUrl,
+        CancellationToken cancellationToken = default)
+    {
+        var senderEmail = configuration["EmailSettings:SenderEmail"]
+            ?? configuration["EmailSettings:FromEmail"]
+            ?? configuration["Email:From"]
+            ?? configuration["Smtp:FromEmail"]
+            ?? "soporte@assist.com.co";
+
+        var senderName = configuration["EmailSettings:SenderName"]
+            ?? configuration["EmailSettings:FromName"]
+            ?? configuration["Email:FromName"]
+            ?? configuration["Smtp:FromName"]
+            ?? "Soporte - Assist Consultores";
+
+        // ---------------------------------------------------------------------------------
+        // INTENTO 1: Google Workspace Gmail API oficial (Service Account con Domain-Wide Delegation)
+        // ---------------------------------------------------------------------------------
+        var keyPath = configuration["GoogleIntegration:ServiceAccountKeyPath"] ?? "Secrets/google-credentials.json";
+        var resolvedKeyPath = keyPath;
+        if (!Path.IsPathRooted(resolvedKeyPath))
+        {
+            var candidates = new[]
+            {
+                Path.Combine(AppContext.BaseDirectory, resolvedKeyPath),
+                Path.Combine(AppContext.BaseDirectory, "Secrets", "google-credentials.json"),
+                Path.Combine(AppContext.BaseDirectory, "Resources", "google-credentials.json")
+            };
+            resolvedKeyPath = candidates.FirstOrDefault(File.Exists) ?? resolvedKeyPath;
+        }
+
+        if (File.Exists(resolvedKeyPath))
+        {
+            try
+            {
+                var impersonationEmail = configuration["GoogleIntegration:GmailImpersonationEmail"]
+                    ?? configuration["GoogleIntegration:AdminImpersonationEmail"]
+                    ?? "soporte@assist.com.co";
+
+                var credential = GoogleCredential.FromFile(resolvedKeyPath)
+                    .CreateScoped("https://www.googleapis.com/auth/gmail.send")
+                    .CreateWithUser(impersonationEmail);
+
+                using var gmailService = new GmailService(new BaseClientService.Initializer
+                {
+                    HttpClientInitializer = credential,
+                    ApplicationName = "PlataformaActas"
+                });
+
+                var mimeMessage = new MimeMessage();
+                var mailbox = new MailboxAddress(senderName, senderEmail);
+                mimeMessage.From.Add(mailbox);
+                mimeMessage.ReplyTo.Add(mailbox);
+                mimeMessage.To.Add(MailboxAddress.Parse(toEmail));
+                mimeMessage.Subject = "Recuperación de Contraseña - Plataforma de Actas";
+
+                var bodyBuilder = new BodyBuilder
+                {
+                    HtmlBody = $@"
+                        <h2>Restablecimiento de Contraseña</h2>
+                        <p>Has solicitado restablecer tu contraseña en la Plataforma de Actas.</p>
+                        <p>Haz clic en el siguiente enlace para continuar:</p>
+                        <p><a href='{resetUrl}'>{resetUrl}</a></p>
+                        <p>Este enlace expirará en 30 minutos.</p>
+                        <p>Si no realizaste esta solicitud, puedes ignorar este mensaje.</p>"
+                };
+                mimeMessage.Body = bodyBuilder.ToMessageBody();
+
+                using var ms = new MemoryStream();
+                await mimeMessage.WriteToAsync(ms, cancellationToken);
+                var rawBase64Url = Convert.ToBase64String(ms.ToArray())
+                    .Replace('+', '-')
+                    .Replace('/', '_')
+                    .TrimEnd('=');
+
+                var gmailMessage = new Google.Apis.Gmail.v1.Data.Message
+                {
+                    Raw = rawBase64Url
+                };
+
+                await gmailService.Users.Messages.Send(gmailMessage, "me").ExecuteAsync(cancellationToken);
+                return;
+            }
+            catch
+            {
+                // Fallback transparente a SMTP tradicional si falla Google Workspace API
+            }
+        }
+
+        // ---------------------------------------------------------------------------------
+        // INTENTO 2: Fallback vía Servidor SMTP tradicional (System.Net.Mail)
+        // ---------------------------------------------------------------------------------
+        var host = configuration["EmailSettings:Server"]
+            ?? configuration["EmailSettings:Host"]
+            ?? configuration["Email:SmtpHost"]
+            ?? configuration["Smtp:Host"];
+
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            return;
+        }
+
+        var portStr = configuration["EmailSettings:Port"]
+            ?? configuration["Email:SmtpPort"]
+            ?? configuration["Smtp:Port"];
+        var port = int.TryParse(portStr, out var p) ? p : 587;
+
+        var username = configuration["EmailSettings:Username"]
+            ?? configuration["Email:Username"]
+            ?? configuration["Smtp:UserName"];
+
+        var password = configuration["EmailSettings:Password"]
+            ?? configuration["Email:Password"]
+            ?? configuration["Smtp:Password"];
+
+        var enableSslStr = configuration["EmailSettings:EnableSsl"]
+            ?? configuration["Email:EnableSsl"]
+            ?? configuration["Smtp:EnableSsl"];
+        var enableSsl = bool.TryParse(enableSslStr, out var ssl) && ssl;
+
+        using var client = new System.Net.Mail.SmtpClient(host, port)
+        {
+            EnableSsl = enableSsl,
+            Credentials = !string.IsNullOrWhiteSpace(username)
+                ? new NetworkCredential(username, password)
+                : null
+        };
+
+        var message = CreatePasswordResetMessage(toEmail, resetUrl, senderEmail, senderName);
 
         await client.SendMailAsync(message, cancellationToken);
     }

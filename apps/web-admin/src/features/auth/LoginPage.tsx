@@ -101,6 +101,8 @@ export default function LoginPage({
 
         if (googleBtnContainerRef.current) {
           googleBtnContainerRef.current.innerHTML = "";
+          const containerWidth = googleBtnContainerRef.current.parentElement?.clientWidth || window.innerWidth || 360;
+          const btnWidth = Math.min(380, Math.max(240, containerWidth - 16));
           window.google.accounts.id.renderButton(googleBtnContainerRef.current, {
             type: "standard",
             theme: currentTheme === "dark" ? "filled_black" : "outline",
@@ -108,7 +110,7 @@ export default function LoginPage({
             text: "continue_with",
             shape: "rectangular",
             logo_alignment: "left",
-            width: 340,
+            width: btnWidth,
           });
         }
       } catch (err) {
@@ -130,9 +132,9 @@ export default function LoginPage({
   }, [googleClientId, showLocalAdmin, currentTheme]);
 
   return (
-    <main className="auth-container">
-      {/* Selector de Modo Claro / Oscuro en pantalla de autenticación */}
-      <div className="auth-theme-toggle-slot">
+    <main className="login-page-container auth-container">
+      {/* Selector de tema (Dark/Light mode switch) */}
+      <div className="login-theme-toggle auth-theme-toggle-slot">
         <ThemeToggle />
       </div>
 
@@ -140,161 +142,141 @@ export default function LoginPage({
       <div className="auth-ambient-light auth-ambient-1" aria-hidden="true" />
       <div className="auth-ambient-light auth-ambient-2" aria-hidden="true" />
 
-      {/* Tarjeta con Halo de Iluminación Suave */}
-      <div className="auth-card-wrapper">
-        <div className="auth-card-aura" aria-hidden="true" />
-
-        <div className="auth-card">
-          {/* Encabezado moderno con Isotipo Vectorial del Producto */}
-          <div className="login-header">
-            <div className="login-product-badge">
-              <svg 
-                className="login-product-icon" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="1.8" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                {/* Documento base */}
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                {/* Líneas de acta y firma */}
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-                {/* Sello o pluma de validación */}
-                <path d="m15 15 3-3 3 3-3 3z" fill="currentColor" fillOpacity="0.2" />
-              </svg>
-            </div>
-            <h1 className="login-title">Plataforma de Actas</h1>
-            <p className="login-subtitle">Gestión Documental y Custodia de Activos</p>
-          </div>
-
-          {/* Notificación de error si existe */}
-          {error && (
-            <div className="auth-alert error" role="alert">
-              <span>{error}</span>
-            </div>
-          )}
-
-          {!showLocalAdmin ? (
-            /* ================= ACCESO CORPORATIVO (GOOGLE OAUTH 2.0) ================= */
-            <div className="auth-corporate-flow">
-              {/* Contenedor oficial exclusivo para Google Identity Services */}
-              <div
-                ref={googleBtnContainerRef}
-                className="auth-gis-btn-slot"
-                style={{
-                  minHeight: "44px",
-                  display: "flex",
-                  justifyContent: "center",
-                  margin: "8px 0 20px",
-                }}
-              />
-
-              <div className="auth-switch-box">
-                <button
-                  type="button"
-                  className="auth-link-btn"
-                  onClick={() => setShowLocalAdmin(true)}
-                  disabled={loading}
-                >
-                  <LockIcon size={13} />
-                  <span>Acceso con credenciales locales</span>
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* ================= ACCESO ADMINISTRADOR LOCAL ================= */
-            <form onSubmit={onSubmit} className="auth-form">
-              <div className="form-group">
-                <label htmlFor="loginUser" className="auth-label">
-                  Usuario
-                </label>
-                <div className="auth-input-box">
-                  <span className="auth-input-icon">
-                    <UserIcon size={18} />
-                  </span>
-                  <input
-                    id="loginUser"
-                    name="username"
-                    className="auth-input"
-                    type="text"
-                    value={username}
-                    onChange={onUsernameChange}
-                    placeholder="admin"
-                    autoComplete="username"
-                    disabled={loading}
-                    autoFocus
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="loginPassword" className="auth-label">
-                  Contraseña
-                </label>
-                <div className="auth-input-box">
-                  <span className="auth-input-icon">
-                    <LockIcon size={18} />
-                  </span>
-                  <input
-                    id="loginPassword"
-                    name="password"
-                    className="auth-input"
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={onPasswordChange}
-                    placeholder="••••••••••••"
-                    autoComplete="current-password"
-                    disabled={loading}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="auth-password-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
-                    title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
-                    aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
-                  >
-                    {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="auth-btn-primary"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span>Verificando...</span>
-                ) : (
-                  <>
-                    <span>Iniciar sesión</span>
-                    <ArrowRightIcon size={16} className="auth-btn-arrow" />
-                  </>
-                )}
-              </button>
-
-              <div className="auth-switch-box">
-                <button
-                  type="button"
-                  className="auth-link-btn"
-                  onClick={() => setShowLocalAdmin(false)}
-                  disabled={loading}
-                >
-                  <ArrowLeftIcon size={13} />
-                  <span>Volver al acceso corporativo</span>
-                </button>
-              </div>
-            </form>
-          )}
+      {/* Tarjeta principal con comportamiento fluido */}
+      <div className="login-card auth-card">
+        {/* Encabezado con Identidad Corporativa Oficial ASSIST */}
+        <div className="login-header">
+          <img
+            src="/brand/assist-logo.png"
+            alt="ASSIST Consultores"
+            className="login-brand-logo"
+            width={180}
+            height={48}
+          />
+          <h1 className="login-title">Plataforma de Actas</h1>
+          <p className="login-subtitle">Gestión Documental y Custodia de Activos</p>
         </div>
+
+        {/* Notificación de error si existe */}
+        {error && (
+          <div className="auth-alert error" role="alert">
+            <span>{error}</span>
+          </div>
+        )}
+
+        {!showLocalAdmin ? (
+          /* ================= ACCESO CORPORATIVO (GOOGLE OAUTH 2.0) ================= */
+          <div className="login-btn-group auth-corporate-flow">
+            {/* Contenedor oficial exclusivo para Google Identity Services */}
+            <div
+              ref={googleBtnContainerRef}
+              className="auth-gis-btn-slot"
+              style={{
+                minHeight: "48px",
+                display: "flex",
+                justifyContent: "center",
+                width: "100%",
+              }}
+            />
+
+            <button
+              type="button"
+              className="btn-local-auth auth-link-btn"
+              onClick={() => setShowLocalAdmin(true)}
+              disabled={loading}
+            >
+              <LockIcon size={16} />
+              <span>Acceso con credenciales locales</span>
+            </button>
+          </div>
+        ) : (
+          /* ================= ACCESO ADMINISTRADOR LOCAL ================= */
+          <form onSubmit={onSubmit} className="auth-form" style={{ width: "100%" }}>
+            <div className="form-group">
+              <label htmlFor="loginUser" className="auth-label">
+                Usuario
+              </label>
+              <div className="auth-input-box">
+                <span className="auth-input-icon">
+                  <UserIcon size={18} />
+                </span>
+                <input
+                  id="loginUser"
+                  name="username"
+                  className="auth-input"
+                  type="text"
+                  value={username}
+                  onChange={onUsernameChange}
+                  placeholder="admin"
+                  autoComplete="username"
+                  disabled={loading}
+                  autoFocus
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="loginPassword" className="auth-label">
+                Contraseña
+              </label>
+              <div className="auth-input-box">
+                <span className="auth-input-icon">
+                  <LockIcon size={18} />
+                </span>
+                <input
+                  id="loginPassword"
+                  name="password"
+                  className="auth-input"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={onPasswordChange}
+                  placeholder="••••••••••••"
+                  autoComplete="current-password"
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  className="auth-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                  title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                >
+                  {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="auth-btn-primary"
+              disabled={loading}
+              style={{ minHeight: "48px" }}
+            >
+              {loading ? (
+                <span>Verificando...</span>
+              ) : (
+                <>
+                  <span>Iniciar sesión</span>
+                  <ArrowRightIcon size={16} className="auth-btn-arrow" />
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              className="btn-local-auth auth-link-btn"
+              onClick={() => setShowLocalAdmin(false)}
+              disabled={loading}
+              style={{ marginTop: "0.5rem" }}
+            >
+              <ArrowLeftIcon size={16} />
+              <span>Volver al acceso corporativo</span>
+            </button>
+          </form>
+        )}
       </div>
     </main>
   );

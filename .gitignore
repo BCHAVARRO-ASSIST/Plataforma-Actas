@@ -9,15 +9,25 @@
 .env
 .env.*
 !.env.example
+.env.local
 **/appsettings.Development.json
 !**/appsettings.Development.example.json
 **/google-credentials*.json
+**/Secrets/
+**/Secrets/*.json
 *.user
 *.suo
 cookies.txt
 token.txt
 *token*.txt
 *cookie*.txt
+
+# Archivos temporales y de respaldo
+*.bak
+*.tmp
+*.orig
+*.old
+*.log
 
 # Herramientas y sistema operativo
 *.exe

@@ -46,6 +46,7 @@ public sealed class UsuarioService(IUsuarioRepository repository) : IUsuarioServ
             Apellido = request.Apellido.Trim(),
             UsuarioRed = trimmedUserRed,
             Correo = trimmedEmail,
+            NumeroDocumento = request.NumeroDocumento?.Trim(),
             PasswordHash = passwordHash,
             Proceso = request.Proceso.Trim(),
             Activo = true
@@ -94,6 +95,7 @@ public sealed class UsuarioService(IUsuarioRepository repository) : IUsuarioServ
         usuario.Apellido = request.Apellido.Trim();
         usuario.UsuarioRed = trimmedUserRed;
         usuario.Correo = trimmedEmail;
+        usuario.NumeroDocumento = request.NumeroDocumento?.Trim();
         usuario.Proceso = request.Proceso.Trim();
         usuario.Activo = request.Activo;
 

@@ -22,30 +22,113 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
   const equipo = acta.equipo;
   const isDevolucion = acta.tipoActa === "Devolución" || acta.tipoActa?.toLowerCase().includes("devoluci");
 
-  // Extraer firma en base64
-  let signatureImage: string | null = null;
+  // Extraer firmas acumulativas en base64
+  let firmaEntregaConsultor: string | null = null;
+  let firmaDevolucionConsultor: string | null = null;
   if (acta.signatureDataJson) {
     try {
       const sigObj = JSON.parse(acta.signatureDataJson);
-      signatureImage = sigObj.firma || sigObj.signature || null;
+      firmaEntregaConsultor = sigObj.firmaEntregaConsultor || null;
+      firmaDevolucionConsultor = sigObj.firmaDevolucionConsultor || null;
+      const genericFirma = sigObj.firma || sigObj.signature || null;
+      if (genericFirma) {
+        if (isDevolucion) {
+          firmaDevolucionConsultor = firmaDevolucionConsultor || genericFirma;
+          firmaEntregaConsultor = firmaEntregaConsultor || genericFirma;
+        } else {
+          firmaEntregaConsultor = firmaEntregaConsultor || genericFirma;
+        }
+      }
     } catch {
-      signatureImage = null;
+      if (acta.signatureDataJson.startsWith("data:") || acta.signatureDataJson.length > 50) {
+        if (isDevolucion) {
+          firmaDevolucionConsultor = acta.signatureDataJson;
+          firmaEntregaConsultor = acta.signatureDataJson;
+        } else {
+          firmaEntregaConsultor = acta.signatureDataJson;
+        }
+      }
     }
   }
 
-  // Extraer observaciones
-  let observacion = "Sin observaciones registradas.";
-  let accesorios: string[] = [];
+  // Extraer observaciones acumulativas
+  let observacionEntrega = acta.observacionesEntrega || "";
+  let observacionDevolucion = acta.observacionesDevolucion || "";
+
+  // Extraer Cédula / Documento de identidad (Prioridad 1: formDataJson manual -> Prioridad 2: destinatarioDocumento -> Prioridad 3: "—")
+  let documentoCc = "";
+  if (acta.formDataJson) {
+    try {
+      const formObj = JSON.parse(acta.formDataJson);
+      documentoCc = formObj.numeroDocumento || formObj.cedula || formObj.documento || "";
+    } catch {}
+  }
+  if (!documentoCc) {
+    documentoCc = acta.destinatarioDocumento || "";
+  }
+  documentoCc = documentoCc || "—";
+
+  // Extraer accesorios y trazabilidad (Entregado vs Devuelto)
+  const canonicalAccessories: { key: string; label: string }[] = [
+    { key: "mouse", label: "Mouse" },
+    { key: "teclado", label: "Teclado" },
+    { key: "base", label: "Base" },
+    { key: "monitor", label: "Monitor" },
+    { key: "guaya", label: "Guaya" },
+    { key: "maletin", label: "Maletín" },
+    { key: "discoDuroExterno", label: "Disco duro externo" },
+  ];
+
+  const accesoriosEstado: Record<string, { entregado: boolean; devuelto: boolean }> = {};
+  canonicalAccessories.forEach(({ key }) => {
+    accesoriosEstado[key] = { entregado: false, devuelto: false };
+  });
+
   try {
     if (acta.formDataJson) {
       const formObj = JSON.parse(acta.formDataJson);
-      observacion = formObj.observacion || formObj.observaciones || "Sin observaciones registradas.";
-      if (Array.isArray(formObj.accesorios)) {
-        accesorios = formObj.accesorios;
+      if (!observacionEntrega) {
+        observacionEntrega = formObj.observacionesEntrega || formObj.observacion || formObj.observaciones || "";
+      }
+      if (!observacionDevolucion) {
+        observacionDevolucion = formObj.observacionesDevolucion || formObj.observacionDevolucion || "";
+      }
+      if (formObj.accesorios && typeof formObj.accesorios === "object" && !Array.isArray(formObj.accesorios)) {
+        Object.entries(formObj.accesorios).forEach(([k, val]) => {
+          const matchItem = canonicalAccessories.find(
+            (c) => c.key.toLowerCase() === k.toLowerCase() || c.label.toLowerCase() === k.toLowerCase()
+          );
+          if (matchItem && typeof val === "object" && val !== null) {
+            const vObj = val as { entregado?: boolean; devuelto?: boolean };
+            accesoriosEstado[matchItem.key] = {
+              entregado: Boolean(vObj.entregado),
+              devuelto: Boolean(vObj.devuelto),
+            };
+          }
+        });
+      } else if (Array.isArray(formObj.accesorios)) {
+        formObj.accesorios.forEach((item: string) => {
+          const matchItem = canonicalAccessories.find(
+            (c) => c.key.toLowerCase() === item.toLowerCase() || c.label.toLowerCase() === item.toLowerCase()
+          );
+          if (matchItem) {
+            accesoriosEstado[matchItem.key] = {
+              entregado: true,
+              devuelto: isDevolucion,
+            };
+          }
+        });
       }
     }
   } catch {
-    observacion = "Sin observaciones registradas.";
+    // fallback
+  }
+
+  if (!observacionEntrega) {
+    observacionEntrega = "Pendiente inspección física en laboratorio.";
+  }
+  if (!observacionDevolucion) {
+    observacionDevolucion = "—";
   }
 
   const fechaCreacionFmt = formatDateTime(acta.fechaCreacion);
@@ -291,15 +374,15 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
 
             {/* 2. DECLARACIÓN INICIAL DE SOPORTE */}
             <div style={{ fontSize: "11px", color: "#1e293b", marginBottom: "14px", lineHeight: "1.45" }}>
-              El área de soporte de Assist Consultores de Sistemas S.A.:{" "}
+              El área de soporte de Assist Consultores de Sistemas S.A.{" "}
               <strong>Entrega</strong>{" "}
-              <span style={{ fontWeight: 800, color: acta.tipoActa !== "Devolución" ? "#1e40af" : "#94a3b8" }}>
-                {acta.tipoActa !== "Devolución" ? "[ X ]" : "[   ]"}
+              <span style={{ fontWeight: 800, color: !isDevolucion ? "#1e40af" : "#94a3b8" }}>
+                {!isDevolucion ? "[ X ]" : "[   ]"}
               </span>{" "}
               &nbsp;
               <strong>Recibe</strong>{" "}
-              <span style={{ fontWeight: 800, color: acta.tipoActa === "Devolución" ? "#1e40af" : "#94a3b8" }}>
-                {acta.tipoActa === "Devolución" ? "[ X ]" : "[   ]"}
+              <span style={{ fontWeight: 800, color: isDevolucion ? "#1e40af" : "#94a3b8" }}>
+                {isDevolucion ? "[ X ]" : "[   ]"}
               </span>{" "}
               &nbsp; el equipo de cómputo y/o accesorios con los siguientes datos anexos:
             </div>
@@ -405,7 +488,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     </tr>
                     <tr>
                       <td style={{ padding: "4px 8px", background: "#edf5fb", border: "1px solid #cbd5e1", fontWeight: 700 }}>Identificación (C.C):</td>
-                      <td style={{ padding: "4px 8px", background: "#edf5fb", border: "1px solid #cbd5e1" }}>—</td>
+                      <td style={{ padding: "4px 8px", background: "#edf5fb", border: "1px solid #cbd5e1" }}>{documentoCc}</td>
                     </tr>
                     <tr>
                       <td style={{ padding: "4px 8px", background: "#ffffff", border: "1px solid #cbd5e1", fontWeight: 700 }}>Fecha de entrega:</td>
@@ -436,22 +519,15 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      "Mouse",
-                      "Teclado",
-                      "Base",
-                      "Monitor",
-                      "Guaya",
-                      "Maletín",
-                      "Disco duro externo",
-                    ].map((item, idx) => {
+                    {canonicalAccessories.map((item, idx) => {
                       const isEven = idx % 2 === 1;
-                      const isEntregado = accesorios.some((a) => a.toLowerCase().includes(item.toLowerCase())) || accesorios.length === 0;
-                      const isDevuelto = acta.tipoActa === "Devolución" && isEntregado;
+                      const estado = accesoriosEstado[item.key] || { entregado: false, devuelto: false };
+                      const isEntregado = estado.entregado;
+                      const isDevuelto = estado.devuelto;
 
                       return (
-                        <tr key={item} style={{ background: isEven ? "#edf5fb" : "#ffffff", border: "1px solid #cbd5e1" }}>
-                          <td style={{ padding: "3.5px 8px" }}>{item}</td>
+                        <tr key={item.key} style={{ background: isEven ? "#edf5fb" : "#ffffff", border: "1px solid #cbd5e1" }}>
+                          <td style={{ padding: "3.5px 8px" }}>{item.label}</td>
                           <td style={{ padding: "3.5px 8px", textAlign: "center", fontWeight: 800, color: isEntregado ? "#1e40af" : "#94a3b8" }}>{isEntregado ? "[ X ]" : "[   ]"}</td>
                           <td style={{ padding: "3.5px 8px", textAlign: "center", fontWeight: 800, color: isDevuelto ? "#1e40af" : "#94a3b8" }}>{isDevuelto ? "[ X ]" : "[   ]"}</td>
                         </tr>
@@ -520,10 +596,10 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     <tbody>
                       <tr style={{ border: "1px solid #cbd5e1" }}>
                         <td style={{ padding: "6px 8px", verticalAlign: "top", minHeight: "38px" }}>
-                          {observacion}
+                          {observacionEntrega}
                         </td>
-                        <td style={{ padding: "6px 8px", verticalAlign: "top", minHeight: "38px", color: "#64748b" }}>
-                          {acta.tipoActa === "Devolución" ? observacion : "—"}
+                        <td style={{ padding: "6px 8px", verticalAlign: "top", minHeight: "38px", color: observacionDevolucion !== "—" ? "#0f172a" : "#64748b" }}>
+                          {observacionDevolucion}
                         </td>
                       </tr>
                     </tbody>
@@ -536,7 +612,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     AUTORIZACIÓN DE DESCUENTO POR NÓMINA O LIQUIDACIÓN EN CASO DE NO DEVOLUCIÓN, PÉRDIDA O DAÑO DE ELEMENTOS ENTREGADOS.
                   </div>
                   <p style={{ margin: "0 0 4px 0" }}>
-                    Yo, <strong>{acta.destinatarioNombre || equipo.asignadoA || "Colaborador"}</strong> identificado(a) con cédula de ciudadanía No. <strong>—</strong>, por medio de la presente declaro que he recibido en condiciones óptimas y funcionales los elementos relacionados con anterioridad.
+                    Yo, <strong>{acta.destinatarioNombre || equipo.asignadoA || "Colaborador"}</strong> identificado(a) con cédula de ciudadanía No. <strong>{documentoCc}</strong>, por medio de la presente declaro que he recibido en condiciones óptimas y funcionales los elementos relacionados con anterioridad.
                   </p>
                   <p style={{ margin: "0 0 4px 0" }}>
                     Reconozco que estos elementos son propiedad de <strong>ASSIST CONSULTORES DE SISTEMAS S.A</strong> y que han sido entregados para el desarrollo de mis funciones laborales. Me comprometo a mantener en buen estado y hacer uso adecuado de dichos elementos.
@@ -555,18 +631,21 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               {/* FIRMAS DE ENTREGA */}
               <div style={{ border: "1px solid #cbd5e1", padding: "8px 12px", borderRadius: "4px", background: "#ffffff" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, marginBottom: "6px", color: "#0f172a" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, marginBottom: "3px", color: "#0f172a" }}>
                   Firmas de Entrega:
+                </div>
+                <div style={{ fontSize: "0.68rem", color: "#1e293b", marginBottom: "6px", lineHeight: "1.35", textAlign: "justify" }}>
+                  Esta autorización se hace en cumplimiento de las normas laborales vigentes y es válida durante el tiempo que dure mi relación laboral con ASSIST CONSULTORES DE SISTEMAS S.A. He sido informado y entiendo completamente las condiciones establecidas en esta cláusula.
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                   <div style={{ border: "1px solid #e2e8f0", padding: "6px", textAlign: "center", borderRadius: "3px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Entrega:</div>
-                    <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "cursive", fontSize: "15px", color: "#1e3a8a" }}>
-                      {!isDevolucion ? "Andrés Trujillo" : ""}
+                    <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <img src="/brand/andres-trujillo-signature.png" alt="Firma Andrés Trujillo" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
                     </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>
-                      <div><strong>Nombre:</strong> {!isDevolucion ? "Andrés Trujillo" : "_________________"}</div>
+                      <div><strong>Nombre:</strong> Andrés Trujillo</div>
                       <div><strong>Cargo:</strong> Ingeniero Soporte</div>
                     </div>
                   </div>
@@ -574,20 +653,18 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                   <div style={{ border: "1px solid #e2e8f0", padding: "6px", textAlign: "center", borderRadius: "3px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Recibe:</div>
                     <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {!isDevolucion ? (
-                        signatureImage ? (
-                          <img src={signatureImage} alt="Firma" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
-                        ) : (
-                          <span style={{ fontSize: "10px", color: "#94a3b8", fontStyle: "italic" }}>Pendiente de firma</span>
-                        )
+                      {firmaEntregaConsultor ? (
+                        <img src={firmaEntregaConsultor} alt="Firma Entrega" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
                       ) : (
-                        <div style={{ height: "42px" }} />
+                        <span style={{ fontSize: "10px", color: "#94a3b8", fontStyle: "italic" }}>
+                          {isDevolucion ? "Firma registrada en entrega" : "Pendiente de firma"}
+                        </span>
                       )}
                     </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>
-                      <div><strong>Nombre:</strong> {!isDevolucion ? (acta.destinatarioNombre || equipo.asignadoA || "Colaborador") : "_________________"}</div>
-                      <div><strong>Cargo:</strong> {!isDevolucion ? (acta.destinatarioCargo || equipo.departamento || "Tecnología") : "_________________"}</div>
-                      {!isDevolucion && <div style={{ fontSize: "8.5px", color: "#64748b" }}>Fecha firma: {fechaFirmaFmt}</div>}
+                      <div><strong>Nombre:</strong> {acta.destinatarioNombre || equipo.asignadoA || "Colaborador"}</div>
+                      <div><strong>Cargo:</strong> {acta.destinatarioCargo || equipo.departamento || "Tecnología"}</div>
+                      <div style={{ fontSize: "8.5px", color: "#64748b" }}>Fecha firma: {fechaFirmaFmt}</div>
                     </div>
                   </div>
                 </div>
@@ -598,8 +675,11 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                 <div style={{ fontSize: "11px", fontWeight: 700, marginBottom: "2px", color: "#0f172a" }}>
                   Firmas de Devolución:
                 </div>
-                <div style={{ fontSize: "9.5px", color: "#475569", marginBottom: "6px" }}>
-                  El equipo de soporte de la organización recibe a conformidad el equipo devuelto: Si {isDevolucion ? "[ X ]" : "[   ]"} &nbsp; No [   ]
+                <div style={{ fontSize: "0.68rem", color: "#1e293b", marginBottom: "3px", lineHeight: "1.35" }}>
+                  El equipo de soporte de la organización recibe a conformidad el equipo de cómputo devuelto por el colaborador:
+                </div>
+                <div style={{ fontSize: "9px", color: "#475569", marginBottom: "6px" }}>
+                  Soporte recibe a conformidad: Si {isDevolucion ? "[ X ]" : "[   ]"} &nbsp; No [   ]
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
@@ -607,8 +687,8 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Entrega:</div>
                     <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {isDevolucion ? (
-                        signatureImage ? (
-                          <img src={signatureImage} alt="Firma" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
+                        firmaDevolucionConsultor ? (
+                          <img src={firmaDevolucionConsultor} alt="Firma Devolución" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
                         ) : (
                           <span style={{ fontSize: "10px", color: "#94a3b8", fontStyle: "italic" }}>Pendiente de firma</span>
                         )
@@ -625,8 +705,10 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
 
                   <div style={{ border: "1px solid #e2e8f0", padding: "6px", textAlign: "center", borderRadius: "3px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Recibe:</div>
-                    <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "cursive", fontSize: "15px", color: "#1e3a8a" }}>
-                      {isDevolucion ? "Andrés Trujillo" : ""}
+                    <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {isDevolucion ? (
+                        <img src="/brand/andres-trujillo-signature.png" alt="Firma Andrés Trujillo" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
+                      ) : null}
                     </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>
                       <div><strong>Nombre:</strong> {isDevolucion ? "Andrés Trujillo" : "_________________"}</div>

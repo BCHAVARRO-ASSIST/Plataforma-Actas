@@ -137,6 +137,8 @@ export function FirmaConsultorView({
         signatureDataJson: JSON.stringify({ firma: currentFirma }),
         observacion: observaciones.trim() || undefined,
         correosNotificacionAdicionales: correosAdicionales.length > 0 ? correosAdicionales : undefined,
+        observacionesEntrega: !isDevolucion ? (observaciones.trim() || undefined) : undefined,
+        observacionesDevolucion: isDevolucion ? (observaciones.trim() || undefined) : undefined,
       });
 
       setSignedCompleted(true);

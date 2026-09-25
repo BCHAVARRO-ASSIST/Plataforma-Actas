@@ -40,19 +40,30 @@ services:
       Jwt__ExpiresMinutes: ${JWT_EXPIRES_MINUTES:-30}
       Cors__AllowedOrigins__0: ${CORS_ORIGIN:-http://localhost:3000}
       Frontend__BaseUrl: ${FRONTEND_BASE_URL:-http://localhost:3000}
-      GoogleIntegration__ClientId: ${GOOGLE_CLIENT_ID:-}
+      GoogleIntegration__ClientId: ${GOOGLE_CLIENT_ID:-104519674085578864792}
+      GoogleIntegration__ServiceAccountKeyPath: ${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-Secrets/google-credentials.json}
+      GoogleIntegration__AdminImpersonationEmail: ${GOOGLE_ADMIN_IMPERSONATION_EMAIL:-soporte@assist.com.co}
+      GoogleIntegration__GmailImpersonationEmail: ${GOOGLE_GMAIL_IMPERSONATION_EMAIL:-soporte@assist.com.co}
+      EmailSettings__Server: ${SMTP_HOST:-smtp.gmail.com}
+      EmailSettings__Port: ${SMTP_PORT:-587}
+      EmailSettings__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+      EmailSettings__Username: ${SMTP_USERNAME:-}
+      EmailSettings__Password: ${SMTP_PASSWORD:-}
+      EmailSettings__SenderEmail: ${SMTP_FROM_EMAIL:-soporte@assist.com.co}
+      EmailSettings__SenderName: ${SMTP_FROM_NAME:-Soporte - Assist Consultores}
       Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
       Smtp__Port: ${SMTP_PORT:-587}
       Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
       Smtp__UserName: ${SMTP_USERNAME:-}
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-soporte@assist.com.co}
-      Smtp__FromName: ${SMTP_FROM_NAME:-Assist Consultores de Sistemas - Soporte IT}
+      Smtp__FromName: ${SMTP_FROM_NAME:-Soporte - Assist Consultores}
     # Expuesto únicamente en localhost para diagnóstico directo
     ports:
       - "127.0.0.1:${API_PORT:-8080}:8080"
     volumes:
       - storage_documentos:/app/storage/documentos
+      - ./apps/api/Secrets/google-credentials.json:/app/Secrets/google-credentials.json:ro
       - ./apps/api/Resources/google-credentials.json:/app/Resources/google-credentials.json:ro
       - ./apps/api/Resources/assist-logo.png:/app/Resources/assist-logo.png:ro
       - ./apps/api/Resources/andres-trujillo-signature.png:/app/Resources/andres-trujillo-signature.png:ro
@@ -97,7 +108,6 @@ networks:
     driver: bridge
   backend-net:
     driver: bridge
-    internal: true
 
 volumes:
   postgres_data:

@@ -58,9 +58,19 @@ public class JwtTokenServiceTests
         Assert.NotNull(nameIdClaim);
         Assert.Equal("101", nameIdClaim.Value);
 
-        // El token NO debe contener lista de permisos ni datos de perfil redundantes en el payload
-        Assert.Null(jwt.Claims.FirstOrDefault(c => c.Type == "permiso"));
-        Assert.Null(jwt.Claims.FirstOrDefault(c => c.Type == "email"));
-        Assert.Null(jwt.Claims.FirstOrDefault(c => c.Type == "role"));
+        // El token debe contener name y role
+        var nameClaim = jwt.Claims.FirstOrDefault(c => c.Type == "unique_name" || c.Type == ClaimTypes.Name);
+        Assert.NotNull(nameClaim);
+        Assert.Equal("cperez", nameClaim.Value);
+
+        var roleClaim = jwt.Claims.FirstOrDefault(c => c.Type == "role" || c.Type == ClaimTypes.Role);
+        Assert.NotNull(roleClaim);
+        Assert.Equal("Administrador", roleClaim.Value);
+
+        // El token debe contener los claims permission
+        var permissionClaims = jwt.Claims.Where(c => c.Type == "permission").Select(c => c.Value).ToList();
+        Assert.Contains("actas.crear", permissionClaims);
+        Assert.Contains("actas.firmar", permissionClaims);
+        Assert.Contains("inventario.editar", permissionClaims);
     }
 }

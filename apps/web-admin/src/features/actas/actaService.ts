@@ -25,6 +25,8 @@ export interface Acta {
   signatureDataJson?: string | null;
   hashSha256: string | null;
   motivoAnulacion: string | null;
+  observacionesEntrega?: string | null;
+  observacionesDevolucion?: string | null;
 }
 
 export interface ActaDetail extends Omit<Acta, "equipmentId"> {
@@ -32,6 +34,7 @@ export interface ActaDetail extends Omit<Acta, "equipmentId"> {
   destinatarioNombre?: string | null;
   destinatarioCorreo?: string | null;
   destinatarioCargo?: string | null;
+  destinatarioDocumento?: string | null;
   mensajeroNombre?: string | null;
   mensajeroCorreo?: string | null;
 }
@@ -46,12 +49,16 @@ export interface CreateActaRequest {
   formDataJson: string;
   tipoActa: "Entrega" | "Devolución";
   actaOrigenId: string | null;
+  observacionesEntrega?: string | null;
+  observacionesDevolucion?: string | null;
 }
 
 export interface FirmarActaRequest {
   signatureDataJson: string;
   observacion?: string;
   correosNotificacionAdicionales?: string[];
+  observacionesEntrega?: string | null;
+  observacionesDevolucion?: string | null;
 }
 
 export interface GenerarDocumentoResponse {

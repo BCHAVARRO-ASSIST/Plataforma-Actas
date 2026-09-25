@@ -47,6 +47,8 @@ public class Acta
     public string? HashSha256 { get; set; }
     public string? MotivoAnulacion { get; set; }
     public string? SignatureDataJson { get; set; }
+    public string? ObservacionesEntrega { get; set; }
+    public string? ObservacionesDevolucion { get; set; }
 
     public ICollection<ActaObservation> Observations { get; set; } = new List<ActaObservation>();
     public ICollection<ActaSignature> Signatures { get; set; } = new List<ActaSignature>();

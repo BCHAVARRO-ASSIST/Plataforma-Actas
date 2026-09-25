@@ -51,6 +51,7 @@ export function UsuariosPage() {
     apellido: "",
     usuarioRed: "",
     correo: "",
+    numeroDocumento: "",
     proceso: "General",
     activo: true,
     password: "",
@@ -146,6 +147,7 @@ export function UsuariosPage() {
       apellido: "",
       usuarioRed: "",
       correo: "",
+      numeroDocumento: "",
       proceso: "Tecnología",
       activo: true,
       password: "",
@@ -162,6 +164,7 @@ export function UsuariosPage() {
       apellido: u.apellido,
       usuarioRed: u.usuarioRed,
       correo: u.correo,
+      numeroDocumento: u.numeroDocumento || "",
       proceso: u.proceso || "General",
       activo: u.activo,
       password: "",
@@ -199,6 +202,7 @@ export function UsuariosPage() {
           apellido: formulario.apellido.trim(),
           usuarioRed: formulario.usuarioRed.trim(),
           correo: formulario.correo.trim(),
+          numeroDocumento: formulario.numeroDocumento.trim() || undefined,
           proceso: formulario.proceso.trim(),
           password: formulario.password.trim() || undefined,
           rolId: formulario.rolId ? Number(formulario.rolId) : undefined,
@@ -210,6 +214,7 @@ export function UsuariosPage() {
           apellido: formulario.apellido.trim(),
           usuarioRed: formulario.usuarioRed.trim(),
           correo: formulario.correo.trim(),
+          numeroDocumento: formulario.numeroDocumento.trim() || undefined,
           proceso: formulario.proceso.trim(),
           activo: formulario.activo,
         });
@@ -485,8 +490,15 @@ export function UsuariosPage() {
                         >
                           {u.nombre.charAt(0)}{u.apellido.charAt(0)}
                         </div>
-                        <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "13.5px" }}>
-                          {u.nombre} {u.apellido}
+                        <div>
+                          <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "13.5px" }}>
+                            {u.nombre} {u.apellido}
+                          </div>
+                          {u.numeroDocumento && (
+                            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                              C.C. {u.numeroDocumento}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -753,6 +765,18 @@ export function UsuariosPage() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                   <div className="form-group">
+                    <label className="form-label" htmlFor="usuarioDocumentoInput">Cédula / Documento (C.C.)</label>
+                    <input
+                      id="usuarioDocumentoInput"
+                      name="numeroDocumento"
+                      type="text"
+                      className="form-input"
+                      placeholder="Ej. 1018485291"
+                      value={formulario.numeroDocumento}
+                      onChange={(e) => setFormulario({ ...formulario, numeroDocumento: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
                     <label className="form-label" htmlFor="usuarioProcesoInput">Proceso / Departamento</label>
                     <input
                       id="usuarioProcesoInput"
@@ -764,26 +788,27 @@ export function UsuariosPage() {
                       onChange={(e) => setFormulario({ ...formulario, proceso: e.target.value })}
                     />
                   </div>
-                  {modoFormulario === "crear" && (
-                    <div className="form-group">
-                      <label className="form-label" htmlFor="usuarioRolSelect">Rol Inicial</label>
-                      <select
-                        id="usuarioRolSelect"
-                        name="rolId"
-                        className="form-select"
-                        value={formulario.rolId}
-                        onChange={(e) => setFormulario({ ...formulario, rolId: e.target.value })}
-                      >
-                        <option value="">-- Sin Rol Inicial --</option>
-                        {roles.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
                 </div>
+
+                {modoFormulario === "crear" && (
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="usuarioRolSelect">Rol Inicial</label>
+                    <select
+                      id="usuarioRolSelect"
+                      name="rolId"
+                      className="form-select"
+                      value={formulario.rolId}
+                      onChange={(e) => setFormulario({ ...formulario, rolId: e.target.value })}
+                    >
+                      <option value="">-- Sin Rol Inicial --</option>
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {modoFormulario === "crear" && (
                   <div className="form-group">

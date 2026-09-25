@@ -6,6 +6,7 @@ export interface Usuario {
   apellido: string;
   usuarioRed: string;
   correo: string;
+  numeroDocumento?: string | null;
   proceso: string;
   activo: boolean;
   rolId: number | null;
@@ -17,6 +18,7 @@ export interface UsuarioCreateRequest {
   apellido: string;
   usuarioRed: string;
   correo: string;
+  numeroDocumento?: string | null;
   proceso: string;
 }
 
@@ -25,6 +27,7 @@ export interface UsuarioUpdateRequest {
   apellido: string;
   usuarioRed: string;
   correo: string;
+  numeroDocumento?: string | null;
   proceso: string;
   activo: boolean;
 }

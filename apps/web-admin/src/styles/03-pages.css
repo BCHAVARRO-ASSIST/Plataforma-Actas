@@ -3,21 +3,78 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. AUTH PAGES (LOGIN) - ELEVATED & MODERN EXECUTIVE
+   1. AUTH PAGES (LOGIN) - RESPONSIVE & EXECUTIVE IDENTITY
    -------------------------------------------------------------------------- */
+.login-page-container,
 .auth-container {
   min-height: 100vh;
+  min-height: 100dvh; /* Evita saltos por la barra de navegación en navegadores móviles */
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  background-color: #090d16;
+  padding: 1rem;
+  box-sizing: border-box;
+  background-color: var(--bg-body, #0b0f19);
   background-image: 
     radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     radial-gradient(circle at 50% -10%, #1e1b4b 0%, #090d16 75%);
   background-size: 24px 24px, 100% 100%;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+}
+
+/* Selector de tema (Dark/Light mode switch) */
+.login-theme-toggle,
+.auth-theme-toggle-slot {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+}
+
+/* Tarjeta principal con comportamiento fluido */
+.login-card,
+.auth-card {
+  width: 100%;
+  max-width: 440px; /* En escritorio se bloquea en un ancho cómodo */
+  border-radius: 1.25rem;
+  box-sizing: border-box;
+  padding: 2.25rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.25s ease;
+  position: relative;
+  z-index: 10;
+
+  /* Modo Claro */
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+/* En pantallas grandes (Desktop >= 768px) mayor respiración interna */
+@media (min-width: 768px) {
+  .login-page-container,
+  .auth-container {
+    padding: 2rem;
+  }
+  .login-card,
+  .auth-card {
+    padding: 2.75rem 2.25rem;
+  }
+}
+
+/* En móviles pequeños (<= 360px) reducir ligeramente el padding */
+@media (max-width: 360px) {
+  .login-card,
+  .auth-card {
+    padding: 1.5rem 1.15rem;
+    border-radius: 1rem;
+  }
 }
 
 /* Ambient Floating Blur Lights */
@@ -46,91 +103,11 @@
   right: 20%;
 }
 
-/* Auth Card Wrapper with Dimensional Aura */
-.auth-card-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 410px;
-  z-index: 10;
-  animation: cardSlideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes cardSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.auth-card-aura {
-  position: absolute;
-  inset: -1px;
-  border-radius: 22px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(168, 85, 247, 0.25), rgba(56, 189, 248, 0.3));
-  filter: blur(14px);
-  opacity: 0.65;
-  z-index: -1;
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-
-.auth-card-wrapper:hover .auth-card-aura {
-  opacity: 0.9;
-  filter: blur(18px);
-}
-
-.auth-card {
-  width: 100%;
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 40px 34px;
-  box-shadow:
-    0 25px 50px -12px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(255, 255, 255, 0.2),
-    0 1px 3px rgba(0, 0, 0, 0.05);
-  position: relative;
-  box-sizing: border-box;
-}
-
-[data-theme="dark"] .auth-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-default);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
+/* Titulares y Subtítulos */
 .login-header,
 .auth-header {
   text-align: center;
-}
-
-.login-product-badge {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 16px auto;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  box-shadow: 0 8px 16px -4px rgba(37, 99, 235, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: transform 0.2s ease;
-}
-
-.login-product-icon {
-  width: 28px;
-  height: 28px;
-}
-
-.auth-theme-toggle-slot {
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  z-index: 50;
+  width: 100%;
 }
 
 .login-title,
@@ -149,13 +126,96 @@
   margin: 0 0 24px 0;
 }
 
+/* Modo Oscuro */
+[data-theme="dark"] .login-card,
+[data-theme="dark"] .auth-card {
+  background-color: var(--bg-surface-elevated, #18233c) !important;
+  border: 1px solid var(--border-default, #1e2e4a) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  color: #f8fafc !important;
+}
+
 [data-theme="dark"] .login-title,
 [data-theme="dark"] .auth-title {
-  color: #f8fafc;
+  color: #f8fafc !important;
 }
 
 [data-theme="dark"] .login-subtitle {
+  color: #94a3b8 !important;
+}
+
+/* Identidad corporativa ASSIST */
+.login-brand-logo {
+  height: 48px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  margin-bottom: 1.25rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  transition: transform 0.2s ease;
+}
+
+[data-theme="dark"] .login-brand-logo {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 6px 14px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Botones e interacciones táctiles */
+.login-btn-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-top: 1.75rem;
+}
+
+.btn-google,
+.btn-local-auth {
+  width: 100%;
+  min-height: 48px; /* Altura óptima para dedos en móvil */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  padding: 0 1rem;
+}
+
+/* Estilo botón Google */
+.btn-google {
+  background-color: #ffffff;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+}
+[data-theme="dark"] .btn-google {
+  background-color: #1e293b;
+  color: #f8fafc;
+  border-color: #334155;
+}
+[data-theme="dark"] .btn-google:hover {
+  background-color: #273549;
+}
+
+/* Botón de acceso local */
+.btn-local-auth {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #64748b;
+}
+[data-theme="dark"] .btn-local-auth {
   color: #94a3b8;
+}
+.btn-local-auth:hover {
+  color: #3b82f6;
+  text-decoration: underline;
 }
 
 .auth-badge {

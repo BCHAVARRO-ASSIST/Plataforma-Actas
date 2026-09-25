@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -113,8 +114,77 @@ public sealed class ActaService(
             ActaOrigenId = request.ActaOrigenId,
             DeviceId = request.DeviceId,
             FormDataJson = request.FormDataJson,
+            ObservacionesEntrega = request.ObservacionesEntrega,
+            ObservacionesDevolucion = request.ObservacionesDevolucion,
             FechaCreacion = DateTimeOffset.UtcNow
         };
+
+        if ((string.Equals(tipoActa, "Devolución", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(tipoActa, "Devolucion", StringComparison.OrdinalIgnoreCase)) &&
+            request.ActaOrigenId.HasValue)
+        {
+            var actaOrigen = await actaRepository.GetByIdAsync(request.ActaOrigenId.Value, cancellationToken);
+            if (actaOrigen != null)
+            {
+                if (string.IsNullOrWhiteSpace(acta.ObservacionesEntrega))
+                {
+                    acta.ObservacionesEntrega = actaOrigen.ObservacionesEntrega;
+                }
+                if (!string.IsNullOrWhiteSpace(actaOrigen.SignatureDataJson))
+                {
+                    acta.SignatureDataJson = actaOrigen.SignatureDataJson;
+                }
+
+                // Heredar y consolidar accesorios y cédula/documento desde el acta origen si no están presentes
+                if (!string.IsNullOrWhiteSpace(actaOrigen.FormDataJson))
+                {
+                    try
+                    {
+                        using var origDoc = System.Text.Json.JsonDocument.Parse(actaOrigen.FormDataJson);
+                        var currentFormData = string.IsNullOrWhiteSpace(acta.FormDataJson)
+                            ? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                            : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(acta.FormDataJson) ?? new(StringComparer.OrdinalIgnoreCase);
+
+                        bool modified = false;
+
+                        if (origDoc.RootElement.TryGetProperty("accesorios", out var origAcc) && !currentFormData.ContainsKey("accesorios"))
+                        {
+                            currentFormData["accesorios"] = System.Text.Json.JsonSerializer.Deserialize<object>(origAcc.GetRawText())!;
+                            modified = true;
+                        }
+
+                        if (!currentFormData.ContainsKey("numeroDocumento") && !currentFormData.ContainsKey("cedula"))
+                        {
+                            string? origCedula = null;
+                            if (origDoc.RootElement.TryGetProperty("numeroDocumento", out var nd) && nd.ValueKind == System.Text.Json.JsonValueKind.String)
+                                origCedula = nd.GetString();
+                            else if (origDoc.RootElement.TryGetProperty("cedula", out var c) && c.ValueKind == System.Text.Json.JsonValueKind.String)
+                                origCedula = c.GetString();
+                            else if (origDoc.RootElement.TryGetProperty("documento", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.String)
+                                origCedula = d.GetString();
+
+                            if (string.IsNullOrWhiteSpace(origCedula) && actaOrigen.DestinatarioUsuario != null && !string.IsNullOrWhiteSpace(actaOrigen.DestinatarioUsuario.NumeroDocumento))
+                            {
+                                origCedula = actaOrigen.DestinatarioUsuario.NumeroDocumento;
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(origCedula))
+                            {
+                                currentFormData["numeroDocumento"] = origCedula.Trim();
+                                currentFormData["cedula"] = origCedula.Trim();
+                                modified = true;
+                            }
+                        }
+
+                        if (modified)
+                        {
+                            acta.FormDataJson = System.Text.Json.JsonSerializer.Serialize(currentFormData);
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
 
         var created = await actaRepository.AddAsync(acta, cancellationToken);
 
@@ -179,43 +249,167 @@ public sealed class ActaService(
             throw new InvalidOperationException($"El acta '{acta.NumeroActa}' no se puede firmar porque su estado actual es '{acta.Estado}'. Solo las actas en estado 'Borrador' pueden ser firmadas.");
         }
 
-        string normalizedSignatureJson;
+        var isDevolucion = string.Equals(acta.TipoActa, "Devolución", StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(acta.TipoActa, "Devolucion", StringComparison.OrdinalIgnoreCase);
+
+        // Extraer la firma capturada en este evento
+        string capturedSignature = request.SignatureDataJson;
         try
         {
             using var doc = System.Text.Json.JsonDocument.Parse(request.SignatureDataJson);
-            normalizedSignatureJson = request.SignatureDataJson;
+            if (doc.RootElement.TryGetProperty("firma", out var f) && f.ValueKind == System.Text.Json.JsonValueKind.String)
+                capturedSignature = f.GetString() ?? capturedSignature;
+            else if (doc.RootElement.TryGetProperty("signature", out var s) && s.ValueKind == System.Text.Json.JsonValueKind.String)
+                capturedSignature = s.GetString() ?? capturedSignature;
         }
         catch
         {
-            normalizedSignatureJson = System.Text.Json.JsonSerializer.Serialize(new
-            {
-                firma = request.SignatureDataJson
-            });
+            // Raw base64 string
         }
 
-        acta.SignatureDataJson = normalizedSignatureJson;
-        acta.FechaFirma = DateTimeOffset.UtcNow;
-        acta.Estado = "Firmada";
+        // Construir diccionario de firmas acumulativo
+        var signatureDict = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
-        if (!string.IsNullOrWhiteSpace(request.Observacion))
+        // Si ya existían firmas previas en el acta, preservarlas
+        if (!string.IsNullOrWhiteSpace(acta.SignatureDataJson))
         {
             try
             {
-                var formData = string.IsNullOrWhiteSpace(acta.FormDataJson)
-                    ? new Dictionary<string, object>()
-                    : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(acta.FormDataJson) ?? new();
-                formData["observacion"] = request.Observacion.Trim();
-                acta.FormDataJson = System.Text.Json.JsonSerializer.Serialize(formData);
-            }
-            catch
-            {
-                acta.FormDataJson = System.Text.Json.JsonSerializer.Serialize(new
+                using var prevDoc = System.Text.Json.JsonDocument.Parse(acta.SignatureDataJson);
+                foreach (var prop in prevDoc.RootElement.EnumerateObject())
                 {
-                    tipo = acta.TipoActa,
-                    observacion = request.Observacion.Trim()
-                });
+                    if (prop.Value.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        signatureDict[prop.Name] = prop.Value.GetString();
+                    }
+                }
+            }
+            catch { }
+        }
+
+        // Si es Devolución y tiene ActaOrigen, traer firmas históricas de Entrega si no están presentes
+        if (isDevolucion && acta.ActaOrigenId.HasValue)
+        {
+            var actaOrigen = await actaRepository.GetByIdAsync(acta.ActaOrigenId.Value, cancellationToken);
+            if (actaOrigen != null)
+            {
+                if (!string.IsNullOrWhiteSpace(actaOrigen.SignatureDataJson))
+                {
+                    try
+                    {
+                        using var origDoc = System.Text.Json.JsonDocument.Parse(actaOrigen.SignatureDataJson);
+                        if (origDoc.RootElement.TryGetProperty("firmaEntregaConsultor", out var fec) && fec.ValueKind == System.Text.Json.JsonValueKind.String)
+                            signatureDict.TryAdd("firmaEntregaConsultor", fec.GetString());
+                        else if (origDoc.RootElement.TryGetProperty("firma", out var fOrig) && fOrig.ValueKind == System.Text.Json.JsonValueKind.String)
+                            signatureDict.TryAdd("firmaEntregaConsultor", fOrig.GetString());
+
+                        if (origDoc.RootElement.TryGetProperty("firmaEntregaSoporte", out var fes) && fes.ValueKind == System.Text.Json.JsonValueKind.String)
+                            signatureDict.TryAdd("firmaEntregaSoporte", fes.GetString());
+                    }
+                    catch { }
+                }
+
+                // Preservar observaciones de entrega del origen si el acta actual no tiene
+                if (string.IsNullOrWhiteSpace(acta.ObservacionesEntrega))
+                {
+                    acta.ObservacionesEntrega = actaOrigen.ObservacionesEntrega;
+                }
+
+                // Preservar accesorios y cédula/documento entregados del origen si no están presentes
+                if (!string.IsNullOrWhiteSpace(actaOrigen.FormDataJson))
+                {
+                    try
+                    {
+                        using var origDoc = System.Text.Json.JsonDocument.Parse(actaOrigen.FormDataJson);
+                        var currentFormData = string.IsNullOrWhiteSpace(acta.FormDataJson)
+                            ? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                            : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(acta.FormDataJson) ?? new(StringComparer.OrdinalIgnoreCase);
+
+                        bool modified = false;
+
+                        if (origDoc.RootElement.TryGetProperty("accesorios", out var origAcc) && !currentFormData.ContainsKey("accesorios"))
+                        {
+                            currentFormData["accesorios"] = System.Text.Json.JsonSerializer.Deserialize<object>(origAcc.GetRawText())!;
+                            modified = true;
+                        }
+
+                        if (!currentFormData.ContainsKey("numeroDocumento") && !currentFormData.ContainsKey("cedula"))
+                        {
+                            string? origCedula = null;
+                            if (origDoc.RootElement.TryGetProperty("numeroDocumento", out var nd) && nd.ValueKind == System.Text.Json.JsonValueKind.String)
+                                origCedula = nd.GetString();
+                            else if (origDoc.RootElement.TryGetProperty("cedula", out var c) && c.ValueKind == System.Text.Json.JsonValueKind.String)
+                                origCedula = c.GetString();
+                            else if (origDoc.RootElement.TryGetProperty("documento", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.String)
+                                origCedula = d.GetString();
+
+                            if (string.IsNullOrWhiteSpace(origCedula) && actaOrigen.DestinatarioUsuario != null && !string.IsNullOrWhiteSpace(actaOrigen.DestinatarioUsuario.NumeroDocumento))
+                            {
+                                origCedula = actaOrigen.DestinatarioUsuario.NumeroDocumento;
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(origCedula))
+                            {
+                                currentFormData["numeroDocumento"] = origCedula.Trim();
+                                currentFormData["cedula"] = origCedula.Trim();
+                                modified = true;
+                            }
+                        }
+
+                        if (modified)
+                        {
+                            acta.FormDataJson = System.Text.Json.JsonSerializer.Serialize(currentFormData);
+                        }
+                    }
+                    catch { }
+                }
             }
         }
+
+        if (isDevolucion)
+        {
+            signatureDict["firmaDevolucionConsultor"] = capturedSignature;
+            signatureDict["firmaDevolucionSoporte"] = "AndresTrujillo";
+            signatureDict["firma"] = capturedSignature;
+
+            var obsDev = request.ObservacionesDevolucion ?? request.Observacion;
+            if (!string.IsNullOrWhiteSpace(obsDev))
+            {
+                acta.ObservacionesDevolucion = obsDev.Trim();
+            }
+        }
+        else
+        {
+            signatureDict["firmaEntregaConsultor"] = capturedSignature;
+            signatureDict["firmaEntregaSoporte"] = "AndresTrujillo";
+            signatureDict["firma"] = capturedSignature;
+
+            var obsEnt = request.ObservacionesEntrega ?? request.Observacion;
+            if (!string.IsNullOrWhiteSpace(obsEnt))
+            {
+                acta.ObservacionesEntrega = obsEnt.Trim();
+            }
+        }
+
+        acta.SignatureDataJson = System.Text.Json.JsonSerializer.Serialize(signatureDict);
+        acta.FechaFirma = DateTimeOffset.UtcNow;
+        acta.Estado = "Firmada";
+
+        // Sincronizar en FormDataJson para retrocompatibilidad con clientes existentes
+        try
+        {
+            var formData = string.IsNullOrWhiteSpace(acta.FormDataJson)
+                ? new Dictionary<string, object>()
+                : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(acta.FormDataJson) ?? new();
+
+            if (!string.IsNullOrWhiteSpace(acta.ObservacionesEntrega))
+                formData["observacion"] = acta.ObservacionesEntrega;
+            if (!string.IsNullOrWhiteSpace(acta.ObservacionesDevolucion))
+                formData["observacionDevolucion"] = acta.ObservacionesDevolucion;
+
+            acta.FormDataJson = System.Text.Json.JsonSerializer.Serialize(formData);
+        }
+        catch { }
 
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
@@ -274,22 +468,64 @@ public sealed class ActaService(
             // Encolamiento asíncrono y desacoplado de la notificación por correo
             try
             {
-                var toList = new List<string>();
-                if (!string.IsNullOrWhiteSpace(acta.DestinatarioUsuario?.Correo))
+                var consultorEmail = acta.DestinatarioUsuario?.Correo;
+                if (string.IsNullOrWhiteSpace(consultorEmail) && !string.IsNullOrWhiteSpace(acta.FormDataJson))
                 {
-                    toList.Add(acta.DestinatarioUsuario.Correo.Trim());
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(acta.FormDataJson);
+                        if (doc.RootElement.TryGetProperty("correo", out var p1) && p1.ValueKind == System.Text.Json.JsonValueKind.String)
+                            consultorEmail = p1.GetString();
+                        else if (doc.RootElement.TryGetProperty("email", out var p2) && p2.ValueKind == System.Text.Json.JsonValueKind.String)
+                            consultorEmail = p2.GetString();
+                        else if (doc.RootElement.TryGetProperty("destinatarioCorreo", out var p3) && p3.ValueKind == System.Text.Json.JsonValueKind.String)
+                            consultorEmail = p3.GetString();
+                    }
+                    catch { }
                 }
 
+                if (string.IsNullOrWhiteSpace(consultorEmail))
+                {
+                    logger.LogWarning("El acta {NumeroActa} no tiene asignado un correo electrónico para el consultor/destinatario. Se omitirá el destinatario principal.", acta.NumeroActa);
+                }
+                else if (!IsValidEmail(consultorEmail))
+                {
+                    logger.LogWarning("El correo del consultor '{ConsultorEmail}' en el acta {NumeroActa} no cumple un formato válido. Omitiendo destinatario principal.", consultorEmail, acta.NumeroActa);
+                }
+
+                var additionalEmails = new List<string>();
                 if (request.CorreosNotificacionAdicionales != null)
                 {
-                    foreach (var email in request.CorreosNotificacionAdicionales)
+                    additionalEmails.AddRange(request.CorreosNotificacionAdicionales);
+                }
+
+                if (!string.IsNullOrWhiteSpace(acta.FormDataJson))
+                {
+                    try
                     {
-                        if (!string.IsNullOrWhiteSpace(email) && !toList.Any(e => string.Equals(e, email.Trim(), StringComparison.OrdinalIgnoreCase)))
+                        using var doc = System.Text.Json.JsonDocument.Parse(acta.FormDataJson);
+                        if (doc.RootElement.TryGetProperty("correosAdicionales", out var prop) && prop.ValueKind == System.Text.Json.JsonValueKind.Array)
                         {
-                            toList.Add(email.Trim());
+                            foreach (var item in prop.EnumerateArray())
+                            {
+                                var itemStr = item.GetString();
+                                if (!string.IsNullOrWhiteSpace(itemStr) && !additionalEmails.Contains(itemStr.Trim(), StringComparer.OrdinalIgnoreCase))
+                                {
+                                    additionalEmails.Add(itemStr.Trim());
+                                }
+                            }
                         }
                     }
+                    catch { }
                 }
+
+                // El correo del operador o usuario logueado que registró/firmó el acta debe excluirse
+                var creatorEmail = acta.Usuario?.Correo;
+
+                var toList = BuildRecipientsList(
+                    consultorEmail,
+                    additionalEmails,
+                    creatorEmail: creatorEmail);
 
                 var ccList = Array.Empty<string>();
                 var bccList = Array.Empty<string>();
@@ -418,5 +654,96 @@ public sealed class ActaService(
 
         await actaRepository.UpdateAsync(acta, cancellationToken);
         return acta.ToResponse();
+    }
+
+    /// <summary>
+    /// Valida si una cadena de texto corresponde a una dirección de correo sintácticamente válida.
+    /// </summary>
+    public static bool IsValidEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email)) return false;
+        try
+        {
+            var addr = new MailAddress(email.Trim());
+            return addr.Address == email.Trim();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Construye de forma limpia la lista de destinatarios del correo de notificación de actas.
+    /// Excluye estrictamente al operador que registró/firmó el acta y correos administrativos predeterminados.
+    /// </summary>
+    public static List<string> BuildRecipientsList(
+        string? consultorEmail,
+        IEnumerable<string>? correosAdicionales,
+        string? creatorEmail = null,
+        IEnumerable<string>? excludedEmails = null)
+    {
+        var recipients = new List<string>();
+        var excludedSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(creatorEmail))
+        {
+            excludedSet.Add(creatorEmail.Trim());
+        }
+
+        if (excludedEmails != null)
+        {
+            foreach (var email in excludedEmails)
+            {
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    excludedSet.Add(email.Trim());
+                }
+            }
+        }
+
+        // 1. Correo electrónico del Consultor / Colaborador asignado (el titular del acta)
+        if (!string.IsNullOrWhiteSpace(consultorEmail) && IsValidEmail(consultorEmail))
+        {
+            var trimmedConsultor = consultorEmail.Trim();
+            recipients.Add(trimmedConsultor);
+        }
+
+        // 2. Lista de Correos Adicionales ingresados en el formulario del acta (si existen y cumplen formato válido)
+        if (correosAdicionales != null)
+        {
+            foreach (var email in correosAdicionales)
+            {
+                if (string.IsNullOrWhiteSpace(email)) continue;
+                var trimmed = email.Trim();
+
+                if (!IsValidEmail(trimmed)) continue;
+                if (excludedSet.Contains(trimmed)) continue;
+
+                if (!recipients.Any(r => string.Equals(r, trimmed, StringComparison.OrdinalIgnoreCase)))
+                {
+                    recipients.Add(trimmed);
+                }
+            }
+        }
+
+        // Eliminar estrictamente de la lista de destinatarios el correo del creador/operador o administradores predeterminados
+        if (!string.IsNullOrWhiteSpace(creatorEmail))
+        {
+            recipients.RemoveAll(r => string.Equals(r, creatorEmail.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (excludedEmails != null)
+        {
+            foreach (var excluded in excludedEmails)
+            {
+                if (!string.IsNullOrWhiteSpace(excluded))
+                {
+                    recipients.RemoveAll(r => string.Equals(r, excluded.Trim(), StringComparison.OrdinalIgnoreCase));
+                }
+            }
+        }
+
+        return recipients;
     }
 }

@@ -16,28 +16,67 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
     {
         public const string SessionCookieName = "actas_session_token";
 
-        public static void AppendSessionCookie(HttpContext context, string token, int expiresMinutes = 30)
+        private static bool IsConnectionSecure(HttpContext context)
         {
+            if (context.Request.IsHttps)
+            {
+                return true;
+            }
+
+            // Detección adaptativa de TLS detrás de proxies inversos y balanceadores (Cloudflare, Nginx, ALB, Traefik)
+            var protoHeader = context.Request.Headers["X-Forwarded-Proto"].ToString();
+            if (!string.IsNullOrWhiteSpace(protoHeader))
+            {
+                var protos = protoHeader.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                if (protos.Any(p => string.Equals(p, "https", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+            }
+
+            var cfVisitor = context.Request.Headers["CF-Visitor"].ToString();
+            if (!string.IsNullOrWhiteSpace(cfVisitor) && cfVisitor.Contains("\"scheme\":\"https\"", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (string.Equals(context.Request.Headers["X-Forwarded-Ssl"], "on", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(context.Request.Headers["Front-End-Https"], "on", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static void AppendSessionCookie(HttpContext context, string token, int expiresMinutes = 480)
+        {
+            var isHttps = IsConnectionSecure(context);
+
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = context.Request.IsHttps,
+                Secure = isHttps, // true de forma obligatoria en HTTPS / Cloudflare; false en HTTP localhost
                 SameSite = SameSiteMode.Lax,
                 Path = "/",
-                Expires = DateTimeOffset.UtcNow.AddMinutes(expiresMinutes)
+                Expires = DateTimeOffset.UtcNow.AddHours(8),
+                MaxAge = TimeSpan.FromHours(8)
             };
             context.Response.Cookies.Append(SessionCookieName, token, cookieOptions);
         }
 
         public static void RemoveSessionCookie(HttpContext context)
         {
+            var isHttps = IsConnectionSecure(context);
+
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = context.Request.IsHttps,
+                Secure = isHttps,
                 SameSite = SameSiteMode.Lax,
                 Path = "/",
-                Expires = DateTimeOffset.UtcNow.AddDays(-1)
+                Expires = DateTimeOffset.UtcNow.AddDays(-1),
+                MaxAge = TimeSpan.Zero
             };
             context.Response.Cookies.Append(SessionCookieName, "", cookieOptions);
             context.Response.Cookies.Delete(SessionCookieName, cookieOptions);

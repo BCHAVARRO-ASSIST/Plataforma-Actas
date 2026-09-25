@@ -8,6 +8,7 @@ interface ActaLivePreviewProps {
   selectedEquipment?: Equipo;
   selectedDestinatario?: Usuario;
   selectedMensajero?: Usuario;
+  numeroDocumento?: string;
   isValid: boolean;
   saving: boolean;
   onCancel: () => void;
@@ -19,12 +20,14 @@ export function ActaLivePreview({
   selectedEquipment,
   selectedDestinatario,
   selectedMensajero,
+  numeroDocumento,
   isValid,
   saving,
   onCancel,
 }: ActaLivePreviewProps) {
   const tieneEquipo = Boolean(selectedEquipment);
   const tieneDestinatario = Boolean(selectedDestinatario);
+  const tieneDocumento = Boolean(numeroDocumento?.trim());
   const tieneOrigen = actaType === "Entrega" || Boolean(actaOrigenId);
 
   return (
@@ -110,6 +113,12 @@ export function ActaLivePreview({
                 {selectedDestinatario.correo} ({selectedDestinatario.usuarioRed})
               </span>
             )}
+            <span style={{ fontSize: "11.5px", marginTop: "2px" }}>
+              <span style={{ color: "var(--text-muted)" }}>C.C: </span>
+              <strong style={{ color: tieneDocumento ? "var(--color-primary-700)" : "var(--color-danger-600)", fontFamily: "monospace" }}>
+                {numeroDocumento?.trim() || "Sin ingresar *"}
+              </strong>
+            </span>
           </div>
 
           {/* Mensajero */}
@@ -156,6 +165,10 @@ export function ActaLivePreview({
           <span style={{ color: tieneDestinatario ? "var(--color-success-700)" : "var(--color-danger-600)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "5px" }}>
             {tieneDestinatario ? <CheckIcon size={13} /> : <span style={{ display: "inline-block", width: "5px", height: "5px", borderRadius: "50%", background: "currentColor" }} />}
             <span>Destinatario seleccionado</span>
+          </span>
+          <span style={{ color: tieneDocumento ? "var(--color-success-700)" : "var(--color-danger-600)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "5px" }}>
+            {tieneDocumento ? <CheckIcon size={13} /> : <span style={{ display: "inline-block", width: "5px", height: "5px", borderRadius: "50%", background: "currentColor" }} />}
+            <span>Cédula de identidad ingresada</span>
           </span>
           {actaType === "Devolución" && (
             <span style={{ color: tieneOrigen ? "var(--color-success-700)" : "var(--color-danger-600)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "5px" }}>

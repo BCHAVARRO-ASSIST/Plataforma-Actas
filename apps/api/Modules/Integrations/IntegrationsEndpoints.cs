@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
+using PlataformaActas.Api.Authorization;
 using PlataformaActas.Api.Modules.Auth.Endpoints;
 using PlataformaActas.Api.Modules.Auth.Models.Dto;
 using PlataformaActas.Api.Modules.Integrations.Google;
@@ -25,7 +26,7 @@ public static class IntegrationsEndpoints
             var result = await syncService.SyncInventoryAsync(cancellationToken);
             return result.Success ? Results.Ok(result) : Results.BadRequest(result);
         })
-        .RequireAuthorization();
+        .RequireAnyPermission(Permissions.EquiposRegistrar, Permissions.EquiposEditar);
 
         // 2. Estado de la última sincronización
         group.MapGet("/google-drive/status", (IGoogleDriveSyncService syncService) =>
@@ -35,7 +36,7 @@ public static class IntegrationsEndpoints
                 ? Results.Ok(status)
                 : Results.Ok(new { message = "Aún no se ha ejecutado ninguna sincronización en esta sesión." });
         })
-        .RequireAuthorization();
+        .RequirePermission(Permissions.EquiposConsultar);
 
         // 3. Verificación de usuario en Directorio de Google
         group.MapGet("/google-directory/user/{email}", async (
@@ -46,7 +47,7 @@ public static class IntegrationsEndpoints
             var result = await directoryService.ValidateUserAsync(email, cancellationToken);
             return Results.Ok(result);
         })
-        .RequireAuthorization();
+        .RequireAnyPermission(Permissions.UsuariosConsultar, Permissions.UsuariosRegistrar);
 
         // 4. Autenticación Oficial con Google OAuth (Google Identity Services)
         endpoints.MapPost("/api/auth/google", async (

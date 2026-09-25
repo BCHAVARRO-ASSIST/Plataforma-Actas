@@ -10,6 +10,7 @@ namespace PlataformaActas.Api.Modules.Usuarios.Data.Entities
         public string Apellido { get; set; } = string.Empty;
         public string UsuarioRed { get; set; } = string.Empty;
         public string Correo { get; set; } = string.Empty;
+        public string? NumeroDocumento { get; set; }
         public string? PasswordHash { get; set; }
         public string Proceso { get; set; } = string.Empty;
         public bool Activo { get; set; } = true;
@@ -54,6 +55,10 @@ namespace PlataformaActas.Api.Modules.Usuarios.Data.Configurations
             builder.HasIndex(u => u.Correo)
                 .IsUnique();
 
+            builder.Property(u => u.NumeroDocumento)
+                .HasColumnName("numero_documento")
+                .HasMaxLength(30);
+
             builder.Property(u => u.PasswordHash)
                 .HasMaxLength(255);
 
@@ -74,11 +79,11 @@ namespace PlataformaActas.Api.Modules.Usuarios.Data.Configurations
 
 namespace PlataformaActas.Api.Modules.Usuarios.Models.Dto
 {
-    public record UsuarioCreateRequest(string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, string? Password = null, int? RolId = null);
-    public record UsuarioUpdateRequest(string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, bool Activo);
+    public record UsuarioCreateRequest(string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, string? Password = null, int? RolId = null, string? NumeroDocumento = null);
+    public record UsuarioUpdateRequest(string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, bool Activo, string? NumeroDocumento = null);
     public record UsuarioResetPasswordRequest(string NewPassword, string ConfirmPassword);
     public record UsuarioRolRequest(int RolId);
-    public record UsuarioResponse(int Id, string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, bool Activo, DateTime FechaCreacion, string? RolNombre, int? RolId);
+    public record UsuarioResponse(int Id, string Nombre, string Apellido, string UsuarioRed, string Correo, string Proceso, bool Activo, DateTime FechaCreacion, string? RolNombre, int? RolId, string? NumeroDocumento = null);
 }
 
 namespace PlataformaActas.Api.Modules.Usuarios.Models.Mappers
@@ -102,7 +107,8 @@ namespace PlataformaActas.Api.Modules.Usuarios.Models.Mappers
                 usuario.Activo,
                 usuario.FechaCreacion,
                 rolAsignado?.Rol?.Nombre,
-                rolAsignado?.RolId
+                rolAsignado?.RolId,
+                usuario.NumeroDocumento
             );
         }
     }
