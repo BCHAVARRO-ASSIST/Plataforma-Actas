@@ -1,6 +1,6 @@
 import { SearchIcon } from "@/components/ui/Icons";
 
-export interface EquipoFiltersProps {
+export interface EquipmentFiltersProps {
   search: string;
   status: string;
   brand: string;
@@ -11,9 +11,9 @@ export interface EquipoFiltersProps {
   onClear: () => void;
 }
 
-export type EquipmentFiltersProps = EquipoFiltersProps;
+export type EquipoFiltersProps = EquipmentFiltersProps;
 
-export function EquipoFilters({
+export function EquipmentFilters({
   search,
   status,
   brand,
@@ -22,7 +22,7 @@ export function EquipoFilters({
   onStatusChange,
   onBrandChange,
   onClear,
-}: EquipoFiltersProps) {
+}: EquipmentFiltersProps) {
   return (
     <div className="toolbar-container" style={{ background: 'var(--bg-surface)', padding: '16px 20px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-default)' }}>
       <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, flexWrap: 'wrap' }}>
@@ -87,4 +87,4 @@ export function EquipoFilters({
   );
 }
 
-export const EquipmentFilters = EquipoFilters;
+export const EquipoFilters = EquipmentFilters;

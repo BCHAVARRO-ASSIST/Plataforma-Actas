@@ -4,7 +4,7 @@ import type {
   ActasReportItem,
   EntregasReportItem,
   DevolucionesReportItem,
-} from "@/features/reportes/reportesService";
+} from "../reportsService";
 import {
   EquipmentIcon,
   CheckIcon,

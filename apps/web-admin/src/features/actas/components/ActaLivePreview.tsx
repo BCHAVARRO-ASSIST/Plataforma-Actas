@@ -1,5 +1,5 @@
-import type { Equipo } from "@/features/equipos/equipoService";
-import type { Usuario } from "@/features/usuarios/usuarioService";
+import type { Equipment as Equipo } from "@/features/equipment/equipmentService";
+import type { User as Usuario } from "@/features/users/userService";
 import { ActaIcon, CheckIcon } from "@/components/ui/Icons";
 
 interface ActaLivePreviewProps {

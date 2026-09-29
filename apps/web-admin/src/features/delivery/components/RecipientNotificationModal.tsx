@@ -3,7 +3,7 @@ import { useState, type KeyboardEvent } from "react";
 /**
  * Propiedades del componente de gestión de destinatarios de notificación de actas.
  */
-export interface NotificacionDestinatariosProps {
+export interface RecipientNotificationModalProps {
   /**
    * Correo corporativo del consultor asignado (destinatario principal inmutable).
    * Proviene del directorio institucional y no puede ser removido por el mensajero en campo
@@ -33,22 +33,14 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /**
  * Componente interactivo para la pre-carga fija del custodio y la incorporación dinámica de copias en campo.
  *
- * @remarks
- * **Regla de Negocio y Diferenciación de Destinatarios:**
- * El sistema distingue estrictamente entre:
- * 1. **Destinatario Principal Fijo:** Vinculado automáticamente al registro del colaborador desde el directorio corporativo.
- *    Es obligatorio, de solo lectura e inmutable en campo para asegurar la validez jurídica de la notificación de custodia.
- * 2. **Copias Adicionales Dinámicas (Cc):** Permite al mensajero o consultor registrar en sitio correos de jefes de proyecto,
- *    clientes corporativos o correos personales alternativos mediante chips interactivos validados contra `EMAIL_REGEX`.
- *
- * @param props - Propiedades de configuración del componente {@link NotificacionDestinatariosProps}.
+ * @param props - Propiedades de configuración del componente {@link RecipientNotificationModalProps}.
  */
-export function NotificacionDestinatarios({
+export function RecipientNotificationModal({
   consultorCorreo,
   consultorNombre,
   onAdditionalEmailsChange,
   disabled = false,
-}: NotificacionDestinatariosProps) {
+}: RecipientNotificationModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [emails, setEmails] = useState<string[]>([]);
@@ -114,7 +106,7 @@ export function NotificacionDestinatarios({
             className="btn btn-ghost btn-sm"
             onClick={() => setIsOpen(true)}
             disabled={disabled}
-            style={{ fontSize: "12px", color: "var(--color-primary-600)", padding: "4px 8px" }}
+            style={{ fontSize: "12px", color: "var(--color-primary-500)", padding: "4px 8px" }}
           >
             + Agregar copia (opcional)
           </button>
@@ -129,23 +121,24 @@ export function NotificacionDestinatarios({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "8px 12px",
-          backgroundColor: "var(--bg-muted, #f8fafc)",
+          backgroundColor: "var(--bg-muted)",
           borderRadius: "6px",
-          border: "1px solid var(--border-subtle, #e2e8f0)",
+          border: "1px solid var(--border-subtle)",
           fontSize: "12px",
         }}
       >
         <span style={{ color: "var(--text-secondary)" }}>
-          Para: <strong>{consultorNombre || "Consultor"}</strong> ({displayPrimaryEmail})
+          Para: <strong style={{ color: "var(--text-primary)" }}>{consultorNombre || "Consultor"}</strong> ({displayPrimaryEmail})
         </span>
         <span
+          className="badge"
           style={{
-            fontSize: "10px",
-            backgroundColor: "var(--color-primary-50, #eff6ff)",
-            color: "var(--color-primary-700, #1d4ed8)",
-            padding: "2px 6px",
-            borderRadius: "4px",
-            fontWeight: 600,
+            fontSize: "10.5px",
+            backgroundColor: "var(--color-primary-50)",
+            color: "var(--color-primary-600)",
+            border: "1px solid var(--color-primary-200)",
+            padding: "2px 8px",
+            fontWeight: 700,
           }}
         >
           Principal
@@ -219,3 +212,7 @@ export function NotificacionDestinatarios({
     </div>
   );
 }
+
+// Retrocompatibilidad
+export { RecipientNotificationModal as NotificacionDestinatarios };
+export type { RecipientNotificationModalProps as NotificacionDestinatariosProps };

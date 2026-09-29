@@ -34,7 +34,7 @@ namespace PlataformaActas.Api.Modules.Actas.Services;
 /// </remarks>
 public sealed class ActaService(
     IActaRepository actaRepository,
-    IDocumentoActaService documentoActaService,
+    IActaDocumentService documentoActaService,
     IFileStorageProvider fileStorageProvider,
     IEmailNotificationQueue emailQueue,
     ILogger<ActaService> logger,

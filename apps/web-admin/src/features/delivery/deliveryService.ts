@@ -1,5 +1,5 @@
 import { apiGet } from "../../shared/api/httpClient";
-import type { Equipo } from "../equipos/equipoService";
+import type { Equipo } from "../equipment/equipmentService";
 
 export interface MensajeroActa {
   id: string;
@@ -37,14 +37,24 @@ export interface MensajeroActaDetail extends MensajeroActa {
   fechaAnulacion: string | null;
 }
 
+export type DeliveryActa = MensajeroActa;
+export type DeliveryActaDetail = MensajeroActaDetail;
+export type CourierActa = MensajeroActa;
+export type CourierActaDetail = MensajeroActaDetail;
+
 export async function getMisActas(): Promise<MensajeroActa[]> {
   return apiGet<MensajeroActa[]>("/actas/mis-actas", {
     errorMessage: "No fue posible obtener las actas asignadas.",
   });
 }
+export const getDeliveryActas = getMisActas;
+export const getCourierActas = getMisActas;
 
 export async function getMiActaById(id: string): Promise<MensajeroActaDetail> {
   return apiGet<MensajeroActaDetail>(`/actas/${id}`, {
     errorMessage: "No fue posible obtener el detalle del acta.",
   });
 }
+export const getDeliveryActaById = getMiActaById;
+export const getCourierActaById = getMiActaById;
+

@@ -265,7 +265,7 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             // 10. Visualizar PDF inline
             group.MapGet("/{id:guid}/pdf", async (
                 Guid id,
-                IDocumentoActaService documentoService,
+                IActaDocumentService documentoService,
                 CancellationToken cancellationToken) =>
             {
                 try
@@ -283,7 +283,7 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             // 11. Descargar archivo PDF
             group.MapGet("/{id:guid}/descargar-pdf", async (
                 Guid id,
-                IDocumentoActaService documentoService,
+                IActaDocumentService documentoService,
                 CancellationToken cancellationToken) =>
             {
                 try
@@ -301,7 +301,7 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             // 12. Regenerar PDF
             group.MapPost("/{id:guid}/generar-pdf", async (
                 Guid id,
-                IDocumentoActaService documentoService,
+                IActaDocumentService documentoService,
                 CancellationToken cancellationToken) =>
             {
                 try
@@ -330,7 +330,9 @@ namespace PlataformaActas.Api.Modules.Actas
             services.AddScoped<PlataformaActas.Api.Infrastructure.Storage.IFileStorageProvider, PlataformaActas.Api.Infrastructure.Storage.LocalFileStorageProvider>();
             services.AddScoped<IActaRepository, ActaRepository>();
             services.AddScoped<IActaService, ActaService>();
-            services.AddScoped<IDocumentoActaService, DocumentoActaService>();
+            services.AddScoped<ActaDocumentService>();
+            services.AddScoped<IActaDocumentService>(sp => sp.GetRequiredService<ActaDocumentService>());
+            services.AddScoped<IDocumentoActaService>(sp => sp.GetRequiredService<ActaDocumentService>());
             return services;
         }
 

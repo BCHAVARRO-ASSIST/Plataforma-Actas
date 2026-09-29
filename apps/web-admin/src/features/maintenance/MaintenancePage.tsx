@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  getMantenimientos as getMaintenanceRecords,
-  updateEquipoMantenimiento as updateEquipmentMaintenance,
-  type RegistroMantenimiento as MaintenanceRecord,
-} from "@/features/equipos/equipoService";
+  getMaintenanceRecords,
+  updateEquipmentMaintenance,
+  type MaintenanceRecord,
+} from "@/features/equipment/equipmentService";
 import {
   MaintenanceIcon,
   CheckIcon,
@@ -20,7 +20,7 @@ import { formatDate } from "@/shared/utils/date";
 
 const ITEMS_PER_PAGE = 15;
 
-export function MantenimientosPage() {
+export function MaintenancePage() {
   const [records, setRecords] = useState<MaintenanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -451,3 +451,6 @@ export function MantenimientosPage() {
     </div>
   );
 }
+
+// Retrocompatibilidad
+export { MaintenancePage as MantenimientosPage };

@@ -7,8 +7,8 @@ import {
   getRol,
   updateRolPermisos,
   deleteRol,
-} from "./rolService";
-import type { Rol, Permiso } from "./rolService";
+} from "./roleService";
+import type { Rol, Permiso } from "./roleService";
 import {
   SearchIcon,
   RefreshIcon,

@@ -4,9 +4,10 @@ import type {
 } from "@/features/actas/actaService";
 import { finalizarActa, anularActa, descargarActaDocumento, generarActaDocumento } from "@/features/actas/actaService";
 import { useAuth } from "@/features/auth/useAuth";
+import { useConfirm } from "@/shared/hooks/useConfirm";
 import { PERMISSIONS, hasPermission } from "@/features/auth/permissions";
 import { OfficialActaModal } from "./OfficialActaModal";
-import { FirmaConsultorView } from "./FirmaConsultorView";
+import { ConsultantSignatureView } from "./ConsultantSignatureView";
 import {
   EyeIcon,
   DownloadIcon,
@@ -24,6 +25,7 @@ import {
   SignatureIcon,
 } from "@/components/ui/Icons";
 import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
+import { Modal } from "@/components/ui/Modal";
 
 // =====================================================
 // PROPS
@@ -99,6 +101,7 @@ export function ActaDetail({
   onRefresh,
 }: ActaDetailProps) {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const equipo = acta.equipo;
 
   const [loadingAction, setLoadingAction] = useState(false);
@@ -138,7 +141,7 @@ export function ActaDetail({
 
   if (showFirmaConsultorView) {
     return (
-      <FirmaConsultorView
+      <ConsultantSignatureView
         actaId={acta.id}
         numeroActa={acta.numeroActa}
         tipoActa={acta.tipoActa}
@@ -194,7 +197,15 @@ export function ActaDetail({
   }
 
   async function handleFinalizar() {
-    if (!window.confirm("¿Estás seguro de que deseas finalizar este acta? Una vez finalizada no podrá modificarse.")) {
+    const isConfirmed = await confirm({
+      title: "Finalizar Acta",
+      message: "¿Estás seguro de que deseas finalizar esta acta? Una vez finalizada no podrá modificarse.",
+      confirmText: "Sí, finalizar",
+      cancelText: "Cancelar",
+      variant: "danger",
+    });
+
+    if (!isConfirmed) {
       return;
     }
 
@@ -878,128 +889,90 @@ export function ActaDetail({
           MODAL ANULAR ACTA
       ================================================== */}
       {isAnularModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 20000,
-            padding: "20px",
-            animation: "actaFadeIn 0.2s ease",
-          }}
-          onClick={() => setIsAnularModalOpen(false)}
+        <Modal
+          isOpen={isAnularModalOpen}
+          onClose={() => setIsAnularModalOpen(false)}
+          size="small"
+          ariaLabel="Anulación de Acta"
         >
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "16px",
-              width: "100%",
-              maxWidth: "480px",
-              padding: "26px",
-              boxShadow: "0 25px 50px -12px rgba(15, 23, 42, 0.25)",
-              border: "1px solid var(--border-default)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 800, color: "var(--text-primary)" }}>
+          <div className="modal-header">
+            <div>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-danger-600)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                Acción Crítica
+              </span>
+              <h2 style={{ margin: "2px 0 0", fontSize: "18px", fontWeight: 800, color: "var(--text-primary)" }}>
                 Anulación de Acta
               </h2>
-              <button
-                type="button"
-                onClick={() => setIsAnularModalOpen(false)}
-                style={{
-                  background: "var(--color-slate-100)",
-                  border: "none",
-                  borderRadius: "var(--radius-sm)",
-                  padding: "6px",
-                  cursor: "pointer",
-                  color: "var(--text-muted)",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <CloseIcon size={16} />
-              </button>
             </div>
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setIsAnularModalOpen(false)}
+              aria-label="Cerrar modal"
+            >
+              <CloseIcon size={16} />
+            </button>
+          </div>
 
-            <form onSubmit={handleConfirmAnular}>
-              <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", margin: "0 0 16px 0", lineHeight: 1.5 }}>
+          <form onSubmit={handleConfirmAnular} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+            <div className="modal-body" style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+              <p style={{ fontSize: "13.5px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.5 }}>
                 Ingresa el motivo detallado de la anulación para el acta <strong style={{ color: "var(--text-primary)" }}>{acta.numeroActa}</strong>. Si el equipo estaba asignado, regresará automáticamente a estado activo.
               </p>
 
-              <label
-                htmlFor="motivoAnulacion"
-                style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "var(--text-secondary)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}
-              >
-                Motivo de anulación *
-              </label>
-              <textarea
-                id="motivoAnulacion"
-                name="motivoAnulacion"
-                required
-                rows={3}
-                value={motivoAnulacion}
-                onChange={(e) => setMotivoAnulacion(e.target.value)}
-                placeholder="Ej. Error en número de serie del equipo asignado..."
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  border: "1px solid var(--border-strong)",
-                  borderRadius: "var(--radius-md)",
-                  fontSize: "14px",
-                  fontFamily: "inherit",
-                  boxSizing: "border-box",
-                  outline: "none",
-                }}
-              />
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "20px" }}>
-                <button
-                  type="button"
-                  onClick={() => setIsAnularModalOpen(false)}
-                  disabled={loadingAction}
-                  style={{
-                    padding: "8px 16px",
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--border-default)",
-                    borderRadius: "var(--radius-md)",
-                    color: "var(--text-secondary)",
-                    fontWeight: 600,
-                    fontSize: "13px",
-                    cursor: "pointer",
-                  }}
+              <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label
+                  htmlFor="motivoAnulacion"
+                  className="form-label"
+                  style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px" }}
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={loadingAction}
+                  Motivo de anulación <span className="required-dot" style={{ color: "var(--color-danger-500)" }}>*</span>
+                </label>
+                <textarea
+                  id="motivoAnulacion"
+                  name="motivoAnulacion"
+                  required
+                  rows={3}
+                  value={motivoAnulacion}
+                  onChange={(e) => setMotivoAnulacion(e.target.value)}
+                  placeholder="Ej. Error en número de serie del equipo asignado..."
+                  className="form-textarea"
                   style={{
-                    padding: "8px 18px",
-                    background: "var(--color-danger-600)",
-                    color: "#ffffff",
-                    border: "none",
+                    width: "100%",
+                    padding: "12px",
+                    background: "var(--bg-input, var(--bg-surface))",
+                    border: "1px solid var(--border-input, var(--border-strong))",
                     borderRadius: "var(--radius-md)",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    boxShadow: "0 2px 4px rgba(225, 29, 72, 0.25)",
+                    fontSize: "14px",
+                    fontFamily: "inherit",
+                    color: "var(--text-primary)",
+                    boxSizing: "border-box",
+                    outline: "none",
                   }}
-                >
-                  {loadingAction ? "Anulando..." : "Confirmar Anulación"}
-                </button>
+                />
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+
+            <div className="modal-footer" style={{ borderTop: "1px solid var(--border-default)", background: "var(--bg-surface)", padding: "16px 24px", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setIsAnularModalOpen(false)}
+                disabled={loadingAction}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="btn confirm-btn-submit confirm-btn-danger"
+                disabled={loadingAction}
+                style={{ minWidth: "160px" }}
+              >
+                {loadingAction ? "Anulando..." : "Confirmar Anulación"}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
     </section>

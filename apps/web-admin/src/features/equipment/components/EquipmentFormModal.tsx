@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Equipo, CreateEquipoRequest, UpdateEquipoRequest } from "@/features/equipos/equipoService";
+import type { Equipment, CreateEquipmentRequest, UpdateEquipmentRequest } from "../equipmentService";
 import {
   CloseIcon,
   EquipmentIcon,
@@ -16,23 +16,23 @@ import {
 import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
 import { Modal } from "@/components/ui/Modal";
 
-export interface EquipoFormModalProps {
+export interface EquipmentFormModalProps {
   isOpen: boolean;
-  equipmentToEdit: Equipo | null;
+  equipmentToEdit: Equipment | null;
   onClose: () => void;
-  onSave: (data: CreateEquipoRequest | UpdateEquipoRequest) => Promise<void>;
+  onSave: (data: CreateEquipmentRequest | UpdateEquipmentRequest) => Promise<void>;
   saving: boolean;
 }
 
-export type EquipmentFormModalProps = EquipoFormModalProps;
+export type EquipoFormModalProps = EquipmentFormModalProps;
 
-export function EquipoFormModal({
+export function EquipmentFormModal({
   isOpen,
   equipmentToEdit,
   onClose,
   onSave,
   saving,
-}: EquipoFormModalProps) {
+}: EquipmentFormModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="custom" closeOnEsc={!saving}>
       <EquipmentFormContent
@@ -45,8 +45,6 @@ export function EquipoFormModal({
     </Modal>
   );
 }
-
-export const EquipmentFormModal = EquipoFormModal;
 
 const STATUS_OPTIONS = [
   { value: "Activo", label: "Activo (Disponible)", dotColor: "var(--color-success-500)" },
@@ -61,9 +59,9 @@ function EquipmentFormContent({
   onSave,
   saving,
 }: {
-  equipmentToEdit: Equipo | null;
+  equipmentToEdit: Equipment | null;
   onClose: () => void;
-  onSave: (data: CreateEquipoRequest | UpdateEquipoRequest) => Promise<void>;
+  onSave: (data: CreateEquipmentRequest | UpdateEquipmentRequest) => Promise<void>;
   saving: boolean;
 }) {
   const [inventoryKey, setInventoryKey] = useState(equipmentToEdit?.inventoryKey || "");
@@ -453,3 +451,7 @@ function EquipmentFormContent({
     </div>
   );
 }
+
+// Retrocompatibilidad
+export { EquipmentFormModal as EquipoFormModal };
+

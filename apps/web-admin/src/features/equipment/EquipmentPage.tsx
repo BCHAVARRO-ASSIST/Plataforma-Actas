@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { EquipoFilters } from "./components/EquipoFilters";
-import { EquipoTable } from "./components/EquipoTable";
-import { EquipoFormModal } from "./components/EquipoFormModal";
+import { EquipmentFilters } from "./components/EquipmentFilters";
+import { EquipmentTable } from "./components/EquipmentTable";
+import { EquipmentFormModal } from "./components/EquipmentFormModal";
 import {
-  getEquipos,
-  createEquipo,
-  updateEquipo,
-  deactivateEquipo,
-  activateEquipo,
-  deleteEquipo,
+  getEquipment,
+  createEquipment,
+  updateEquipment,
+  deactivateEquipment,
+  activateEquipment,
+  deleteEquipment,
   syncGoogleDriveInventory,
-} from "./equipoService";
-import type { Equipo, CreateEquipoRequest, UpdateEquipoRequest } from "./equipoService";
+} from "./equipmentService";
+import type { Equipment, CreateEquipmentRequest, UpdateEquipmentRequest } from "./equipmentService";
 import { useAuth } from "@/features/auth/useAuth";
+import { useConfirm } from "@/shared/hooks/useConfirm";
 import { PERMISSIONS, hasPermission } from "@/features/auth/permissions";
 import {
   EquipmentIcon,
@@ -27,10 +28,11 @@ import { Pagination } from "@/components/ui/Pagination";
 
 const ITEMS_PER_PAGE = 12;
 
-export function EquiposPage() {
+export function EquipmentPage() {
   const { user } = useAuth();
+  const confirm = useConfirm();
 
-  const [equipment, setEquipment] = useState<Equipo[]>([]);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export function EquiposPage() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingEquipment, setEditingEquipment] = useState<Equipo | null>(null);
+  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [saving, setSaving] = useState(false);
   const [syncingDrive, setSyncingDrive] = useState(false);
 
@@ -70,7 +72,7 @@ export function EquiposPage() {
         setLoading(true);
         setError(null);
       }
-      const data = await getEquipos();
+      const data = await getEquipment();
       setEquipment(data);
     } catch (err) {
       if (!silent) {
@@ -159,19 +161,19 @@ export function EquiposPage() {
     setIsModalOpen(true);
   }
 
-  function handleOpenEdit(item: Equipo) {
+  function handleOpenEdit(item: Equipment) {
     setEditingEquipment(item);
     setIsModalOpen(true);
   }
 
-  async function handleSaveEquipment(data: CreateEquipoRequest | UpdateEquipoRequest) {
+  async function handleSaveEquipment(data: CreateEquipmentRequest | UpdateEquipmentRequest) {
     try {
       setSaving(true);
       if (editingEquipment) {
-        await updateEquipo(editingEquipment.id, data as UpdateEquipoRequest);
+        await updateEquipment(editingEquipment.id, data as UpdateEquipmentRequest);
         setSuccessMessage(`Equipo ${data.inventoryKey} actualizado correctamente.`);
       } else {
-        await createEquipo(data as CreateEquipoRequest);
+        await createEquipment(data as CreateEquipmentRequest);
         setSuccessMessage(`Equipo ${data.inventoryKey} registrado correctamente.`);
       }
       setIsModalOpen(false);
@@ -183,21 +185,29 @@ export function EquiposPage() {
     }
   }
 
-  async function handleToggleStatus(item: Equipo) {
+  async function handleToggleStatus(item: Equipment) {
     const isActivo = item.estatusEquipo?.toLowerCase() === "activo" || item.estatusEquipo?.toLowerCase() === "asignado";
     const confirmMessage = isActivo
       ? `¿Estás seguro de que deseas desactivar el equipo ${item.inventoryKey}?`
       : `¿Estás seguro de que deseas activar el equipo ${item.inventoryKey}?`;
 
-    if (!window.confirm(confirmMessage)) return;
+    const isConfirmed = await confirm({
+      title: isActivo ? "Desactivar Equipo" : "Activar Equipo",
+      message: confirmMessage,
+      confirmText: isActivo ? "Desactivar" : "Activar",
+      cancelText: "Cancelar",
+      variant: isActivo ? "warning" : "info",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setError(null);
       if (isActivo) {
-        await deactivateEquipo(item.id);
+        await deactivateEquipment(item.id);
         setSuccessMessage(`Equipo ${item.inventoryKey} desactivado correctamente.`);
       } else {
-        await activateEquipo(item.id);
+        await activateEquipment(item.id);
         setSuccessMessage(`Equipo ${item.inventoryKey} activado correctamente.`);
       }
       await loadEquipment();
@@ -206,13 +216,20 @@ export function EquiposPage() {
     }
   }
 
-  async function handleDeleteEquipment(item: Equipo) {
-    const confirmMessage = `¿Estás seguro de que deseas eliminar permanentemente el equipo inactivo ${item.inventoryKey} (${item.nombreEquipo})?\n\nEsta acción no se puede deshacer.`;
-    if (!window.confirm(confirmMessage)) return;
+  async function handleDeleteEquipment(item: Equipment) {
+    const isConfirmed = await confirm({
+      title: "Eliminar Equipo",
+      message: `¿Estás seguro de que deseas eliminar permanentemente el equipo inactivo ${item.inventoryKey} (${item.nombreEquipo})?\n\nEsta acción no se puede deshacer.`,
+      confirmText: "Eliminar definitivamente",
+      cancelText: "Cancelar",
+      variant: "danger",
+    });
+
+    if (!isConfirmed) return;
 
     try {
       setError(null);
-      await deleteEquipo(item.id);
+      await deleteEquipment(item.id);
       setSuccessMessage(`Equipo ${item.inventoryKey} eliminado definitivamente del inventario.`);
       await loadEquipment();
     } catch (err) {
@@ -343,19 +360,19 @@ export function EquiposPage() {
       />
 
       {/* Filters Toolbar */}
-      <EquipoFilters
+      <EquipmentFilters
         search={search}
         status={status}
         brand={brand}
         brands={brands}
-        onSearchChange={(v) => { setSearch(v); setCurrentPage(1); }}
-        onStatusChange={(v) => { setStatus(v); setCurrentPage(1); }}
-        onBrandChange={(v) => { setBrand(v); setCurrentPage(1); }}
+        onSearchChange={(v: string) => { setSearch(v); setCurrentPage(1); }}
+        onStatusChange={(v: string) => { setStatus(v); setCurrentPage(1); }}
+        onBrandChange={(v: string) => { setBrand(v); setCurrentPage(1); }}
         onClear={clearFilters}
       />
 
       {/* Data Table */}
-      <EquipoTable
+      <EquipmentTable
         equipment={paginatedEquipment}
         onEdit={handleOpenEdit}
         onToggleStatus={handleToggleStatus}
@@ -376,7 +393,7 @@ export function EquiposPage() {
       />
 
       {/* Modal */}
-      <EquipoFormModal
+      <EquipmentFormModal
         isOpen={isModalOpen}
         equipmentToEdit={editingEquipment}
         onClose={() => setIsModalOpen(false)}
@@ -387,4 +404,5 @@ export function EquiposPage() {
   );
 }
 
-export const EquipmentPage = EquiposPage;
+export const EquiposPage = EquipmentPage;
+

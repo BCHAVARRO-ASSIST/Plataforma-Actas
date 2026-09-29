@@ -829,6 +829,297 @@
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* 7.1 CONFIRM DIALOGS */
+.confirm-dialog-backdrop {
+  z-index: 21000 !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  background-color: rgba(15, 23, 42, 0.72) !important;
+}
+
+.confirm-dialog-card {
+  position: relative !important;
+  z-index: 21001 !important;
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.28), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  animation: modalSpringIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.confirm-dialog-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.confirm-dialog-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-xs);
+}
+
+.confirm-icon-danger {
+  background-color: var(--color-danger-50);
+  border: 1px solid var(--color-danger-100);
+  color: var(--color-danger-600);
+}
+
+.confirm-icon-warning {
+  background-color: var(--color-warning-50);
+  border: 1px solid var(--color-warning-100);
+  color: var(--color-warning-600);
+}
+
+.confirm-icon-info {
+  background-color: var(--color-info-50);
+  border: 1px solid var(--color-info-100);
+  color: var(--color-info-600);
+}
+
+[data-theme="dark"] .confirm-icon-danger {
+  background-color: rgba(225, 29, 72, 0.16);
+  border-color: rgba(225, 29, 72, 0.35);
+  color: #fb7185;
+}
+
+[data-theme="dark"] .confirm-icon-warning {
+  background-color: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .confirm-icon-info {
+  background-color: rgba(14, 165, 233, 0.16);
+  border-color: rgba(14, 165, 233, 0.35);
+  color: #38bdf8;
+}
+
+.confirm-dialog-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.confirm-dialog-title {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.confirm-dialog-message {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.confirm-dialog-footer {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.confirm-btn-submit.confirm-btn-danger {
+  background: linear-gradient(135deg, var(--color-danger-600), var(--color-danger-700));
+  color: #ffffff;
+  border: 1px solid var(--color-danger-700);
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.28);
+}
+.confirm-btn-submit.confirm-btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-danger-500), var(--color-danger-600));
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
+  transform: translateY(-1px);
+}
+
+.confirm-btn-submit.confirm-btn-warning {
+  background: linear-gradient(135deg, var(--color-warning-600), var(--color-warning-700));
+  color: #ffffff;
+  border: 1px solid var(--color-warning-700);
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.28);
+}
+.confirm-btn-submit.confirm-btn-warning:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-warning-500), var(--color-warning-600));
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
+  transform: translateY(-1px);
+}
+
+.confirm-btn-submit.confirm-btn-info {
+  background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-700));
+  color: #ffffff;
+  border: 1px solid var(--color-primary-700);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.28);
+}
+.confirm-btn-submit.confirm-btn-info:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   7.2 DARK MODE SYNCHRONIZATION FOR ALL MODALS & DIALOGS
+   ========================================================================== */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-dialog,
+[data-theme="dark"] .confirm-dialog-card {
+  background-color: var(--bg-surface, #111a2e) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+  color: var(--text-primary, #f8fafc) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+}
+
+[data-theme="dark"] .modal-header {
+  background: var(--bg-surface, #111a2e) !important;
+  border-bottom-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .modal-header h2,
+[data-theme="dark"] .modal-header h3,
+[data-theme="dark"] .modal-header h4,
+[data-theme="dark"] .confirm-dialog-title {
+  color: var(--text-primary, #f8fafc) !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .modal-close {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: transparent;
+  color: var(--text-secondary, #94a3b8);
+}
+
+[data-theme="dark"] .modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: var(--border-default, #1e2e4a);
+}
+
+[data-theme="dark"] .modal-footer {
+  background: var(--bg-surface, #111a2e) !important;
+  border-top-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .modal-header-badge {
+  background: rgba(99, 102, 241, 0.18) !important;
+  border-color: rgba(99, 102, 241, 0.35) !important;
+  color: var(--color-primary-400, #818cf8) !important;
+}
+
+[data-theme="dark"] .confirm-dialog-message {
+  color: var(--text-secondary, #94a3b8) !important;
+}
+
+/* Sincronización Universal de Inputs y Textareas en Modales */
+.modal-content input:not([type="checkbox"]):not([type="radio"]),
+.modal-content textarea,
+.modal-content select,
+.modal-dialog input:not([type="checkbox"]):not([type="radio"]),
+.modal-dialog textarea,
+.modal-dialog select,
+.confirm-dialog-card input,
+.confirm-dialog-card textarea {
+  background-color: var(--bg-input, var(--bg-surface));
+  border: 1px solid var(--border-input, var(--border-strong));
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+[data-theme="dark"] .modal-content input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] .modal-content textarea,
+[data-theme="dark"] .modal-content select,
+[data-theme="dark"] .modal-dialog input:not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] .modal-dialog textarea,
+[data-theme="dark"] .modal-dialog select,
+[data-theme="dark"] .confirm-dialog-card input,
+[data-theme="dark"] .confirm-dialog-card textarea,
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-textarea,
+[data-theme="dark"] .form-select {
+  background-color: var(--bg-input, #0b111e) !important;
+  border-color: var(--border-input, #2d4268) !important;
+  color: var(--text-primary, #f8fafc) !important;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus,
+.modal-content select:focus,
+.modal-dialog input:focus,
+.modal-dialog textarea:focus,
+.modal-dialog select:focus,
+.confirm-dialog-card input:focus,
+.confirm-dialog-card textarea:focus,
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: 2px solid var(--color-primary-500) !important;
+  outline-offset: 0 !important;
+  border-color: var(--color-primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22) !important;
+}
+
+[data-theme="dark"] .modal-content input::placeholder,
+[data-theme="dark"] .modal-content textarea::placeholder,
+[data-theme="dark"] .form-input::placeholder,
+[data-theme="dark"] .form-textarea::placeholder {
+  color: var(--text-muted, #64748b) !important;
+}
+
+[data-theme="dark"] .form-section-card {
+  background: var(--bg-surface, #111a2e) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .form-section-tinted {
+  background: var(--bg-surface-elevated, #18233c) !important;
+  border-color: var(--border-default, #1e2e4a) !important;
+}
+
+[data-theme="dark"] .status-pill-btn {
+  background: var(--bg-surface, #111a2e);
+  border-color: var(--border-default, #1e2e4a);
+  color: var(--text-secondary, #94a3b8);
+}
+[data-theme="dark"] .status-pill-btn:hover {
+  background: var(--bg-surface-hover, #1e2c4a);
+  border-color: var(--border-strong, #2d4268);
+  color: var(--text-primary, #f8fafc);
+}
+[data-theme="dark"] .status-pill-btn.active-Activo {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #34d399 !important;
+}
+[data-theme="dark"] .status-pill-btn.active-Asignado {
+  background: rgba(14, 165, 233, 0.16) !important;
+  border-color: rgba(14, 165, 233, 0.45) !important;
+  color: #38bdf8 !important;
+}
+[data-theme="dark"] .status-pill-btn.active-Mantenimiento {
+  background: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] .status-pill-btn.active-Inactivo {
+  background: rgba(148, 163, 184, 0.16) !important;
+  border-color: rgba(148, 163, 184, 0.45) !important;
+  color: #cbd5e1 !important;
+}
 
 /* ==========================================================================
    8. FIRMA DIGITAL MANUSCRITA & SIGNATURE PAD

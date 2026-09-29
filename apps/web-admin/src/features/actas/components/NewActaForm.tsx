@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { createActa, getActas } from "@/features/actas/actaService";
 import type { Acta } from "@/features/actas/actaService";
-import { getEquipos, type Equipo } from "@/features/equipos/equipoService";
-import { getUsuarios, type Usuario } from "@/features/usuarios/usuarioService";
+import { getEquipment as getEquipos, type Equipment as Equipo } from "@/features/equipment/equipmentService";
+import { getUsers as getUsuarios, type User as Usuario } from "@/features/users/userService";
 import { useAuth } from "@/features/auth/useAuth";
 import { ActaTypeSelector } from "./ActaTypeSelector";
 import { ActaLivePreview } from "./ActaLivePreview";

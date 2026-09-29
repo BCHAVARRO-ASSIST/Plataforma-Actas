@@ -1,15 +1,15 @@
 import { useState, useCallback } from "react";
 import type { FormEvent, ChangeEvent } from "react";
 
-import { EquiposPage } from "@/features/equipos/EquiposPage";
+import { EquipmentPage } from "@/features/equipment/EquipmentPage";
 import { ActaPage } from "@/features/actas/ActaPage";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
-import { ReportesPage } from "@/features/reportes/ReportesPage";
-import { MantenimientosPage } from "@/features/mantenimientos/MantenimientosPage";
-import { UsuariosPage } from "@/features/usuarios/UsuariosPage";
+import { ReportsPage } from "@/features/reports/ReportsPage";
+import { MaintenancePage } from "@/features/maintenance/MaintenancePage";
+import { UsersPage } from "@/features/users/UsersPage";
 import { RolesPage } from "@/features/roles/RolesPage";
-import { MensajeroPage } from "@/features/mensajero/MensajeroPage";
-import { MensajeroActaDetail } from "@/features/mensajero/components/MensajeroActaDetail";
+import { DeliveryPage } from "@/features/delivery/DeliveryPage";
+import { DeliveryActaDetail } from "@/features/delivery/components/DeliveryActaDetail";
 
 import LoginPage from "@/features/auth/LoginPage";
 
@@ -18,6 +18,7 @@ import { AuthProvider } from "@/features/auth/AuthContext";
 import { useAuth } from "@/features/auth/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/app/theme";
+import { ConfirmProvider } from "@/shared/hooks/useConfirm";
 
 import { AppShell } from "@/app/layout/AppShell";
 import { Sidebar } from "@/app/layout/Sidebar";
@@ -148,7 +149,7 @@ function AppContent() {
       case "equipment":
         return (
           <ProtectedRoute requiredPermission={PERMISSIONS.EQUIPOS_CONSULTAR}>
-            <EquiposPage />
+            <EquipmentPage />
           </ProtectedRoute>
         );
 
@@ -162,14 +163,14 @@ function AppContent() {
       case "mantenimientos":
         return (
           <ProtectedRoute requiredPermission={PERMISSIONS.EQUIPOS_CONSULTAR}>
-            <MantenimientosPage />
+            <MaintenancePage />
           </ProtectedRoute>
         );
 
       case "reportes":
         return (
           <ProtectedRoute requiredPermission={PERMISSIONS.REPORTES_CONSULTAR}>
-            <ReportesPage />
+            <ReportsPage />
           </ProtectedRoute>
         );
 
@@ -177,12 +178,12 @@ function AppContent() {
         return (
           <ProtectedRoute requiredPermission={PERMISSIONS.MENSAJERO_ACTAS_CONSULTAR}>
             {selectedMensajeroActaId !== null ? (
-              <MensajeroActaDetail
+              <DeliveryActaDetail
                 actaId={selectedMensajeroActaId}
                 onBack={() => setSelectedMensajeroActaId(null)}
               />
             ) : (
-              <MensajeroPage
+              <DeliveryPage
                 onSelectActa={(id) => setSelectedMensajeroActaId(id)}
               />
             )}
@@ -192,7 +193,7 @@ function AppContent() {
       case "usuarios":
         return (
           <ProtectedRoute requiredPermission={PERMISSIONS.USUARIOS_CONSULTAR}>
-            <UsuariosPage />
+            <UsersPage />
           </ProtectedRoute>
         );
 
@@ -246,7 +247,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppContent />
+        <ConfirmProvider>
+          <AppContent />
+        </ConfirmProvider>
       </AuthProvider>
     </ThemeProvider>
   );

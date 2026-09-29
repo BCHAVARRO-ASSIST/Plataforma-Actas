@@ -1,4 +1,4 @@
-import type { ReportFilter, ReportTab } from "@/features/reportes/reportesService";
+import type { ReportFilter, ReportTab } from "../reportsService";
 import { SearchIcon, FilterIcon, CalendarIcon, RefreshIcon, CloseIcon } from "@/components/ui/Icons";
 
 interface ReportFiltersProps {

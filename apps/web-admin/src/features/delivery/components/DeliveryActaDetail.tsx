@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import type { MensajeroActaDetail as MensajeroActaDetailType } from "@/features/mensajero/mensajeroService";
-import { getMiActaById } from "@/features/mensajero/mensajeroService";
+import type { DeliveryActaDetail as DeliveryActaDetailType } from "../deliveryService";
+import { getDeliveryActaById } from "../deliveryService";
 import { type ActaDetail } from "@/features/actas/actaService";
 import { OfficialActaModal } from "@/features/actas/components/OfficialActaModal";
-import { FirmaConsultorView } from "@/features/actas/components/FirmaConsultorView";
+import { ConsultantSignatureView } from "@/features/actas/components/ConsultantSignatureView";
 import {
   EquipmentIcon,
   UserIcon,
@@ -13,10 +13,12 @@ import {
 } from "@/components/ui/Icons";
 import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
 
-interface MensajeroActaDetailProps {
+export interface DeliveryActaDetailProps {
   actaId: string;
   onBack: () => void;
 }
+export type CourierActaDetailProps = DeliveryActaDetailProps;
+export type MensajeroActaDetailProps = DeliveryActaDetailProps;
 
 function formatDate(value: string | null): string {
   if (!value) return "Pendiente";
@@ -27,8 +29,8 @@ function formatDate(value: string | null): string {
   }
 }
 
-export function MensajeroActaDetail({ actaId, onBack }: MensajeroActaDetailProps) {
-  const [acta, setActa] = useState<MensajeroActaDetailType | null>(null);
+export function DeliveryActaDetail({ actaId, onBack }: DeliveryActaDetailProps) {
+  const [acta, setActa] = useState<DeliveryActaDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export function MensajeroActaDetail({ actaId, onBack }: MensajeroActaDetailProps
     try {
       setLoading(true);
       setError(null);
-      const data = await getMiActaById(actaId);
+      const data = await getDeliveryActaById(actaId);
       setActa(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar los detalles del acta.");
@@ -54,7 +56,7 @@ export function MensajeroActaDetail({ actaId, onBack }: MensajeroActaDetailProps
 
   if (showConsultorView && acta) {
     return (
-      <FirmaConsultorView
+      <ConsultantSignatureView
         actaId={actaId}
         numeroActa={acta.numeroActa || "ACT-ASIGNADA"}
         tipoActa={acta.tipoActa}
@@ -268,3 +270,8 @@ export function MensajeroActaDetail({ actaId, onBack }: MensajeroActaDetailProps
     </div>
   );
 }
+
+// Retrocompatibilidad
+export { DeliveryActaDetail as CourierActaDetail, DeliveryActaDetail as MensajeroActaDetail };
+
+

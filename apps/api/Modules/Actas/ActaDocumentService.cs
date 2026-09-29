@@ -15,7 +15,7 @@ namespace PlataformaActas.Api.Modules.Actas.Services;
 /// <summary>
 /// Contrato del servicio de generación, custodia e inmutabilidad de documentos PDF de actas.
 /// </summary>
-public interface IDocumentoActaService
+public interface IActaDocumentService
 {
     /// <summary>
     /// Renderiza en memoria el documento PDF oficial según la especificación formal del formato P8-FR-003.
@@ -42,6 +42,13 @@ public interface IDocumentoActaService
 }
 
 /// <summary>
+/// Alias de compatibilidad arquitectónica.
+/// </summary>
+public interface IDocumentoActaService : IActaDocumentService
+{
+}
+
+/// <summary>
 /// Motor de renderizado y certificación documental de actas institucionales de Assist Consultores.
 /// </summary>
 /// <remarks>
@@ -59,7 +66,7 @@ public interface IDocumentoActaService
 /// </list>
 /// </para>
 /// </remarks>
-public sealed class DocumentoActaService : IDocumentoActaService
+public class ActaDocumentService : IActaDocumentService, IDocumentoActaService
 {
     private readonly PlataformaActasDbContext _context;
     private readonly IFileStorageProvider _fileStorageProvider;
@@ -94,7 +101,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
         // Capa 4: EmbeddedResource compilado directamente en el ensamblado (resiliencia absoluta en contenedores)
         try
         {
-            var assembly = typeof(DocumentoActaService).Assembly;
+            var assembly = typeof(ActaDocumentService).Assembly;
             var resourceName = assembly.GetManifestResourceNames()
                 .FirstOrDefault(n => n.EndsWith(filename, StringComparison.OrdinalIgnoreCase));
             if (resourceName != null)
@@ -131,7 +138,7 @@ public sealed class DocumentoActaService : IDocumentoActaService
         return TimeZoneInfo.CreateCustomTimeZone("COT", TimeSpan.FromHours(-5), "Colombia Time", "Colombia Standard Time");
     }
 
-    public DocumentoActaService(
+    public ActaDocumentService(
         PlataformaActasDbContext context,
         IFileStorageProvider fileStorageProvider)
     {
@@ -1035,3 +1042,17 @@ public sealed class DocumentoActaService : IDocumentoActaService
         return fileName;
     }
 }
+
+/// <summary>
+/// Alias retrocompatible de ActaDocumentService.
+/// </summary>
+public class DocumentoActaService : ActaDocumentService
+{
+    public DocumentoActaService(
+        PlataformaActasDbContext context,
+        IFileStorageProvider fileStorageProvider)
+        : base(context, fileStorageProvider)
+    {
+    }
+}
+

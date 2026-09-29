@@ -1,20 +1,20 @@
-import type { Equipo } from "@/features/equipos/equipoService";
+import type { Equipment } from "../equipmentService";
 import { UserIcon, TrashIcon, EditIcon } from "@/components/ui/Icons";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
-export interface EquipoTableProps {
-  equipment: Equipo[];
-  onEdit?: (item: Equipo) => void;
-  onToggleStatus?: (item: Equipo) => void;
-  onDelete?: (item: Equipo) => void;
+export interface EquipmentTableProps {
+  equipment: Equipment[];
+  onEdit?: (item: Equipment) => void;
+  onToggleStatus?: (item: Equipment) => void;
+  onDelete?: (item: Equipment) => void;
   canEdit?: boolean;
   canDeactivate?: boolean;
   canDelete?: boolean;
 }
 
-export type EquipmentTableProps = EquipoTableProps;
+export type EquipoTableProps = EquipmentTableProps;
 
-export function EquipoTable({
+export function EquipmentTable({
   equipment,
   onEdit,
   onToggleStatus,
@@ -22,7 +22,7 @@ export function EquipoTable({
   canEdit = false,
   canDeactivate = false,
   canDelete = false,
-}: EquipoTableProps) {
+}: EquipmentTableProps) {
   const showActions = canEdit || canDeactivate || canDelete;
 
   return (
@@ -146,4 +146,4 @@ export function EquipoTable({
   );
 }
 
-export const EquipmentTable = EquipoTable;
+export const EquipoTable = EquipmentTable;

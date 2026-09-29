@@ -74,6 +74,8 @@
   --border-strong: #cbd5e1;
   --border-color: #e2e8f0;
   --border-focus: #6366f1;
+  --bg-input: #ffffff;
+  --border-input: #cbd5e1;
 
   /* Text Hierarchy */
   --text-primary: #0f172a;
@@ -127,6 +129,7 @@
   --bg-card: #18233c;
   --bg-muted: rgba(15, 23, 42, 0.6);
   --bg-header: #111a2e;
+  --bg-input: #0b111e;
 
   /* Borders & Dividers */
   --border-subtle: #16243b;
@@ -134,6 +137,7 @@
   --border-strong: #2d4268;
   --border-color: #334155;
   --border-focus: #818cf8;
+  --border-input: #2d4268;
 
   /* Text Hierarchy */
   --text-primary: #f8fafc;

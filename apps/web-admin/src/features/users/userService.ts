@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiPut, apiPatch, apiDelete } from "../../shared/api/httpClient";
 
-export interface Usuario {
+export interface User {
   id: number;
   nombre: string;
   apellido: string;
@@ -12,8 +12,9 @@ export interface Usuario {
   rolId: number | null;
   rolNombre: string | null;
 }
+export type Usuario = User;
 
-export interface UsuarioCreateRequest {
+export interface UserCreateRequest {
   nombre: string;
   apellido: string;
   usuarioRed: string;
@@ -21,8 +22,9 @@ export interface UsuarioCreateRequest {
   numeroDocumento?: string | null;
   proceso: string;
 }
+export type UsuarioCreateRequest = UserCreateRequest;
 
-export interface UsuarioUpdateRequest {
+export interface UserUpdateRequest {
   nombre: string;
   apellido: string;
   usuarioRed: string;
@@ -31,36 +33,43 @@ export interface UsuarioUpdateRequest {
   proceso: string;
   activo: boolean;
 }
+export type UsuarioUpdateRequest = UserUpdateRequest;
 
-export async function getUsuarios(): Promise<Usuario[]> {
-  return apiGet<Usuario[]>("/usuarios", { errorMessage: "No fue posible obtener los usuarios." });
+export async function getUsers(): Promise<User[]> {
+  return apiGet<User[]>("/usuarios", { errorMessage: "No fue posible obtener los usuarios." });
 }
+export const getUsuarios = getUsers;
 
-export async function createUsuario(data: unknown) {
+export async function createUser(data: unknown) {
   return apiPost("/usuarios", data, { errorMessage: "No fue posible crear el usuario." });
 }
+export const createUsuario = createUser;
 
-export async function updateUsuario(id: number, data: unknown) {
+export async function updateUser(id: number, data: unknown) {
   return apiPut(`/usuarios/${id}`, data, { errorMessage: "No fue posible actualizar el usuario." });
 }
+export const updateUsuario = updateUser;
 
-export async function assignUsuarioRol(usuarioId: number, rolId: number | null) {
+export async function assignUserRole(usuarioId: number, rolId: number | null) {
   return apiPut(`/usuarios/${usuarioId}/rol`, { rolId }, { errorMessage: "No fue posible asignar el rol al usuario." });
 }
+export const assignUsuarioRol = assignUserRole;
 
-export async function setUsuarioActivo(id: number, activo: boolean): Promise<void> {
+export async function setUserActive(id: number, activo: boolean): Promise<void> {
   if (activo) {
     await apiPatch(`/usuarios/${id}/activar`, undefined, { errorMessage: "No fue posible activar el usuario." });
   } else {
     await apiDelete(`/usuarios/${id}`, { errorMessage: "No fue posible desactivar el usuario." });
   }
 }
+export const setUsuarioActivo = setUserActive;
 
-export async function deleteUsuario(id: number): Promise<void> {
+export async function deleteUser(id: number): Promise<void> {
   return apiDelete(`/usuarios/${id}`, { errorMessage: "No fue posible eliminar el usuario." });
 }
+export const deleteUsuario = deleteUser;
 
-export async function resetUsuarioPassword(
+export async function resetUserPassword(
   id: number,
   newPassword: string,
   confirmPassword: string
@@ -71,3 +80,4 @@ export async function resetUsuarioPassword(
     { errorMessage: "No fue posible restablecer la contraseña del usuario." }
   );
 }
+export const resetUsuarioPassword = resetUserPassword;

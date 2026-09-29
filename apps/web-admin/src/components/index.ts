@@ -6,8 +6,10 @@
 // UI Compartidos
 export * from "./ui/Icons";
 export * from "./ui/AutoDismissAlert";
+export * from "./ui/HandwrittenSignature";
 export * from "./ui/FirmaManuscrita";
 export * from "./ui/Modal";
+export * from "./ui/ConfirmDialog";
 export * from "./ui/Pagination";
 export * from "./ui/StatusBadge";
 
@@ -20,24 +22,26 @@ export * from "@/features/actas/components/ActaDetail";
 export * from "@/features/actas/components/ActaLivePreview";
 export * from "@/features/actas/components/ActaTable";
 export * from "@/features/actas/components/ActaTypeSelector";
+export * from "@/features/actas/components/ConsultantSignatureView";
 export * from "@/features/actas/components/FirmaConsultorView";
 export * from "@/features/actas/components/NewActaForm";
 export * from "@/features/actas/components/OfficialActaModal";
 
-// Features: Equipos
-export * from "@/features/equipos/components/EquipoFilters";
-export * from "@/features/equipos/components/EquipoFormModal";
-export * from "@/features/equipos/components/EquipoTable";
+// Features: Equipment
+export * from "@/features/equipment/components/EquipmentFilters";
+export * from "@/features/equipment/components/EquipmentFormModal";
+export * from "@/features/equipment/components/EquipmentTable";
 
 // Features: Dashboard
 export * from "@/features/dashboard/components/ExecutiveSummaryCards";
 export * from "@/features/dashboard/components/RecentActasCard";
 
-// Features: Mensajero
-export * from "@/features/mensajero/components/MensajeroActaDetail";
+// Features: Delivery
+export * from "@/features/delivery/components/DeliveryActaDetail";
+export * from "@/features/delivery/components/RecipientNotificationModal";
 
-// Features: Reportes
-export * from "@/features/reportes/components/ReportCharts";
-export * from "@/features/reportes/components/ReportFilters";
-export * from "@/features/reportes/components/ReportKpi";
-export * from "@/features/reportes/components/ReportTable";
+// Features: Reports
+export * from "@/features/reports/components/ReportCharts";
+export * from "@/features/reports/components/ReportFilters";
+export * from "@/features/reports/components/ReportKpi";
+export * from "@/features/reports/components/ReportTable";

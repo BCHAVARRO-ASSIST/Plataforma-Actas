@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiGetBlob } from "../../shared/api/httpClient";
-import type { Equipo } from "../equipos/equipoService";
+import type { Equipment as Equipo } from "../equipment/equipmentService";
 
 export interface Acta {
   id: string;

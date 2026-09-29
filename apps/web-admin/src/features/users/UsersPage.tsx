@@ -5,10 +5,10 @@ import {
   updateUsuario,
   assignUsuarioRol,
   resetUsuarioPassword,
-} from "./usuarioService";
-import type { Usuario } from "./usuarioService";
-import { getRoles } from "../roles/rolService";
-import type { Rol } from "../roles/rolService";
+} from "./userService";
+import type { Usuario } from "./userService";
+import { getRoles } from "../roles/roleService";
+import type { Role } from "../roles/roleService";
 import {
   SearchIcon,
   RefreshIcon,
@@ -23,14 +23,16 @@ import {
   UserCheckIcon,
 } from "@/components/ui/Icons";
 import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
+import { useConfirm } from "@/shared/hooks/useConfirm";
 import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
 
 const ITEMS_PER_PAGE = 15;
 
-export function UsuariosPage() {
+export function UsersPage() {
+  const confirm = useConfirm();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [roles, setRoles] = useState<Rol[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -283,7 +285,15 @@ export function UsuariosPage() {
     }
 
     const accion = u.activo ? "desactivar" : "activar";
-    if (!confirm(`¿Estás seguro de que deseas ${accion} al usuario ${u.nombre} ${u.apellido}?`)) {
+    const isConfirmed = await confirm({
+      title: u.activo ? "Desactivar Usuario" : "Activar Usuario",
+      message: `¿Estás seguro de que deseas ${accion} al usuario ${u.nombre} ${u.apellido}?`,
+      confirmText: u.activo ? "Desactivar" : "Activar",
+      cancelText: "Cancelar",
+      variant: u.activo ? "warning" : "info",
+    });
+
+    if (!isConfirmed) {
       return;
     }
 
@@ -963,3 +973,6 @@ export function UsuariosPage() {
     </div>
   );
 }
+
+// Retrocompatibilidad
+export { UsersPage as UsuariosPage };

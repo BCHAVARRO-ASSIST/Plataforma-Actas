@@ -5,7 +5,7 @@ import type {
   ActasReportItem,
   EntregasReportItem,
   DevolucionesReportItem,
-} from "@/features/reportes/reportesService";
+} from "../reportsService";
 import { UserIcon } from "@/components/ui/Icons";
 import { formatDate } from "@/shared/utils/date";
 

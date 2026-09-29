@@ -12,7 +12,7 @@ import {
   exportToCsv,
   exportToExcel,
   exportToPdf,
-} from "./reportesService";
+} from "./reportsService";
 import type {
   ReportTab,
   ReportFilter,
@@ -20,7 +20,7 @@ import type {
   ActasReportItem,
   EntregasReportItem,
   DevolucionesReportItem,
-} from "./reportesService";
+} from "./reportsService";
 import {
   EquipmentIcon,
   ActaIcon,
@@ -32,7 +32,7 @@ import {
   RefreshIcon,
 } from "@/components/ui/Icons";
 
-export function ReportesPage() {
+export function ReportsPage() {
   const [activeTab, setActiveTab] = useState<ReportTab>("equipos");
   const [filters, setFilters] = useState<ReportFilter>({});
   const [loading, setLoading] = useState(false);
@@ -459,3 +459,6 @@ export function ReportesPage() {
     </div>
   );
 }
+
+// Retrocompatibilidad
+export { ReportsPage as ReportesPage };

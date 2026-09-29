@@ -198,7 +198,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
         padding: "24px",
       }}
       contentStyle={{
-        background: "#ffffff",
+        background: "var(--bg-surface, #ffffff)",
         borderRadius: "12px",
         width: "100%",
         maxWidth: "900px",
@@ -290,7 +290,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
         </div>
 
         {/* CUERPO DEL MODAL (DOCUMENTO OFICIAL SOBRE ESCRITORIO DIGITAL) */}
-        <div className="modal-body acta-preview-body" style={{ flex: 1, overflowY: "auto", background: "#f1f5f9", padding: "24px" }}>
+        <div className="modal-body acta-preview-body" style={{ flex: 1, overflowY: "auto", background: "var(--bg-app, #f1f5f9)", padding: "24px" }}>
           <div
             ref={printRef}
             style={{

@@ -9,9 +9,9 @@ using Xunit;
 
 namespace PlataformaActas.Tests.Unit;
 
-public sealed class DocumentoActaCumulativeTests
+public sealed class ActaDocumentCumulativeTests
 {
-    static DocumentoActaCumulativeTests()
+    static ActaDocumentCumulativeTests()
     {
         QuestPDF.Settings.License = LicenseType.Community;
     }
@@ -23,7 +23,7 @@ public sealed class DocumentoActaCumulativeTests
     public void GenerarPdfBytes_ActaDevolucion_PreservesBothObservationsAndSignatures_StrictlySinglePage()
     {
         // Arrange
-        var service = new DocumentoActaService(null!, null!);
+        var service = new ActaDocumentService(null!, null!);
 
         var signaturePayload = JsonSerializer.Serialize(new
         {
@@ -109,7 +109,7 @@ public sealed class DocumentoActaCumulativeTests
     public void GenerarPdfBytes_ActaEntrega_RendersCorrectly()
     {
         // Arrange
-        var service = new DocumentoActaService(null!, null!);
+        var service = new ActaDocumentService(null!, null!);
 
         var signaturePayload = JsonSerializer.Serialize(new
         {
@@ -185,7 +185,7 @@ public sealed class DocumentoActaCumulativeTests
     [Fact]
     public void GenerarPdfBytes_LoadsEmbeddedAndresTrujilloSignatureImage()
     {
-        var service = new DocumentoActaService(null!, null!);
+        var service = new ActaDocumentService(null!, null!);
 
         var actaDevolucion = new ActaDetailResponse(
             Id: Guid.NewGuid(),
@@ -241,7 +241,7 @@ public sealed class DocumentoActaCumulativeTests
     [Fact]
     public void GenerarPdfBytes_HeaderMarking_And_AccessoryTraceability_ObjectMap()
     {
-        var service = new DocumentoActaService(null!, null!);
+        var service = new ActaDocumentService(null!, null!);
 
         // Arrange: Entrega con mapa de 7 accesorios
         var accesoriosEntrega = new
@@ -355,7 +355,7 @@ public sealed class DocumentoActaCumulativeTests
     public void GenerarPdfBytes_IncludesLegalAndOperationalTexts_AndStrictlySinglePage()
     {
         // Arrange
-        var service = new DocumentoActaService(null!, null!);
+        var service = new ActaDocumentService(null!, null!);
         var acta = new ActaDetailResponse(
             Id: Guid.NewGuid(),
             NumeroActa: "ACTA-2026-TEST-LEGAL",
@@ -480,7 +480,7 @@ public sealed class DocumentoActaCumulativeTests
     public void GenerarPdfBytes_DosActasConCedulasDistintas_MantienenAislamientoEstricto()
     {
         // Arrange
-        var service = new DocumentoActaService(null!, null!);
+        var service = new ActaDocumentService(null!, null!);
 
         var eq = new EquipmentActaResponse(
             Guid.NewGuid(), "INV-001", "Portatil Dell", "Assist", "Consultor",

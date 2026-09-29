@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { MensajeroActa } from "./mensajeroService";
-import { getMisActas } from "./mensajeroService";
+import type { DeliveryActa } from "./deliveryService";
+import { getDeliveryActas } from "./deliveryService";
 import { ActaTable } from "@/features/actas/components/ActaTable";
 import {
   MessengerIcon,
@@ -11,12 +11,14 @@ import {
   SearchIcon,
 } from "@/components/ui/Icons";
 
-interface MensajeroPageProps {
+export interface DeliveryPageProps {
   onSelectActa: (id: string) => void;
 }
+export type CourierPageProps = DeliveryPageProps;
+export type MensajeroPageProps = DeliveryPageProps;
 
-export function MensajeroPage({ onSelectActa }: MensajeroPageProps) {
-  const [actas, setActas] = useState<MensajeroActa[]>([]);
+export function DeliveryPage({ onSelectActa }: DeliveryPageProps) {
+  const [actas, setActas] = useState<DeliveryActa[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -25,7 +27,7 @@ export function MensajeroPage({ onSelectActa }: MensajeroPageProps) {
     try {
       setLoading(true);
       setError(null);
-      const data = await getMisActas();
+      const data = await getDeliveryActas();
       setActas(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No fue posible cargar las actas asignadas.");
@@ -170,3 +172,7 @@ export function MensajeroPage({ onSelectActa }: MensajeroPageProps) {
     </div>
   );
 }
+
+// Retrocompatibilidad
+export { DeliveryPage as CourierPage, DeliveryPage as MensajeroPage };
+
