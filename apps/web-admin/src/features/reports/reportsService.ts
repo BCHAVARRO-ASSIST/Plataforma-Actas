@@ -109,48 +109,6 @@ export async function getDevolucionesReport(filter: ReportFilter): Promise<Devol
   });
 }
 
-export function exportToCsv(
-  filename: string,
-  title: string,
-  headers: string[],
-  rows: (string | number | boolean | null | undefined)[][]
-) {
-  const escapeCell = (val: string | number | boolean | null | undefined) => {
-    if (val === null || val === undefined) return '""';
-    const str = String(val).replace(/"/g, '""');
-    return `"${str}"`;
-  };
-
-  const timestamp = new Date().toLocaleString("es-CO");
-  const metadataLines = [
-    `# =========================================================================`,
-    `# ${ASSIST_COMPANY_NAME}`,
-    `# ${ASSIST_SYSTEM_NAME}`,
-    `# REPORTE: ${title.toUpperCase()}`,
-    `# Fecha de Emisión: ${timestamp}`,
-    `# Total Registros: ${rows.length}`,
-    `# Clasificación: Uso Interno Exclusivo`,
-    `# =========================================================================`,
-  ];
-
-  const csvContent =
-    "\uFEFF" +
-    [
-      ...metadataLines,
-      headers.map(escapeCell).join(";"),
-      ...rows.map((row) => row.map(escapeCell).join(";")),
-    ].join("\r\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", `${filename}_${new Date().toISOString().slice(0, 10)}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
 export function exportToExcel(
   filename: string,
   title: string,
@@ -253,7 +211,7 @@ export function exportToExcel(
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", `${filename}_${new Date().toISOString().slice(0, 10)}.xls`);
+  link.setAttribute("download", `${filename}_${new Date().toISOString().slice(0, 10)}.xlsx`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
