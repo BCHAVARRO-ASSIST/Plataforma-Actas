@@ -8,6 +8,7 @@ import {
   UserIcon,
 } from "@/components/ui/Icons";
 import { ThemeToggle, useTheme } from "@/app/theme";
+import { PasswordRecoveryModal } from "./PasswordRecoveryModal";
 
 declare global {
   interface Window {
@@ -66,9 +67,23 @@ export default function LoginPage({
 }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showLocalAdmin, setShowLocalAdmin] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoverySuccessMessage, setRecoverySuccessMessage] = useState<string | null>(null);
+  const [recoveryInitialToken, setRecoveryInitialToken] = useState("");
 
   const googleBtnContainerRef = useRef<HTMLDivElement>(null);
   const { theme: currentTheme } = useTheme();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get("token") || params.get("resetToken") || params.get("code");
+      if (urlToken) {
+        setRecoveryInitialToken(urlToken);
+        setShowRecoveryModal(true);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     activeGoogleLoginHandler = onGoogleLogin || null;
@@ -178,6 +193,24 @@ export default function LoginPage({
           </div>
         )}
 
+        {/* Notificación de éxito si fue recuperada la contraseña */}
+        {recoverySuccessMessage && (
+          <div
+            className="auth-alert success"
+            role="status"
+            style={{
+              backgroundColor: "rgba(16, 185, 129, 0.12)",
+              color: "#10b981",
+              border: "1px solid rgba(16, 185, 129, 0.25)",
+              padding: "0.75rem 1rem",
+              borderRadius: "8px",
+              marginBottom: "1rem",
+            }}
+          >
+            <span>{recoverySuccessMessage}</span>
+          </div>
+        )}
+
         {!showLocalAdmin ? (
           /* ================= ACCESO CORPORATIVO (GOOGLE OAUTH 2.0) ================= */
           <div className="login-btn-group auth-corporate-flow">
@@ -201,6 +234,25 @@ export default function LoginPage({
             >
               <LockIcon size={16} />
               <span>Acceso con credenciales locales</span>
+            </button>
+
+            <button
+              type="button"
+              className="auth-link-btn"
+              onClick={() => {
+                setShowRecoveryModal(true);
+                setRecoverySuccessMessage(null);
+              }}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--color-text-secondary, #6b7280)",
+                fontSize: "0.825rem",
+                marginTop: "0.5rem",
+                cursor: "pointer",
+              }}
+            >
+              ¿Problemas para acceder o validar credenciales?
             </button>
           </div>
         ) : (
@@ -231,9 +283,28 @@ export default function LoginPage({
             </div>
 
             <div className="form-group">
-              <label htmlFor="loginPassword" className="auth-label">
-                Contraseña
-              </label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label htmlFor="loginPassword" className="auth-label">
+                  Contraseña
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRecoveryModal(true);
+                    setRecoverySuccessMessage(null);
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--color-primary, #3b82f6)",
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </div>
               <div className="auth-input-box">
                 <span className="auth-input-icon">
                   <LockIcon size={18} />
@@ -292,6 +363,16 @@ export default function LoginPage({
           </form>
         )}
       </div>
+
+      <PasswordRecoveryModal
+        isOpen={showRecoveryModal}
+        initialToken={recoveryInitialToken}
+        onClose={() => setShowRecoveryModal(false)}
+        onSuccess={(msg) => {
+          setRecoverySuccessMessage(msg);
+          setShowRecoveryModal(false);
+        }}
+      />
     </main>
   );
 }

@@ -230,16 +230,19 @@ public sealed class EmailService(IConfiguration configuration) : IEmailService
         string resetUrl,
         CancellationToken cancellationToken = default)
     {
-        var senderEmail = configuration["EmailSettings:SenderEmail"]
+        var senderEmail = configuration["Smtp:From"]
+            ?? configuration["Smtp:FromEmail"]
+            ?? configuration["Smtp:SenderEmail"]
+            ?? configuration["EmailSettings:SenderEmail"]
             ?? configuration["EmailSettings:FromEmail"]
             ?? configuration["Email:From"]
-            ?? configuration["Smtp:FromEmail"]
             ?? "soporte@assist.com.co";
 
-        var senderName = configuration["EmailSettings:SenderName"]
+        var senderName = configuration["Smtp:FromName"]
+            ?? configuration["Smtp:SenderName"]
+            ?? configuration["EmailSettings:SenderName"]
             ?? configuration["EmailSettings:FromName"]
             ?? configuration["Email:FromName"]
-            ?? configuration["Smtp:FromName"]
             ?? "Soporte - Assist Consultores";
 
         // ---------------------------------------------------------------------------------
@@ -319,33 +322,37 @@ public sealed class EmailService(IConfiguration configuration) : IEmailService
         // ---------------------------------------------------------------------------------
         // INTENTO 2: Fallback vía Servidor SMTP tradicional (System.Net.Mail)
         // ---------------------------------------------------------------------------------
-        var host = configuration["EmailSettings:Server"]
+        var host = configuration["Smtp:Host"]
+            ?? configuration["Smtp:Server"]
+            ?? configuration["EmailSettings:Server"]
             ?? configuration["EmailSettings:Host"]
-            ?? configuration["Email:SmtpHost"]
-            ?? configuration["Smtp:Host"];
+            ?? configuration["Email:SmtpHost"];
 
         if (string.IsNullOrWhiteSpace(host))
         {
             return;
         }
 
-        var portStr = configuration["EmailSettings:Port"]
-            ?? configuration["Email:SmtpPort"]
-            ?? configuration["Smtp:Port"];
+        var portStr = configuration["Smtp:Port"]
+            ?? configuration["EmailSettings:Port"]
+            ?? configuration["Email:SmtpPort"];
         var port = int.TryParse(portStr, out var p) ? p : 587;
 
-        var username = configuration["EmailSettings:Username"]
-            ?? configuration["Email:Username"]
-            ?? configuration["Smtp:UserName"];
+        var username = configuration["Smtp:User"]
+            ?? configuration["Smtp:UserName"]
+            ?? configuration["Smtp:Username"]
+            ?? configuration["EmailSettings:Username"]
+            ?? configuration["EmailSettings:User"]
+            ?? configuration["Email:Username"];
 
-        var password = configuration["EmailSettings:Password"]
-            ?? configuration["Email:Password"]
-            ?? configuration["Smtp:Password"];
+        var password = configuration["Smtp:Password"]
+            ?? configuration["EmailSettings:Password"]
+            ?? configuration["Email:Password"];
 
-        var enableSslStr = configuration["EmailSettings:EnableSsl"]
-            ?? configuration["Email:EnableSsl"]
-            ?? configuration["Smtp:EnableSsl"];
-        var enableSsl = bool.TryParse(enableSslStr, out var ssl) && ssl;
+        var enableSslStr = configuration["Smtp:EnableSsl"]
+            ?? configuration["EmailSettings:EnableSsl"]
+            ?? configuration["Email:EnableSsl"];
+        var enableSsl = bool.TryParse(enableSslStr, out var ssl) ? ssl : true;
 
         using var client = new System.Net.Mail.SmtpClient(host, port)
         {

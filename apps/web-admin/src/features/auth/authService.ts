@@ -214,3 +214,46 @@ export async function changePassword(request: ChangePasswordRequest): Promise<Ch
     errorMessage: "No fue posible actualizar la contraseña.",
   });
 }
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export async function requestPasswordReset(identifier: string): Promise<ForgotPasswordResponse> {
+  return apiRequest<ForgotPasswordResponse>("/auth/forgot-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      identifier: identifier.trim(),
+    }),
+    errorMessage: "No fue posible procesar la solicitud de recuperación.",
+  });
+}
+
+export interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
+export async function resetPasswordWithToken(payload: ResetPasswordPayload): Promise<ResetPasswordResponse> {
+  return apiRequest<ResetPasswordResponse>("/auth/reset-password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      token: payload.token.trim(),
+      newPassword: payload.newPassword,
+      confirmPassword: payload.confirmPassword,
+    }),
+    errorMessage: "No fue posible restablecer la contraseña con el código o token suministrado.",
+  });
+}
+

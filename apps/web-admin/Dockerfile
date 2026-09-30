@@ -19,8 +19,10 @@ COPY apps/web-admin/ ./
 # Inyección de variables de entorno para compilación de producción en Vite
 ARG VITE_GOOGLE_CLIENT_ID=""
 ARG VITE_API_URL="/api"
+ARG VITE_API_BASE_URL=""
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID \
-    VITE_API_URL=$VITE_API_URL
+    VITE_API_URL=$VITE_API_URL \
+    VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN npm run build
 

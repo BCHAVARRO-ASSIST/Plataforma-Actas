@@ -34,11 +34,21 @@ public sealed class SmtpOptions
         get => UserName;
         set => UserName = value;
     }
+    public string User
+    {
+        get => UserName;
+        set => UserName = value;
+    }
 
     public string Password { get; set; } = string.Empty;
 
     public string FromEmail { get; set; } = "soporte@assist.com.co";
     public string SenderEmail
+    {
+        get => FromEmail;
+        set => FromEmail = value;
+    }
+    public string From
     {
         get => FromEmail;
         set => FromEmail = value;
