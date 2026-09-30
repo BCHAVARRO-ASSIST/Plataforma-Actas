@@ -42,7 +42,7 @@ public sealed class GoogleInventorySyncBackgroundService : BackgroundService
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var syncService = scope.ServiceProvider.GetRequiredService<IGoogleDriveSyncService>();
-                    var result = await syncService.SyncInventoryAsync(stoppingToken);
+                    var result = await syncService.SyncInventoryAsync(cancellationToken: stoppingToken);
                     _logger.LogInformation("Ciclo automático finalizado: {Message}", result.Message);
                 }
             }

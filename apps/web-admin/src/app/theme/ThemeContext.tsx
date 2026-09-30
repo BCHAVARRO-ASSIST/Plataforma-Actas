@@ -10,13 +10,34 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const STORAGE_KEY = "plataforma-theme";
+export const THEME_STORAGE_KEY = "plataforma-theme";
+
+function cleanupResidualStorage(): void {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      // Limpieza preventiva de clave residual vacía '' en localStorage si existiera
+      if (localStorage.getItem("") !== null) {
+        localStorage.removeItem("");
+      }
+    }
+  } catch {
+    // Manejo seguro en caso de restricciones de acceso al storage
+  }
+}
 
 function getInitialTheme(): Theme {
+  cleanupResidualStorage();
+
   // 1. Verificar preferencia guardada en localStorage
-  const savedTheme = localStorage.getItem(STORAGE_KEY) as Theme | null;
-  if (savedTheme === "light" || savedTheme === "dark") {
-    return savedTheme;
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
+      if (savedTheme === "light" || savedTheme === "dark") {
+        return savedTheme;
+      }
+    }
+  } catch {
+    // Fallback a preferencia del sistema
   }
 
   // 2. Verificar preferencia del sistema operativo
@@ -31,21 +52,32 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
+    cleanupResidualStorage();
     document.documentElement.setAttribute("data-theme", theme);
     document.documentElement.classList.toggle("dark", theme === "dark");
     if (typeof document !== "undefined" && document.body) {
       document.body.setAttribute("data-theme", theme);
       document.body.classList.toggle("dark", theme === "dark");
     }
-    localStorage.setItem(STORAGE_KEY, theme);
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        localStorage.setItem(THEME_STORAGE_KEY, theme);
+      }
+    } catch {
+      // Storage no disponible
+    }
   }, [theme]);
 
   // Escuchar cambios en la preferencia del sistema si el usuario no guardó preferencia manual
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => {
-      const savedTheme = localStorage.getItem(STORAGE_KEY);
-      if (!savedTheme) {
+      try {
+        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        if (!savedTheme) {
+          setThemeState(e.matches ? "dark" : "light");
+        }
+      } catch {
         setThemeState(e.matches ? "dark" : "light");
       }
     };

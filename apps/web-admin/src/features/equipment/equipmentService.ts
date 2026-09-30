@@ -75,6 +75,12 @@ export interface DriveSyncResult {
   updated: number;
   unchanged: number;
   timestamp: string;
+  errorCode?: string;
+}
+
+export interface GoogleDriveSyncRequest {
+  driveFileId?: string;
+  sheetName?: string;
 }
 
 // =====================================================
@@ -142,8 +148,8 @@ export async function updateEquipoMantenimiento(
   });
 }
 
-export async function syncGoogleDriveInventory(): Promise<DriveSyncResult> {
-  return apiPost<DriveSyncResult>("/integrations/google-drive/sync", undefined, {
+export async function syncGoogleDriveInventory(request?: GoogleDriveSyncRequest): Promise<DriveSyncResult> {
+  return apiPost<DriveSyncResult>("/integrations/google-drive/sync", request ?? {}, {
     errorMessage: "Error al sincronizar con Google Drive.",
   });
 }

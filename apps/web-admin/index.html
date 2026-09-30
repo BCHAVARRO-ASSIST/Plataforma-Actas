@@ -12,8 +12,12 @@
     <script>
       (function() {
         try {
-          var saved = localStorage.getItem('plataforma-theme');
-          var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          var THEME_STORAGE_KEY = 'plataforma-theme';
+          if (localStorage.getItem('') !== null) {
+            localStorage.removeItem('');
+          }
+          var saved = localStorage.getItem(THEME_STORAGE_KEY);
+          var theme = (saved === 'dark' || saved === 'light') ? saved : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
           document.documentElement.setAttribute('data-theme', theme);
           if (theme === 'dark') {
             document.documentElement.classList.add('dark');

@@ -14,6 +14,7 @@ import {
 import type { Equipment, CreateEquipmentRequest, UpdateEquipmentRequest } from "./equipmentService";
 import { useAuth } from "@/features/auth/useAuth";
 import { useConfirm } from "@/shared/hooks/useConfirm";
+import { ApiError } from "@/shared/api/httpClient";
 import { PERMISSIONS, hasPermission } from "@/features/auth/permissions";
 import {
   EquipmentIcon,
@@ -48,23 +49,47 @@ export function EquipmentPage() {
   const [saving, setSaving] = useState(false);
   const [syncingDrive, setSyncingDrive] = useState(false);
 
+  const canCreate = hasPermission(user, PERMISSIONS.EQUIPOS_REGISTRAR);
+  const canEdit = hasPermission(user, PERMISSIONS.EQUIPOS_EDITAR);
+  const canDeactivate = hasPermission(user, PERMISSIONS.EQUIPOS_DESACTIVAR);
+
   async function handleSyncDrive() {
+    if (!user) {
+      setError("Debes iniciar sesión con una cuenta autorizada para ejecutar la sincronización con Google Drive.");
+      return;
+    }
+
+    if (!canCreate && !canEdit) {
+      setError("No cuentas con permisos suficientes para sincronizar el inventario desde Google Drive.");
+      return;
+    }
+
     try {
       setSyncingDrive(true);
       setError(null);
       const res = await syncGoogleDriveInventory();
-      setSuccessMessage(res.message);
-      await loadEquipment();
+      if (res && res.success) {
+        setSuccessMessage(res.message);
+        await loadEquipment();
+      } else {
+        setError(res?.message || "La sincronización no pudo completarse con éxito.");
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al sincronizar con Google Drive.");
+      if (err instanceof ApiError) {
+        if (err.status === 412) {
+          setError(`Integración no vinculada: ${err.message}`);
+        } else if (err.status === 400 || err.status === 422) {
+          setError(`No fue posible procesar la sincronización: ${err.message}`);
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError(err instanceof Error ? err.message : "Error al sincronizar con Google Drive.");
+      }
     } finally {
       setSyncingDrive(false);
     }
   }
-
-  const canCreate = hasPermission(user, PERMISSIONS.EQUIPOS_REGISTRAR);
-  const canEdit = hasPermission(user, PERMISSIONS.EQUIPOS_EDITAR);
-  const canDeactivate = hasPermission(user, PERMISSIONS.EQUIPOS_DESACTIVAR);
 
   async function loadEquipment(silent = false) {
     try {

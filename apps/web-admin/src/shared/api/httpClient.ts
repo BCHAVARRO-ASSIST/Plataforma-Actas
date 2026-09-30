@@ -105,6 +105,8 @@ export async function getApiErrorMessage(
       try {
         const data = JSON.parse(text);
         if (typeof data === "string") return data;
+        // Priorizar 'detail' estándar de RFC 7807 ProblemDetails
+        if (data.detail) return data.detail;
         if (data.message) return data.message;
         if (data.title) return data.title;
         if (data.error) return data.error;
@@ -114,6 +116,10 @@ export async function getApiErrorMessage(
     }
   } catch {
     // Fallback al mensaje por defecto
+  }
+
+  if (response.status === 412) {
+    return "Precondición no cumplida: la integración requiere vinculación o configuración previa.";
   }
 
   return defaultMessage;

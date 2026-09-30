@@ -144,7 +144,39 @@
   color: #94a3b8 !important;
 }
 
-/* Identidad corporativa ASSIST */
+/* Insignia / Ícono Isotipo de Plataforma de Actas */
+.login-product-badge {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  color: #ffffff;
+  box-shadow: 0 10px 20px -3px rgba(37, 99, 235, 0.35), 0 4px 6px -2px rgba(37, 99, 235, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-product-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 24px -3px rgba(37, 99, 235, 0.45), 0 6px 8px -2px rgba(37, 99, 235, 0.25);
+}
+
+.login-product-icon {
+  width: 28px;
+  height: 28px;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .login-product-badge {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 10px 25px -3px rgba(59, 130, 246, 0.4), 0 0 15px rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Identidad corporativa ASSIST (fallback) */
 .login-brand-logo {
   height: 48px;
   width: auto;

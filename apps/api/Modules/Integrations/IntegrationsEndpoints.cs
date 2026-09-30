@@ -11,6 +11,7 @@ using PlataformaActas.Api.Modules.Integrations.Google;
 namespace PlataformaActas.Api.Modules.Integrations;
 
 public sealed record GoogleAuthRequest(string? IdToken);
+public sealed record GoogleDriveSyncRequest(string? DriveFileId = null, string? SheetName = null);
 
 public static class IntegrationsEndpoints
 {
@@ -20,11 +21,42 @@ public static class IntegrationsEndpoints
 
         // 1. Sincronización manual bajo demanda desde Google Drive
         group.MapPost("/google-drive/sync", async (
+            [FromBody] GoogleDriveSyncRequest? request,
             IGoogleDriveSyncService syncService,
             CancellationToken cancellationToken) =>
         {
-            var result = await syncService.SyncInventoryAsync(cancellationToken);
-            return result.Success ? Results.Ok(result) : Results.BadRequest(result);
+            var result = await syncService.SyncInventoryAsync(request?.DriveFileId, request?.SheetName, cancellationToken);
+            if (result.Success)
+            {
+                return Results.Ok(result);
+            }
+
+            var statusCode = result.ErrorCode switch
+            {
+                "GOOGLE_DRIVE_DISABLED" => StatusCodes.Status412PreconditionFailed,
+                "GOOGLE_CREDENTIALS_MISSING" => StatusCodes.Status412PreconditionFailed,
+                "GOOGLE_DRIVE_FILE_NOT_FOUND" => StatusCodes.Status412PreconditionFailed,
+                "GOOGLE_DRIVE_PERMISSION_DENIED" => StatusCodes.Status412PreconditionFailed,
+                "INVALID_DRIVE_FILE_ID" => StatusCodes.Status400BadRequest,
+                _ => StatusCodes.Status422UnprocessableEntity
+            };
+
+            return Results.Problem(
+                statusCode: statusCode,
+                title: "Error de sincronización con Google Drive",
+                detail: result.Message,
+                type: statusCode == StatusCodes.Status412PreconditionFailed 
+                    ? "https://tools.ietf.org/html/rfc7232#section-4.2" 
+                    : statusCode == StatusCodes.Status400BadRequest
+                        ? "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+                        : "https://tools.ietf.org/html/rfc4918#section-11.2",
+                extensions: new Dictionary<string, object?>
+                {
+                    ["errorCode"] = result.ErrorCode ?? "SYNC_FAILED",
+                    ["success"] = false,
+                    ["timestamp"] = result.Timestamp
+                }
+            );
         })
         .RequireAnyPermission(Permissions.EquiposRegistrar, Permissions.EquiposEditar);
 

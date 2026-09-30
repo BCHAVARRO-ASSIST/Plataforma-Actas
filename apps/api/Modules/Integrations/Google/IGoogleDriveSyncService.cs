@@ -7,11 +7,12 @@ public sealed record SyncResult(
     int Created,
     int Updated,
     int Unchanged,
-    DateTimeOffset Timestamp
+    DateTimeOffset Timestamp,
+    string? ErrorCode = null
 );
 
 public interface IGoogleDriveSyncService
 {
-    Task<SyncResult> SyncInventoryAsync(CancellationToken cancellationToken = default);
+    Task<SyncResult> SyncInventoryAsync(string? overrideFileId = null, string? overrideSheetName = null, CancellationToken cancellationToken = default);
     SyncResult? GetLastSyncStatus();
 }

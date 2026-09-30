@@ -34,23 +34,34 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
 
     public SyncResult? GetLastSyncStatus() => _lastSyncResult;
 
-    public async Task<SyncResult> SyncInventoryAsync(CancellationToken cancellationToken = default)
+    public async Task<SyncResult> SyncInventoryAsync(
+        string? overrideFileId = null,
+        string? overrideSheetName = null,
+        CancellationToken cancellationToken = default)
     {
         if (!_options.Enabled)
         {
-            return new SyncResult(false, "La sincronización con Google Drive está deshabilitada en la configuración.", 0, 0, 0, 0, DateTimeOffset.UtcNow);
+            return new SyncResult(false, "La sincronización con Google Drive está deshabilitada en la configuración del servidor.", 0, 0, 0, 0, DateTimeOffset.UtcNow, "GOOGLE_DRIVE_DISABLED");
         }
 
         var keyPath = ResolveKeyPath(_options.ServiceAccountKeyPath);
         if (!File.Exists(keyPath))
         {
             _logger.LogError("Archivo de credenciales de Google no encontrado en: {KeyPath}", keyPath);
-            return new SyncResult(false, $"Archivo de credenciales no encontrado en: {keyPath}", 0, 0, 0, 0, DateTimeOffset.UtcNow);
+            return new SyncResult(false, $"El archivo de credenciales de Google no fue encontrado en: {keyPath}. Se requiere vincular la cuenta de servicio.", 0, 0, 0, 0, DateTimeOffset.UtcNow, "GOOGLE_CREDENTIALS_MISSING");
         }
+
+        var fileId = !string.IsNullOrWhiteSpace(overrideFileId) ? overrideFileId.Trim() : _options.DriveFileId?.Trim();
+        if (string.IsNullOrWhiteSpace(fileId))
+        {
+            return new SyncResult(false, "No se ha configurado un identificador de archivo (DriveFileId) válido para la sincronización con Google Drive.", 0, 0, 0, 0, DateTimeOffset.UtcNow, "INVALID_DRIVE_FILE_ID");
+        }
+
+        var targetSheetName = !string.IsNullOrWhiteSpace(overrideSheetName) ? overrideSheetName.Trim() : _options.SheetName?.Trim();
 
         try
         {
-            _logger.LogInformation("Iniciando sincronización con Google Drive para archivo: {FileId}...", _options.DriveFileId);
+            _logger.LogInformation("Iniciando sincronización con Google Drive para archivo: {FileId}...", fileId);
 
             var credential = GoogleCredential.FromFile(keyPath)
                 .CreateScoped(DriveService.ScopeConstants.DriveReadonly)
@@ -65,7 +76,7 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
             using var memoryStream = new MemoryStream();
 
             // 1. Obtener metadatos del archivo para determinar si es Google Spreadsheet nativo o archivo binario
-            var metaRequest = driveService.Files.Get(_options.DriveFileId);
+            var metaRequest = driveService.Files.Get(fileId);
             metaRequest.SupportsAllDrives = true;
             metaRequest.Fields = "id, name, mimeType, size";
             var fileMetadata = await metaRequest.ExecuteAsync(cancellationToken);
@@ -75,13 +86,13 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
             if (string.Equals(fileMetadata.MimeType, "application/vnd.google-apps.spreadsheet", StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogInformation("Exportando Google Spreadsheet nativo '{Name}' a formato OpenXML (.xlsx)...", fileMetadata.Name);
-                var exportRequest = driveService.Files.Export(_options.DriveFileId, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                var exportRequest = driveService.Files.Export(fileId, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                 await exportRequest.DownloadAsync(memoryStream, cancellationToken);
             }
             else
             {
                 _logger.LogInformation("Descargando archivo binario directo '{Name}' desde Google Drive...", fileMetadata.Name);
-                var getRequest = driveService.Files.Get(_options.DriveFileId);
+                var getRequest = driveService.Files.Get(fileId);
                 getRequest.SupportsAllDrives = true;
                 await getRequest.DownloadAsync(memoryStream, cancellationToken);
             }
@@ -104,22 +115,38 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
 
             var targetSheet = dataSet.Tables
                 .Cast<DataTable>()
-                .FirstOrDefault(t => t.TableName.Equals(_options.SheetName, StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(t => t.TableName.Equals(targetSheetName, StringComparison.OrdinalIgnoreCase));
 
             if (targetSheet == null)
             {
                 var available = string.Join(", ", dataSet.Tables.Cast<DataTable>().Select(t => $"'{t.TableName}'"));
-                throw new InvalidOperationException($"La pestaña '{_options.SheetName}' no fue encontrada en el Excel. Pestañas disponibles: {available}");
+                throw new InvalidOperationException($"La pestaña '{targetSheetName}' no fue encontrada en el archivo Excel. Pestañas disponibles: {available}");
             }
 
             var result = await ProcessSheetAsync(targetSheet, cancellationToken);
             _lastSyncResult = result;
             return result;
         }
+        catch (global::Google.GoogleApiException gEx)
+        {
+            _logger.LogError(gEx, "Error de Google Drive API al acceder al archivo {FileId}. Status: {Status}", fileId, gEx.HttpStatusCode);
+            var isNotFound = gEx.HttpStatusCode == System.Net.HttpStatusCode.NotFound;
+            var isAuth = gEx.HttpStatusCode == System.Net.HttpStatusCode.Unauthorized || gEx.HttpStatusCode == System.Net.HttpStatusCode.Forbidden;
+            var errorCode = isNotFound ? "GOOGLE_DRIVE_FILE_NOT_FOUND" : isAuth ? "GOOGLE_DRIVE_PERMISSION_DENIED" : "GOOGLE_API_ERROR";
+            var msg = isNotFound
+                ? $"El archivo de inventario con ID '{fileId}' no fue encontrado en Google Drive o no ha sido compartido con la cuenta de servicio vinculada ({_options.AdminImpersonationEmail})."
+                : isAuth
+                    ? $"La cuenta de servicio ({_options.AdminImpersonationEmail}) no cuenta con permisos suficientes para leer el archivo con ID '{fileId}' en Google Drive."
+                    : $"Error en el servicio de Google Drive ({gEx.HttpStatusCode}): {gEx.Message}";
+
+            var failedResult = new SyncResult(false, msg, 0, 0, 0, 0, DateTimeOffset.UtcNow, errorCode);
+            _lastSyncResult = failedResult;
+            return failedResult;
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error durante la sincronización del inventario desde Google Drive.");
-            var failedResult = new SyncResult(false, $"Error al sincronizar: {ex.Message}", 0, 0, 0, 0, DateTimeOffset.UtcNow);
+            var failedResult = new SyncResult(false, $"Error al sincronizar con Google Drive: {ex.Message}", 0, 0, 0, 0, DateTimeOffset.UtcNow, "PROCESS_ERROR");
             _lastSyncResult = failedResult;
             return failedResult;
         }
