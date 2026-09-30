@@ -105,6 +105,15 @@ export async function getApiErrorMessage(
       try {
         const data = JSON.parse(text);
         if (typeof data === "string") return data;
+        // Priorizar errores estructurados RFC 7807 ValidationProblemDetails
+        if (data.errors && typeof data.errors === "object") {
+          const messages = Object.values(data.errors).flatMap((errs) =>
+            Array.isArray(errs) ? errs : [String(errs)]
+          );
+          if (messages.length > 0) {
+            return messages.join(". ");
+          }
+        }
         // Priorizar 'detail' estándar de RFC 7807 ProblemDetails
         if (data.detail) return data.detail;
         if (data.message) return data.message;

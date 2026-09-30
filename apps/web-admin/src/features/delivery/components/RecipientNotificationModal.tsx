@@ -1,4 +1,5 @@
 import { useState, type KeyboardEvent } from "react";
+import { isValidEmail, normalizeEmail } from "@/shared/utils/validation";
 
 /**
  * Propiedades del componente de gestión de destinatarios de notificación de actas.
@@ -28,8 +29,6 @@ export interface RecipientNotificationModalProps {
   disabled?: boolean;
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 /**
  * Componente interactivo para la pre-carga fija del custodio y la incorporación dinámica de copias en campo.
  *
@@ -49,11 +48,11 @@ export function RecipientNotificationModal({
   const displayPrimaryEmail = consultorCorreo?.trim() || "correo-no-registrado@assist.com.co";
 
   function handleAddEmail() {
-    const trimmed = inputValue.trim().toLowerCase();
+    const trimmed = normalizeEmail(inputValue);
     if (!trimmed) return;
 
-    if (!EMAIL_REGEX.test(trimmed)) {
-      setValidationError("El formato de correo ingresado no es válido.");
+    if (!isValidEmail(trimmed)) {
+      setValidationError("El formato de correo ingresado no es válido (debe cumplir estándar RFC 5322: ejemplo@dominio.com).");
       return;
     }
 

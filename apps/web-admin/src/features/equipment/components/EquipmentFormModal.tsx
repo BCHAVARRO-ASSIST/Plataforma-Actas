@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Equipment, CreateEquipmentRequest, UpdateEquipmentRequest } from "../equipmentService";
 import {
   CloseIcon,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/Icons";
 import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
 import { Modal } from "@/components/ui/Modal";
+import { isValidInventoryKey, isValidName } from "@/shared/utils/validation";
 
 export interface EquipmentFormModalProps {
   isOpen: boolean;
@@ -76,14 +77,34 @@ function EquipmentFormContent({
   const [estatusEquipo, setEstatusEquipo] = useState(equipmentToEdit?.estatusEquipo || "Activo");
   const [error, setError] = useState<string | null>(null);
 
+  const validationErrors = useMemo(() => {
+    const errs: Record<string, string> = {};
+
+    if (inventoryKey.trim() && !isValidInventoryKey(inventoryKey)) {
+      errs.inventoryKey = "La placa debe ser alfanumérica limpia (2 a 50 caracteres, guiones o puntos).";
+    }
+
+    if (nombreEquipo.trim().length > 0 && (nombreEquipo.trim().length < 2 || nombreEquipo.trim().length > 150)) {
+      errs.nombreEquipo = "El nombre o modelo del equipo debe tener entre 2 y 150 caracteres.";
+    }
+
+    if (asignadoA.trim() && !isValidName(asignadoA)) {
+      errs.asignadoA = "El nombre del responsable solo puede contener caracteres alfabéticos y espacios.";
+    }
+
+    return errs;
+  }, [inventoryKey, nombreEquipo, asignadoA]);
+
+  const isFormValid = useMemo(() => {
+    const hasRequired = Boolean(inventoryKey.trim()) && Boolean(nombreEquipo.trim());
+    const hasNoValidationErrors = Object.keys(validationErrors).length === 0;
+    return hasRequired && hasNoValidationErrors;
+  }, [inventoryKey, nombreEquipo, validationErrors]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!inventoryKey.trim()) {
-      setError("El código de placa / inventario es obligatorio.");
-      return;
-    }
-    if (!nombreEquipo.trim()) {
-      setError("El nombre o modelo del equipo es obligatorio.");
+    if (!isFormValid) {
+      setError("Por favor verifique los datos del equipo antes de continuar.");
       return;
     }
 
@@ -170,9 +191,10 @@ function EquipmentFormContent({
                     name="inventoryKey"
                     className="form-input"
                     type="text"
+                    maxLength={50}
                     placeholder="Ej. LAP-2026-0042"
                     value={inventoryKey}
-                    onChange={(e) => setInventoryKey(e.target.value)}
+                    onChange={(e) => setInventoryKey(e.target.value.toUpperCase().replace(/[^A-Z0-9\-_./]/g, "").slice(0, 50))}
                     disabled={saving || Boolean(equipmentToEdit)}
                     style={{
                       fontFamily: "var(--font-mono)",
@@ -183,6 +205,11 @@ function EquipmentFormContent({
                     required
                   />
                 </div>
+                {validationErrors.inventoryKey && (
+                  <span style={{ fontSize: "11px", color: "var(--color-danger-600)", marginTop: "3px", display: "block" }}>
+                    {validationErrors.inventoryKey}
+                  </span>
+                )}
                 {equipmentToEdit && (
                   <span style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
                     El código único no se puede modificar.
@@ -222,6 +249,7 @@ function EquipmentFormContent({
                     name="nombreEquipo"
                     className="form-input"
                     type="text"
+                    maxLength={150}
                     placeholder="Ej. ThinkPad T14 Gen 4 / Latitude 5440"
                     value={nombreEquipo}
                     onChange={(e) => setNombreEquipo(e.target.value)}
@@ -229,6 +257,11 @@ function EquipmentFormContent({
                     required
                   />
                 </div>
+                {validationErrors.nombreEquipo && (
+                  <span style={{ fontSize: "11px", color: "var(--color-danger-600)", marginTop: "3px", display: "block" }}>
+                    {validationErrors.nombreEquipo}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -420,8 +453,9 @@ function EquipmentFormContent({
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={saving}
-              style={{ minWidth: "160px" }}
+              disabled={saving || !isFormValid}
+              style={{ minWidth: "160px", ...(!isFormValid ? { opacity: 0.6, cursor: "not-allowed" } : {}) }}
+              title={!isFormValid ? "Diligencia los campos obligatorios para guardar" : undefined}
             >
               {saving ? (
                 <>

@@ -86,10 +86,10 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
                 IActaService actaService,
                 CancellationToken cancellationToken) =>
             {
-                if (InputSanitizationValidator.ContainsSqlInjection(request.ObservacionesEntrega) ||
-                    InputSanitizationValidator.ContainsSqlInjection(request.ObservacionesDevolucion))
+                var validationErrors = ValidateCreateActa(request);
+                if (validationErrors.Count > 0)
                 {
-                    return Results.BadRequest(new { message = "Se detectaron caracteres o patrones maliciosos no permitidos en las observaciones del acta." });
+                    return Results.ValidationProblem(validationErrors, statusCode: StatusCodes.Status400BadRequest);
                 }
 
                 try
@@ -139,6 +139,12 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
                     mensajeroPermission: Permissions.MensajeroActasFirmar);
 
                 if (!canAccess) return Results.Forbid();
+
+                var validationErrors = ValidateFirmarActa(request);
+                if (validationErrors.Count > 0)
+                {
+                    return Results.ValidationProblem(validationErrors, statusCode: StatusCodes.Status400BadRequest);
+                }
 
                 try
                 {
@@ -242,9 +248,10 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
                 IActaService actaService,
                 CancellationToken cancellationToken) =>
             {
-                if (InputSanitizationValidator.ContainsSqlInjection(request.Motivo))
+                var validationErrors = ValidateAnularActa(request);
+                if (validationErrors.Count > 0)
                 {
-                    return Results.BadRequest(new { message = "Se detectaron caracteres o patrones maliciosos no permitidos en el motivo de anulación." });
+                    return Results.ValidationProblem(validationErrors, statusCode: StatusCodes.Status400BadRequest);
                 }
 
                 try
@@ -317,6 +324,119 @@ namespace PlataformaActas.Api.Modules.Actas.Endpoints
             .RequirePermission(Permissions.ActasEditar);
 
             return endpoints;
+        }
+
+        private static Dictionary<string, string[]> ValidateCreateActa(CreateActaRequest request)
+        {
+            var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+            if (request.EquipmentId == Guid.Empty)
+            {
+                errors["equipmentId"] = ["El equipo tecnológico seleccionado es obligatorio."];
+            }
+
+            if (string.IsNullOrWhiteSpace(request.TipoActa))
+            {
+                errors["tipoActa"] = ["El tipo de acta es obligatorio."];
+            }
+            else
+            {
+                var tipo = request.TipoActa.Trim();
+                if (!tipo.Equals("Entrega", StringComparison.OrdinalIgnoreCase) &&
+                    !tipo.Equals("Devolución", StringComparison.OrdinalIgnoreCase) &&
+                    !tipo.Equals("Devolucion", StringComparison.OrdinalIgnoreCase))
+                {
+                    errors["tipoActa"] = ["El tipo de acta debe ser 'Entrega' o 'Devolución'."];
+                }
+                else if ((tipo.Equals("Devolución", StringComparison.OrdinalIgnoreCase) ||
+                          tipo.Equals("Devolucion", StringComparison.OrdinalIgnoreCase)) &&
+                         (!request.ActaOrigenId.HasValue || request.ActaOrigenId.Value == Guid.Empty))
+                {
+                    errors["actaOrigenId"] = ["Para registrar un acta de Devolución es obligatorio vincular el acta de Entrega de origen."];
+                }
+            }
+
+            if (InputSanitizationValidator.ContainsSqlInjection(request.ObservacionesEntrega) ||
+                InputSanitizationValidator.ContainsSqlInjection(request.ObservacionesDevolucion))
+            {
+                errors["observaciones"] = ["Se detectaron caracteres o patrones maliciosos no permitidos en las observaciones del acta."];
+            }
+
+            // Validar documento de identidad si viene especificado en FormDataJson
+            if (!string.IsNullOrWhiteSpace(request.FormDataJson))
+            {
+                try
+                {
+                    using var jsonDoc = System.Text.Json.JsonDocument.Parse(request.FormDataJson);
+                    string? docVal = null;
+                    if (jsonDoc.RootElement.TryGetProperty("numeroDocumento", out var nd) && nd.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        docVal = nd.GetString();
+                    }
+                    else if (jsonDoc.RootElement.TryGetProperty("cedula", out var c) && c.ValueKind == System.Text.Json.JsonValueKind.String)
+                    {
+                        docVal = c.GetString();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(docVal) && !InputSanitizationValidator.IsValidDocumentNumber(docVal))
+                    {
+                        errors["numeroDocumento"] = ["El documento de identidad debe contener exclusivamente entre 6 y 12 dígitos numéricos."];
+                    }
+                }
+                catch
+                {
+                    // Error en formato JSON
+                }
+            }
+
+            return errors;
+        }
+
+        private static Dictionary<string, string[]> ValidateFirmarActa(FirmarActaRequest request)
+        {
+            var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+            if (string.IsNullOrWhiteSpace(request.SignatureDataJson))
+            {
+                errors["signatureDataJson"] = ["La firma digital es obligatoria para concluir el acta."];
+            }
+
+            if (request.CorreosNotificacionAdicionales != null && request.CorreosNotificacionAdicionales.Count > 0)
+            {
+                foreach (var mail in request.CorreosNotificacionAdicionales)
+                {
+                    if (!InputSanitizationValidator.IsValidEmail(mail))
+                    {
+                        errors["correosNotificacionAdicionales"] = ["Uno o más correos electrónicos de notificación adicional tienen un formato inválido (estándar RFC 5322)."];
+                        break;
+                    }
+                }
+            }
+
+            if (InputSanitizationValidator.ContainsSqlInjection(request.Observacion) ||
+                InputSanitizationValidator.ContainsSqlInjection(request.ObservacionesEntrega) ||
+                InputSanitizationValidator.ContainsSqlInjection(request.ObservacionesDevolucion))
+            {
+                errors["observaciones"] = ["Se detectaron caracteres o patrones no permitidos en las observaciones."];
+            }
+
+            return errors;
+        }
+
+        private static Dictionary<string, string[]> ValidateAnularActa(AnularActaRequest request)
+        {
+            var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+            if (string.IsNullOrWhiteSpace(request.Motivo) || request.Motivo.Trim().Length < 3)
+            {
+                errors["motivo"] = ["El motivo de anulación es obligatorio (mínimo 3 caracteres)."];
+            }
+            else if (InputSanitizationValidator.ContainsSqlInjection(request.Motivo))
+            {
+                errors["motivo"] = ["Se detectaron caracteres o patrones maliciosos no permitidos en el motivo de anulación."];
+            }
+
+            return errors;
         }
     }
 }

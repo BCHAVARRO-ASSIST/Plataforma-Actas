@@ -12,6 +12,12 @@ import {
   MessengerIcon,
   UserIcon,
 } from "@/components/ui/Icons";
+import {
+  handleNumericKeyDown,
+  handleNumericPaste,
+  isValidDocument,
+  sanitizeNumeric,
+} from "@/shared/utils/validation";
 
 const CANONICAL_ACCESSORIES = [
   { key: "mouse", label: "Mouse" },
@@ -214,10 +220,12 @@ export function NewActaForm({ onCreated, onCancel }: NewActaFormProps) {
     }
   }
 
+  const isDocumentValid = Boolean(numeroDocumento.trim()) && isValidDocument(numeroDocumento);
+
   const isValid =
     Boolean(equipmentId) &&
     Boolean(destinatarioUsuarioId) &&
-    Boolean(numeroDocumento.trim()) &&
+    isDocumentValid &&
     (actaType === "Entrega" || Boolean(actaOrigenId));
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -238,8 +246,8 @@ export function NewActaForm({ onCreated, onCancel }: NewActaFormProps) {
       return;
     }
 
-    if (!numeroDocumento.trim()) {
-      setError("Ingrese el número de identificación / cédula (C.C.) del consultor destinatario.");
+    if (!isDocumentValid) {
+      setError("La cédula o documento de identidad debe contener entre 6 y 12 dígitos numéricos.");
       return;
     }
 
@@ -472,10 +480,14 @@ export function NewActaForm({ onCreated, onCancel }: NewActaFormProps) {
                     id="acta-numero-documento"
                     name="numeroDocumento"
                     type="text"
+                    inputMode="numeric"
+                    maxLength={12}
                     className="form-input"
                     value={numeroDocumento}
-                    onChange={(event) => setNumeroDocumento(event.target.value)}
-                    placeholder="Ej: 1020304050"
+                    onKeyDown={handleNumericKeyDown}
+                    onPaste={(event) => handleNumericPaste(event, (sanitized) => setNumeroDocumento(sanitized), 12)}
+                    onChange={(event) => setNumeroDocumento(sanitizeNumeric(event.target.value).slice(0, 12))}
+                    placeholder="Ej: 1020304050 (6 a 12 dígitos)"
                     disabled={saving}
                     required
                     style={{
@@ -483,6 +495,11 @@ export function NewActaForm({ onCreated, onCancel }: NewActaFormProps) {
                       letterSpacing: "0.5px",
                     }}
                   />
+                  {numeroDocumento.trim() && !isValidDocument(numeroDocumento) && (
+                    <span style={{ fontSize: "11px", color: "var(--color-danger-600)", marginTop: "4px", display: "block" }}>
+                      La cédula debe contener entre 6 y 12 dígitos numéricos.
+                    </span>
+                  )}
                   <span style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
                     Este documento se registrará formalmente en el formato P8-FR-003 y en la cláusula de descuento por nómina.
                   </span>

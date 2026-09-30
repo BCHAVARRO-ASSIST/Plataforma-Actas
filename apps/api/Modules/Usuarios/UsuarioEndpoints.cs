@@ -43,33 +43,17 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
                 IUsuarioService service,
                 CancellationToken cancellationToken) =>
             {
-                if (string.IsNullOrWhiteSpace(request.Nombre) ||
-                    string.IsNullOrWhiteSpace(request.Apellido) ||
-                    string.IsNullOrWhiteSpace(request.UsuarioRed) ||
-                    string.IsNullOrWhiteSpace(request.Correo) ||
-                    string.IsNullOrWhiteSpace(request.Proceso))
-                {
-                    return Results.BadRequest(new { message = "Todos los campos obligatorios deben ser diligenciados." });
-                }
+                var validationErrors = ValidateUsuario(
+                    request.Nombre,
+                    request.Apellido,
+                    request.UsuarioRed,
+                    request.Correo,
+                    request.Proceso,
+                    request.NumeroDocumento);
 
-                if (!System.Net.Mail.MailAddress.TryCreate(request.Correo.Trim(), out var parsedMail) || parsedMail.Address != request.Correo.Trim())
+                if (validationErrors.Count > 0)
                 {
-                    return Results.BadRequest(new { message = "El formato del correo electrónico es inválido." });
-                }
-
-                if (request.Nombre.Length > 100 || request.Apellido.Length > 100 || request.UsuarioRed.Length > 50 || request.Correo.Length > 150)
-                {
-                    return Results.BadRequest(new { message = "Uno o más campos exceden la longitud máxima permitida." });
-                }
-
-                // Prevención estricta de SQL Injection en datos de entrada
-                if (InputSanitizationValidator.ContainsSqlInjection(request.Nombre) ||
-                    InputSanitizationValidator.ContainsSqlInjection(request.Apellido) ||
-                    InputSanitizationValidator.ContainsSqlInjection(request.UsuarioRed) ||
-                    InputSanitizationValidator.ContainsSqlInjection(request.Proceso) ||
-                    !InputSanitizationValidator.IsValidDocumentNumber(request.NumeroDocumento))
-                {
-                    return Results.BadRequest(new { message = "Se detectaron caracteres o patrones maliciosos no permitidos en los datos de entrada." });
+                    return Results.ValidationProblem(validationErrors, statusCode: StatusCodes.Status400BadRequest);
                 }
 
                 try
@@ -99,33 +83,17 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
                     return Results.BadRequest(new { message = "No puedes desactivar o revocar tu propia cuenta de administrador en sesión." });
                 }
 
-                if (string.IsNullOrWhiteSpace(request.Nombre) ||
-                    string.IsNullOrWhiteSpace(request.Apellido) ||
-                    string.IsNullOrWhiteSpace(request.UsuarioRed) ||
-                    string.IsNullOrWhiteSpace(request.Correo) ||
-                    string.IsNullOrWhiteSpace(request.Proceso))
-                {
-                    return Results.BadRequest(new { message = "Todos los campos obligatorios deben ser diligenciados." });
-                }
+                var validationErrors = ValidateUsuario(
+                    request.Nombre,
+                    request.Apellido,
+                    request.UsuarioRed,
+                    request.Correo,
+                    request.Proceso,
+                    request.NumeroDocumento);
 
-                if (!System.Net.Mail.MailAddress.TryCreate(request.Correo.Trim(), out var parsedMail) || parsedMail.Address != request.Correo.Trim())
+                if (validationErrors.Count > 0)
                 {
-                    return Results.BadRequest(new { message = "El formato del correo electrónico es inválido." });
-                }
-
-                if (request.Nombre.Length > 100 || request.Apellido.Length > 100 || request.UsuarioRed.Length > 50 || request.Correo.Length > 150)
-                {
-                    return Results.BadRequest(new { message = "Uno o más campos exceden la longitud máxima permitida." });
-                }
-
-                // Prevención estricta de SQL Injection en actualización de usuario
-                if (InputSanitizationValidator.ContainsSqlInjection(request.Nombre) ||
-                    InputSanitizationValidator.ContainsSqlInjection(request.Apellido) ||
-                    InputSanitizationValidator.ContainsSqlInjection(request.UsuarioRed) ||
-                    InputSanitizationValidator.ContainsSqlInjection(request.Proceso) ||
-                    !InputSanitizationValidator.IsValidDocumentNumber(request.NumeroDocumento))
-                {
-                    return Results.BadRequest(new { message = "Se detectaron caracteres o patrones maliciosos no permitidos en los datos de entrada." });
+                    return Results.ValidationProblem(validationErrors, statusCode: StatusCodes.Status400BadRequest);
                 }
 
                 try
@@ -225,6 +193,69 @@ namespace PlataformaActas.Api.Modules.Usuarios.Endpoints
             .RequirePermission(Permissions.UsuariosEditar);
 
             return endpoints;
+        }
+
+        private static Dictionary<string, string[]> ValidateUsuario(
+            string? nombre,
+            string? apellido,
+            string? usuarioRed,
+            string? correo,
+            string? proceso,
+            string? numeroDocumento)
+        {
+            var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+            if (string.IsNullOrWhiteSpace(nombre))
+            {
+                errors["nombre"] = ["El nombre es obligatorio."];
+            }
+            else if (!InputSanitizationValidator.IsValidPersonName(nombre))
+            {
+                errors["nombre"] = ["El nombre solo puede contener letras, tildes, diéresis y espacios (entre 2 y 100 caracteres)."];
+            }
+
+            if (string.IsNullOrWhiteSpace(apellido))
+            {
+                errors["apellido"] = ["El apellido es obligatorio."];
+            }
+            else if (!InputSanitizationValidator.IsValidPersonName(apellido))
+            {
+                errors["apellido"] = ["El apellido solo puede contener letras, tildes, diéresis y espacios (entre 2 y 100 caracteres)."];
+            }
+
+            if (string.IsNullOrWhiteSpace(usuarioRed))
+            {
+                errors["usuarioRed"] = ["El usuario de red / login es obligatorio."];
+            }
+            else if (usuarioRed.Trim().Length > 50 || InputSanitizationValidator.ContainsSqlInjection(usuarioRed))
+            {
+                errors["usuarioRed"] = ["El usuario de red no puede exceder 50 caracteres ni contener caracteres prohibidos."];
+            }
+
+            if (string.IsNullOrWhiteSpace(correo))
+            {
+                errors["correo"] = ["El correo electrónico es obligatorio."];
+            }
+            else if (!InputSanitizationValidator.IsValidEmail(correo))
+            {
+                errors["correo"] = ["El formato del correo electrónico es inválido (estándar RFC 5322)."];
+            }
+
+            if (string.IsNullOrWhiteSpace(proceso))
+            {
+                errors["proceso"] = ["El proceso o departamento es obligatorio."];
+            }
+            else if (proceso.Trim().Length > 100 || InputSanitizationValidator.ContainsSqlInjection(proceso))
+            {
+                errors["proceso"] = ["El proceso no debe exceder 100 caracteres ni contener caracteres prohibidos."];
+            }
+
+            if (!string.IsNullOrWhiteSpace(numeroDocumento) && !InputSanitizationValidator.IsValidDocumentNumber(numeroDocumento))
+            {
+                errors["numeroDocumento"] = ["El documento de identidad debe contener exclusivamente entre 6 y 12 dígitos numéricos."];
+            }
+
+            return errors;
         }
     }
 }

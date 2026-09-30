@@ -419,6 +419,9 @@ export function MaintenancePage() {
                   className="form-input"
                   value={modalFecha}
                   onChange={(e) => setModalFecha(e.target.value)}
+                  min="2010-01-01"
+                  max={new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]}
+                  required
                 />
               </div>
 
@@ -441,7 +444,7 @@ export function MaintenancePage() {
               <button type="button" className="btn btn-ghost" onClick={() => setSelectedItem(null)}>
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-primary" disabled={saving}>
+              <button type="submit" className="btn btn-primary" disabled={saving || !modalFecha}>
                 {saving ? "Guardando..." : "Guardar Mantenimiento"}
               </button>
             </div>

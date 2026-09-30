@@ -301,6 +301,7 @@ export function ReportFilters({
                 name="fechaInicio"
                 type="date"
                 className="form-input"
+                max={filters.fechaFin || undefined}
                 value={filters.fechaInicio || ""}
                 onChange={(e) => handleChange("fechaInicio", e.target.value)}
                 style={{ height: "38px", fontSize: "12.5px" }}
@@ -324,6 +325,7 @@ export function ReportFilters({
                 name="fechaFin"
                 type="date"
                 className="form-input"
+                min={filters.fechaInicio || undefined}
                 value={filters.fechaFin || ""}
                 onChange={(e) => handleChange("fechaFin", e.target.value)}
                 style={{ height: "38px", fontSize: "12.5px" }}

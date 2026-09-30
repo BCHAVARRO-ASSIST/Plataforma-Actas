@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using PlataformaActas.Api.Authorization;
+using PlataformaActas.Api.Common.Security;
 using PlataformaActas.Api.Modules.Equipos.Data;
 using PlataformaActas.Api.Modules.Equipos.Models.Dto;
 using PlataformaActas.Api.Modules.Equipos.Services;
@@ -50,6 +51,23 @@ public static class EquiposEndpoints
             IEquiposService service,
             CancellationToken cancellationToken) =>
         {
+            var validationErrors = ValidateEquipment(
+                request.InventoryKey,
+                request.NombreEquipo,
+                request.AsignadoA,
+                request.Empresa,
+                request.Proveedor,
+                request.Marca,
+                request.Procesador,
+                request.DiscoDuro,
+                request.MemoriaRam,
+                request.Departamento);
+
+            if (validationErrors.Count > 0)
+            {
+                return Results.ValidationProblem(validationErrors, statusCode: StatusCodes.Status400BadRequest);
+            }
+
             try
             {
                 var created = await service.CreateAsync(request, cancellationToken);
@@ -73,6 +91,23 @@ public static class EquiposEndpoints
             IEquiposService service,
             CancellationToken cancellationToken) =>
         {
+            var validationErrors = ValidateEquipment(
+                request.InventoryKey,
+                request.NombreEquipo,
+                request.AsignadoA,
+                request.Empresa,
+                request.Proveedor,
+                request.Marca,
+                request.Procesador,
+                request.DiscoDuro,
+                request.MemoriaRam,
+                request.Departamento);
+
+            if (validationErrors.Count > 0)
+            {
+                return Results.ValidationProblem(validationErrors, statusCode: StatusCodes.Status400BadRequest);
+            }
+
             try
             {
                 var updated = await service.UpdateAsync(id, request, cancellationToken);
@@ -164,9 +199,111 @@ public static class EquiposEndpoints
             IEquiposService service,
             CancellationToken cancellationToken) =>
         {
+            var validationErrors = ValidateMaintenance(request);
+            if (validationErrors.Count > 0)
+            {
+                return Results.ValidationProblem(validationErrors, statusCode: StatusCodes.Status400BadRequest);
+            }
+
             var ok = await service.UpdateMaintenanceAsync(id, request, cancellationToken);
             return ok ? Results.NoContent() : Results.NotFound();
         })
         .RequirePermission(Permissions.EquiposEditar);
+    }
+
+    private static Dictionary<string, string[]> ValidateEquipment(
+        string? inventoryKey,
+        string? nombreEquipo,
+        string? asignadoA,
+        string? empresa,
+        string? proveedor,
+        string? marca,
+        string? procesador,
+        string? discoDuro,
+        string? memoriaRam,
+        string? departamento)
+    {
+        var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(inventoryKey))
+        {
+            errors["inventoryKey"] = ["La clave o placa de inventario es obligatoria."];
+        }
+        else if (!InputSanitizationValidator.IsValidInventoryKey(inventoryKey))
+        {
+            errors["inventoryKey"] = ["La placa de inventario debe ser alfanumérica limpia (entre 2 y 50 caracteres) sin patrones prohibidos."];
+        }
+
+        if (string.IsNullOrWhiteSpace(nombreEquipo))
+        {
+            errors["nombreEquipo"] = ["El nombre o modelo del equipo es obligatorio."];
+        }
+        else
+        {
+            var trimmed = nombreEquipo.Trim();
+            if (trimmed.Length < 2 || trimmed.Length > 150 || InputSanitizationValidator.ContainsSqlInjection(trimmed))
+            {
+                errors["nombreEquipo"] = ["El nombre o modelo del equipo debe tener entre 2 y 150 caracteres y no contener patrones prohibidos."];
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(asignadoA))
+        {
+            var trimmed = asignadoA.Trim();
+            if (trimmed.Length > 100 || InputSanitizationValidator.ContainsSqlInjection(trimmed))
+            {
+                errors["asignadoA"] = ["El nombre del responsable no debe exceder 100 caracteres ni contener caracteres prohibidos."];
+            }
+        }
+
+        void CheckField(string fieldName, string? value, int maxLen)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                var trimmed = value.Trim();
+                if (trimmed.Length > maxLen || InputSanitizationValidator.ContainsSqlInjection(trimmed))
+                {
+                    errors[fieldName] = [$"El campo {fieldName} no debe exceder {maxLen} caracteres ni contener patrones prohibidos."];
+                }
+            }
+        }
+
+        CheckField("empresa", empresa, 100);
+        CheckField("proveedor", proveedor, 100);
+        CheckField("marca", marca, 100);
+        CheckField("procesador", procesador, 100);
+        CheckField("discoDuro", discoDuro, 100);
+        CheckField("memoriaRam", memoriaRam, 100);
+        CheckField("departamento", departamento, 100);
+
+        return errors;
+    }
+
+    private static Dictionary<string, string[]> ValidateMaintenance(UpdateMaintenanceRequest request)
+    {
+        var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+        if (!string.IsNullOrWhiteSpace(request.TipoMantenimiento))
+        {
+            var tipo = request.TipoMantenimiento.Trim();
+            if (!tipo.Equals("Preventivo", StringComparison.OrdinalIgnoreCase) &&
+                !tipo.Equals("Correctivo", StringComparison.OrdinalIgnoreCase))
+            {
+                errors["tipoMantenimiento"] = ["El tipo de mantenimiento debe ser 'Preventivo' o 'Correctivo'."];
+            }
+        }
+
+        if (request.FechaMantenimiento.HasValue)
+        {
+            var fecha = request.FechaMantenimiento.Value;
+            var maxFuture = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(2));
+            var minPast = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-10));
+            if (fecha > maxFuture || fecha < minPast)
+            {
+                errors["fechaMantenimiento"] = ["La fecha de mantenimiento debe encontrarse en un rango temporal válido."];
+            }
+        }
+
+        return errors;
     }
 }

@@ -26,6 +26,15 @@ import { AutoDismissAlert } from "@/components/ui/AutoDismissAlert";
 import { useConfirm } from "@/shared/hooks/useConfirm";
 import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
+import {
+  handleNumericKeyDown,
+  handleNumericPaste,
+  isValidDocument,
+  isValidName,
+  isValidEmail,
+  normalizeEmail,
+  sanitizeNumeric,
+} from "@/shared/utils/validation";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -60,6 +69,41 @@ export function UsersPage() {
     rolId: "",
   });
   const [guardando, setGuardando] = useState(false);
+
+  // Esquema de validación en tiempo real para el formulario de usuarios
+  const formValidationErrors = useMemo(() => {
+    const errs: Record<string, string> = {};
+
+    if (formulario.nombre.trim() && !isValidName(formulario.nombre)) {
+      errs.nombre = "El nombre solo puede contener letras, tildes, diéresis y espacios (entre 2 y 100 caracteres).";
+    }
+
+    if (formulario.apellido.trim() && !isValidName(formulario.apellido)) {
+      errs.apellido = "El apellido solo puede contener letras, tildes, diéresis y espacios (entre 2 y 100 caracteres).";
+    }
+
+    if (formulario.correo.trim() && !isValidEmail(formulario.correo)) {
+      errs.correo = "El formato del correo electrónico no es válido (ejemplo@dominio.com).";
+    }
+
+    if (formulario.numeroDocumento.trim() && !isValidDocument(formulario.numeroDocumento)) {
+      errs.numeroDocumento = "La cédula debe contener entre 6 y 12 dígitos numéricos.";
+    }
+
+    return errs;
+  }, [formulario.nombre, formulario.apellido, formulario.correo, formulario.numeroDocumento]);
+
+  const isUserFormValid = useMemo(() => {
+    const hasRequired =
+      Boolean(formulario.nombre.trim()) &&
+      Boolean(formulario.apellido.trim()) &&
+      Boolean(formulario.usuarioRed.trim()) &&
+      Boolean(formulario.correo.trim());
+
+    const hasNoValidationErrors = Object.keys(formValidationErrors).length === 0;
+
+    return hasRequired && hasNoValidationErrors;
+  }, [formulario.nombre, formulario.apellido, formulario.usuarioRed, formulario.correo, formValidationErrors]);
 
   // Modal Asignar Rol
   const [rolModalAbierto, setRolModalAbierto] = useState(false);
@@ -190,8 +234,8 @@ export function UsersPage() {
 
   async function handleGuardarUsuario(e: React.FormEvent) {
     e.preventDefault();
-    if (!formulario.nombre || !formulario.apellido || !formulario.usuarioRed || !formulario.correo) {
-      setError("Todos los campos con asterisco (*) son obligatorios.");
+    if (!isUserFormValid) {
+      setError("Por favor verifique los campos del formulario con advertencias antes de guardar.");
       return;
     }
 
@@ -203,7 +247,7 @@ export function UsersPage() {
           nombre: formulario.nombre.trim(),
           apellido: formulario.apellido.trim(),
           usuarioRed: formulario.usuarioRed.trim(),
-          correo: formulario.correo.trim(),
+          correo: normalizeEmail(formulario.correo),
           numeroDocumento: formulario.numeroDocumento.trim() || undefined,
           proceso: formulario.proceso.trim(),
           password: formulario.password.trim() || undefined,
@@ -215,7 +259,7 @@ export function UsersPage() {
           nombre: formulario.nombre.trim(),
           apellido: formulario.apellido.trim(),
           usuarioRed: formulario.usuarioRed.trim(),
-          correo: formulario.correo.trim(),
+          correo: normalizeEmail(formulario.correo),
           numeroDocumento: formulario.numeroDocumento.trim() || undefined,
           proceso: formulario.proceso.trim(),
           activo: formulario.activo,
@@ -721,12 +765,18 @@ export function UsersPage() {
                       id="usuarioNombreInput"
                       name="nombre"
                       type="text"
+                      maxLength={100}
                       className="form-input"
                       required
                       placeholder="Ej. Juan"
                       value={formulario.nombre}
                       onChange={(e) => setFormulario({ ...formulario, nombre: e.target.value })}
                     />
+                    {formValidationErrors.nombre && (
+                      <span style={{ fontSize: "11px", color: "var(--color-danger-600)", marginTop: "3px", display: "block" }}>
+                        {formValidationErrors.nombre}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label className="form-label" htmlFor="usuarioApellidoInput">Apellido *</label>
@@ -734,12 +784,18 @@ export function UsersPage() {
                       id="usuarioApellidoInput"
                       name="apellido"
                       type="text"
+                      maxLength={100}
                       className="form-input"
                       required
                       placeholder="Ej. Pérez"
                       value={formulario.apellido}
                       onChange={(e) => setFormulario({ ...formulario, apellido: e.target.value })}
                     />
+                    {formValidationErrors.apellido && (
+                      <span style={{ fontSize: "11px", color: "var(--color-danger-600)", marginTop: "3px", display: "block" }}>
+                        {formValidationErrors.apellido}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -750,6 +806,7 @@ export function UsersPage() {
                       id="usuarioRedInput"
                       name="usuarioRed"
                       type="text"
+                      maxLength={50}
                       className="form-input"
                       required
                       disabled={modoFormulario === "editar" && usuarioSeleccionado?.usuarioRed.toLowerCase() === "admin"}
@@ -764,12 +821,18 @@ export function UsersPage() {
                       id="usuarioCorreoInput"
                       name="correo"
                       type="email"
+                      maxLength={150}
                       className="form-input"
                       required
                       placeholder="ejemplo@empresa.com"
                       value={formulario.correo}
-                      onChange={(e) => setFormulario({ ...formulario, correo: e.target.value })}
+                      onChange={(e) => setFormulario({ ...formulario, correo: e.target.value.toLowerCase() })}
                     />
+                    {formValidationErrors.correo && (
+                      <span style={{ fontSize: "11px", color: "var(--color-danger-600)", marginTop: "3px", display: "block" }}>
+                        {formValidationErrors.correo}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -780,11 +843,20 @@ export function UsersPage() {
                       id="usuarioDocumentoInput"
                       name="numeroDocumento"
                       type="text"
+                      inputMode="numeric"
+                      maxLength={12}
                       className="form-input"
-                      placeholder="Ej. 1018485291"
+                      placeholder="Ej. 1018485291 (6 a 12 dígitos)"
                       value={formulario.numeroDocumento}
-                      onChange={(e) => setFormulario({ ...formulario, numeroDocumento: e.target.value })}
+                      onKeyDown={handleNumericKeyDown}
+                      onPaste={(e) => handleNumericPaste(e, (sanitized) => setFormulario((prev) => ({ ...prev, numeroDocumento: sanitized })), 12)}
+                      onChange={(e) => setFormulario({ ...formulario, numeroDocumento: sanitizeNumeric(e.target.value).slice(0, 12) })}
                     />
+                    {formValidationErrors.numeroDocumento && (
+                      <span style={{ fontSize: "11px", color: "var(--color-danger-600)", marginTop: "3px", display: "block" }}>
+                        {formValidationErrors.numeroDocumento}
+                      </span>
+                    )}
                   </div>
                   <div className="form-group">
                     <label className="form-label" htmlFor="usuarioProcesoInput">Proceso / Departamento</label>
@@ -792,6 +864,7 @@ export function UsersPage() {
                       id="usuarioProcesoInput"
                       name="proceso"
                       type="text"
+                      maxLength={100}
                       className="form-input"
                       placeholder="Ej. Tecnología, Operaciones..."
                       value={formulario.proceso}
@@ -843,7 +916,13 @@ export function UsersPage() {
                 <button type="button" className="btn btn-ghost" onClick={() => setModalAbierto(false)}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={guardando}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={guardando || !isUserFormValid}
+                  style={!isUserFormValid ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                  title={!isUserFormValid ? "Diligencia los campos obligatorios y corrige los errores para guardar" : undefined}
+                >
                   {guardando ? "Guardando..." : modoFormulario === "crear" ? "Crear Usuario" : "Guardar Cambios"}
                 </button>
               </div>
