@@ -286,11 +286,11 @@ export function UsersPage() {
 
     const accion = u.activo ? "desactivar" : "activar";
     const isConfirmed = await confirm({
-      title: u.activo ? "Desactivar Usuario" : "Activar Usuario",
-      message: `¿Estás seguro de que deseas ${accion} al usuario ${u.nombre} ${u.apellido}?`,
-      confirmText: u.activo ? "Desactivar" : "Activar",
+      title: `${u.activo ? "Desactivar" : "Activar"} Colaborador`,
+      message: `¿Estás seguro de que deseas ${u.activo ? "desactivar" : "activar"} al usuario ${`${u.nombre} ${u.apellido}`.trim() || u.nombre}?`,
+      confirmText: u.activo ? "Sí, desactivar" : "Sí, activar",
       cancelText: "Cancelar",
-      variant: u.activo ? "warning" : "info",
+      variant: u.activo ? "danger" : "info",
     });
 
     if (!isConfirmed) {

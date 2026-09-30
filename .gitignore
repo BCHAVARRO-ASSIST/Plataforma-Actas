@@ -1,20 +1,31 @@
-# Dependencias y artefactos generados
+# ==============================================================================
+# Git Ignore - Plataforma de Actas
+# ==============================================================================
+
+# Dependencias y artefactos generados de compilación
 **/node_modules/
 **/dist/
+**/build/
 **/bin/
 **/obj/
+**/.vite/
 *.tsbuildinfo
 
-# Configuracion local y secretos
-.env
-.env.*
-!.env.example
-.env.local
+# Configuración local, variables de entorno y secretos
+**/.env
+**/.env.*
+!**/.env.example
+**/.env.local
 **/appsettings.Development.json
 !**/appsettings.Development.example.json
 **/google-credentials*.json
 **/Secrets/
 **/Secrets/*.json
+**/*.pfx
+**/*.key
+**/*.pem
+**/*.cer
+**/*.crt
 *.user
 *.suo
 cookies.txt
@@ -29,13 +40,14 @@ token.txt
 *.old
 *.log
 
-# Herramientas y sistema operativo
+# Herramientas y metadatos de entorno / IDE
 *.exe
 tools/*.exe
 .vs/
 .vscode/*
 !.vscode/extensions.json
 .idea/
+.fleet/
 .DS_Store
 Thumbs.db
 
@@ -44,6 +56,8 @@ Thumbs.db
 *.backup
 *.sql.bak
 
-# Runtime storage
+# Almacenamiento persistente de documentos en runtime
 storage/documentos/*
 !storage/documentos/.gitkeep
+**/storage/documentos/*
+!**/storage/documentos/.gitkeep

@@ -63,17 +63,37 @@ public sealed class GoogleDriveSyncService : IGoogleDriveSyncService
             });
 
             using var memoryStream = new MemoryStream();
-            var getRequest = driveService.Files.Get(_options.DriveFileId);
-            getRequest.SupportsAllDrives = true;
-            await getRequest.DownloadAsync(memoryStream, cancellationToken);
+
+            // 1. Obtener metadatos del archivo para determinar si es Google Spreadsheet nativo o archivo binario
+            var metaRequest = driveService.Files.Get(_options.DriveFileId);
+            metaRequest.SupportsAllDrives = true;
+            metaRequest.Fields = "id, name, mimeType, size";
+            var fileMetadata = await metaRequest.ExecuteAsync(cancellationToken);
+
+            _logger.LogInformation("Archivo detectado en Google Drive: '{Name}' (MimeType: {MimeType})", fileMetadata.Name, fileMetadata.MimeType);
+
+            if (string.Equals(fileMetadata.MimeType, "application/vnd.google-apps.spreadsheet", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Exportando Google Spreadsheet nativo '{Name}' a formato OpenXML (.xlsx)...", fileMetadata.Name);
+                var exportRequest = driveService.Files.Export(_options.DriveFileId, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                await exportRequest.DownloadAsync(memoryStream, cancellationToken);
+            }
+            else
+            {
+                _logger.LogInformation("Descargando archivo binario directo '{Name}' desde Google Drive...", fileMetadata.Name);
+                var getRequest = driveService.Files.Get(_options.DriveFileId);
+                getRequest.SupportsAllDrives = true;
+                await getRequest.DownloadAsync(memoryStream, cancellationToken);
+            }
+
+            memoryStream.Position = 0;
 
             if (memoryStream.Length == 0)
             {
                 throw new InvalidOperationException("El archivo descargado desde Google Drive está vacío.");
             }
 
-            memoryStream.Position = 0;
-            _logger.LogInformation("Archivo descargado exitosamente ({Size} bytes). Procesando Excel...", memoryStream.Length);
+            _logger.LogInformation("Archivo descargado/exportado exitosamente ({Size} bytes). Procesando Excel...", memoryStream.Length);
 
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             using var reader = ExcelReaderFactory.CreateReader(memoryStream);

@@ -121,7 +121,9 @@ public class ActaDocumentService : IActaDocumentService, IDocumentoActaService
     }
 
     private static readonly Lazy<byte[]?> CachedLogo = new(() => LoadAssetBytes("assist-logo.png"));
-    private static readonly Lazy<byte[]?> CachedSoporteSignature = new(() => LoadAssetBytes("andres-trujillo-signature.png"));
+    private static readonly Lazy<byte[]?> CachedSoporteSignature = new(() =>
+        LoadAssetBytes("authorized-signature.png")
+        ?? LoadAssetBytes("lead-signature.png"));
 
     // 2. ZONA HORARIA OFICIAL COLOMBIA (UTC-5)
     private static readonly TimeZoneInfo ColombiaTimeZone = ResolveColombiaTimeZone();

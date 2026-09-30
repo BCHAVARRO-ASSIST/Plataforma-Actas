@@ -7,6 +7,7 @@ import {
 import { Modal } from "@/components/ui/Modal";
 import { formatDateTime } from "@/shared/utils/date";
 import { ASSIST_LOGO_BASE64 } from "@/shared/assets/assistLogoBase64";
+import { useConfirm } from "@/shared/hooks/useConfirm";
 
 interface OfficialActaModalProps {
   acta: ActaDetail;
@@ -16,6 +17,7 @@ interface OfficialActaModalProps {
 
 export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const confirm = useConfirm();
 
   if (!isOpen) return null;
 
@@ -134,11 +136,16 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
   const fechaCreacionFmt = formatDateTime(acta.fechaCreacion);
   const fechaFirmaFmt = formatDateTime(acta.fechaFirma, "Pendiente de firma");
 
-  function handlePrint() {
+  async function handlePrint() {
     if (!printRef.current) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      alert("Por favor habilita las ventanas emergentes para imprimir.");
+      await confirm({
+        title: "Ventanas emergentes bloqueadas",
+        message: "Por favor habilita las ventanas emergentes en la barra de direcciones de tu navegador para imprimir el acta.",
+        confirmText: "Entendido",
+        variant: "warning",
+      });
       return;
     }
 
@@ -642,7 +649,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                   <div style={{ border: "1px solid #e2e8f0", padding: "6px", textAlign: "center", borderRadius: "3px" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Entrega:</div>
                     <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <img src="/brand/andres-trujillo-signature.png" alt="Firma Andrés Trujillo" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
+                      <img src="/brand/authorized-signature.png" alt="Firma Autorizada Soporte" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
                     </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>
                       <div><strong>Nombre:</strong> Andrés Trujillo</div>
@@ -707,7 +714,7 @@ export function OfficialActaModal({ acta, isOpen, onClose }: OfficialActaModalPr
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#64748b" }}>Recibe:</div>
                     <div style={{ height: "42px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {isDevolucion ? (
-                        <img src="/brand/andres-trujillo-signature.png" alt="Firma Andrés Trujillo" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
+                        <img src="/brand/authorized-signature.png" alt="Firma Autorizada Soporte" style={{ maxHeight: "38px", maxWidth: "90%", objectFit: "contain" }} />
                       ) : null}
                     </div>
                     <div style={{ borderTop: "1px solid #94a3b8", paddingTop: "3px", fontSize: "9.5px" }}>

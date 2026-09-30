@@ -1,0 +1,26 @@
+# ==============================================================================
+# Docker Ignore - PlataformaActas Web-Admin (React 19 / Vite)
+# ==============================================================================
+
+**/.git
+**/.github
+**/.vscode
+**/.idea
+
+# Dependencias locales y empaquetados
+node_modules/
+dist/
+build/
+.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables de entorno locales
+.env*
+!.env.example
+
+# Logs y SO
+*.log
+.DS_Store
+Thumbs.db

@@ -977,51 +977,88 @@
    ========================================================================== */
 [data-theme="dark"] .modal-content,
 [data-theme="dark"] .modal-dialog,
-[data-theme="dark"] .confirm-dialog-card {
-  background-color: var(--bg-surface, #111a2e) !important;
-  border-color: var(--border-default, #1e2e4a) !important;
-  color: var(--text-primary, #f8fafc) !important;
+[data-theme="dark"] .confirm-dialog-card,
+html.dark .modal-content,
+html.dark .modal-dialog,
+html.dark .confirm-dialog-card,
+.dark .modal-content,
+.dark .modal-dialog,
+.dark .confirm-dialog-card,
+body[data-theme="dark"] .modal-content,
+body[data-theme="dark"] .modal-dialog,
+body[data-theme="dark"] .confirm-dialog-card {
+  background-color: #111a2e !important;
+  border: 1px solid #1e2e4a !important;
+  color: #f8fafc !important;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
 }
 
-[data-theme="dark"] .modal-header {
-  background: var(--bg-surface, #111a2e) !important;
-  border-bottom-color: var(--border-default, #1e2e4a) !important;
+[data-theme="dark"] .modal-header,
+html.dark .modal-header,
+.dark .modal-header,
+body[data-theme="dark"] .modal-header {
+  background: #111a2e !important;
+  border-bottom-color: #1e2e4a !important;
 }
 
 [data-theme="dark"] .modal-header h2,
 [data-theme="dark"] .modal-header h3,
 [data-theme="dark"] .modal-header h4,
-[data-theme="dark"] .confirm-dialog-title {
-  color: var(--text-primary, #f8fafc) !important;
+[data-theme="dark"] .confirm-dialog-title,
+html.dark .modal-header h2,
+html.dark .modal-header h3,
+html.dark .modal-header h4,
+html.dark .confirm-dialog-title,
+.dark .modal-header h2,
+.dark .modal-header h3,
+.dark .modal-header h4,
+.dark .confirm-dialog-title,
+body[data-theme="dark"] .modal-header h2,
+body[data-theme="dark"] .modal-header h3,
+body[data-theme="dark"] .confirm-dialog-title {
+  color: #f8fafc !important;
   font-weight: 700 !important;
 }
 
-[data-theme="dark"] .modal-close {
+[data-theme="dark"] .modal-close,
+html.dark .modal-close,
+.dark .modal-close,
+body[data-theme="dark"] .modal-close {
   background: rgba(255, 255, 255, 0.05);
   border-color: transparent;
-  color: var(--text-secondary, #94a3b8);
+  color: #94a3b8;
 }
 
-[data-theme="dark"] .modal-close:hover {
+[data-theme="dark"] .modal-close:hover,
+html.dark .modal-close:hover,
+.dark .modal-close:hover,
+body[data-theme="dark"] .modal-close:hover {
   background: rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  border-color: var(--border-default, #1e2e4a);
+  border-color: #1e2e4a;
 }
 
-[data-theme="dark"] .modal-footer {
-  background: var(--bg-surface, #111a2e) !important;
-  border-top-color: var(--border-default, #1e2e4a) !important;
+[data-theme="dark"] .modal-footer,
+html.dark .modal-footer,
+.dark .modal-footer,
+body[data-theme="dark"] .modal-footer {
+  background: #111a2e !important;
+  border-top-color: #1e2e4a !important;
 }
 
-[data-theme="dark"] .modal-header-badge {
+[data-theme="dark"] .modal-header-badge,
+html.dark .modal-header-badge,
+.dark .modal-header-badge {
   background: rgba(99, 102, 241, 0.18) !important;
   border-color: rgba(99, 102, 241, 0.35) !important;
-  color: var(--color-primary-400, #818cf8) !important;
+  color: #818cf8 !important;
 }
 
-[data-theme="dark"] .confirm-dialog-message {
-  color: var(--text-secondary, #94a3b8) !important;
+[data-theme="dark"] .confirm-dialog-message,
+html.dark .confirm-dialog-message,
+.dark .confirm-dialog-message,
+body[data-theme="dark"] .confirm-dialog-message {
+  color: #94a3b8 !important;
 }
 
 /* Sincronización Universal de Inputs y Textareas en Modales */
@@ -1050,10 +1087,30 @@
 [data-theme="dark"] .confirm-dialog-card textarea,
 [data-theme="dark"] .form-input,
 [data-theme="dark"] .form-textarea,
-[data-theme="dark"] .form-select {
-  background-color: var(--bg-input, #0b111e) !important;
-  border-color: var(--border-input, #2d4268) !important;
-  color: var(--text-primary, #f8fafc) !important;
+[data-theme="dark"] .form-select,
+html.dark .modal-content input:not([type="checkbox"]):not([type="radio"]),
+html.dark .modal-content textarea,
+html.dark .modal-content select,
+html.dark .modal-dialog input:not([type="checkbox"]):not([type="radio"]),
+html.dark .modal-dialog textarea,
+html.dark .modal-dialog select,
+html.dark .confirm-dialog-card input,
+html.dark .confirm-dialog-card textarea,
+html.dark .form-input,
+html.dark .form-textarea,
+html.dark .form-select,
+.dark .modal-content input:not([type="checkbox"]):not([type="radio"]),
+.dark .modal-content textarea,
+.dark .modal-content select,
+.dark .form-input,
+.dark .form-textarea,
+.dark .form-select,
+body[data-theme="dark"] .modal-content input:not([type="checkbox"]):not([type="radio"]),
+body[data-theme="dark"] .modal-content textarea,
+body[data-theme="dark"] .modal-content select {
+  background-color: #0b111e !important;
+  border-color: #2d4268 !important;
+  color: #f8fafc !important;
 }
 
 .modal-content input:focus,

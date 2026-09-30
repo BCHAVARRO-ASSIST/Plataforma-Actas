@@ -34,6 +34,6 @@
     <None Include="Resources/**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="Secrets/**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <EmbeddedResource Include="Resources/assist-logo.png" />
-    <EmbeddedResource Include="Resources/andres-trujillo-signature.png" />
+    <EmbeddedResource Include="Resources/authorized-signature.png" />
   </ItemGroup>
 </Project>

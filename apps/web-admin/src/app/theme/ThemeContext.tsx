@@ -32,6 +32,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    if (typeof document !== "undefined" && document.body) {
+      document.body.setAttribute("data-theme", theme);
+      document.body.classList.toggle("dark", theme === "dark");
+    }
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 

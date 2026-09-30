@@ -1,7 +1,9 @@
 name: plataforma-actas
 
 services:
-  # 1. Base de datos PostgreSQL 17 (Aislada en red backend-net)
+  # ============================================================================
+  # 1. Base de datos PostgreSQL 17 (Aislada en backend-net)
+  # ============================================================================
   db:
     image: postgres:17-alpine
     container_name: plataforma-actas-db
@@ -10,7 +12,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-plataforma_actas}
       POSTGRES_USER: ${POSTGRES_USER:-plataforma_user}
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Error: POSTGRES_PASSWORD es obligatoria}"
-    # Restringido estrictamente a localhost para herramientas de depuración local (DBeaver/pgAdmin)
+    # Restringido estrictamente a localhost para depuración interna
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -24,7 +26,9 @@ services:
       retries: 5
       start_period: 10s
 
-  # 2. Backend API ASP.NET Core 10 (Conecta con backend-net y frontend-net)
+  # ============================================================================
+  # 2. Backend API ASP.NET Core 10 (Conexión entre backend-net y frontend-net)
+  # ============================================================================
   api:
     build:
       context: .
@@ -41,16 +45,11 @@ services:
       Cors__AllowedOrigins__0: ${CORS_ORIGIN:-http://localhost:3000}
       Frontend__BaseUrl: ${FRONTEND_BASE_URL:-http://localhost:3000}
       GoogleIntegration__ClientId: ${GOOGLE_CLIENT_ID:-104519674085578864792}
-      GoogleIntegration__ServiceAccountKeyPath: ${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-Secrets/google-credentials.json}
+      GoogleIntegration__ServiceAccountKeyPath: ${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-/app/Secrets/google-credentials.json}
       GoogleIntegration__AdminImpersonationEmail: ${GOOGLE_ADMIN_IMPERSONATION_EMAIL:-soporte@assist.com.co}
       GoogleIntegration__GmailImpersonationEmail: ${GOOGLE_GMAIL_IMPERSONATION_EMAIL:-soporte@assist.com.co}
-      EmailSettings__Server: ${SMTP_HOST:-smtp.gmail.com}
-      EmailSettings__Port: ${SMTP_PORT:-587}
-      EmailSettings__EnableSsl: ${SMTP_ENABLE_SSL:-true}
-      EmailSettings__Username: ${SMTP_USERNAME:-}
-      EmailSettings__Password: ${SMTP_PASSWORD:-}
-      EmailSettings__SenderEmail: ${SMTP_FROM_EMAIL:-soporte@assist.com.co}
-      EmailSettings__SenderName: ${SMTP_FROM_NAME:-Soporte - Assist Consultores}
+      GoogleIntegration__DriveFileId: ${GOOGLE_DRIVE_FILE_ID:-1IzIM5X_ph99Q_fw9T290IMFOpkZj5Qkc}
+      # Configuración limpia de transporte SMTP (Canal de respaldo institucional)
       Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
       Smtp__Port: ${SMTP_PORT:-587}
       Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
@@ -58,15 +57,14 @@ services:
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__FromEmail: ${SMTP_FROM_EMAIL:-soporte@assist.com.co}
       Smtp__FromName: ${SMTP_FROM_NAME:-Soporte - Assist Consultores}
-    # Expuesto únicamente en localhost para diagnóstico directo
+    # Expuesto únicamente en loopback 127.0.0.1 para auditoría y diagnóstico directo
     ports:
       - "127.0.0.1:${API_PORT:-8080}:8080"
     volumes:
       - storage_documentos:/app/storage/documentos
       - ./apps/api/Secrets/google-credentials.json:/app/Secrets/google-credentials.json:ro
-      - ./apps/api/Resources/google-credentials.json:/app/Resources/google-credentials.json:ro
       - ./apps/api/Resources/assist-logo.png:/app/Resources/assist-logo.png:ro
-      - ./apps/api/Resources/andres-trujillo-signature.png:/app/Resources/andres-trujillo-signature.png:ro
+      - ./apps/api/Resources/authorized-signature.png:/app/Resources/authorized-signature.png:ro
     depends_on:
       db:
         condition: service_healthy
@@ -80,13 +78,16 @@ services:
       retries: 3
       start_period: 15s
 
+  # ============================================================================
   # 3. Frontend SPA & Reverse Proxy (React 19 + Vite + Nginx)
+  # ============================================================================
   web:
     build:
       context: .
       dockerfile: apps/web-admin/Dockerfile
       args:
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_API_URL: ${VITE_API_URL:-/api}
     container_name: plataforma-actas-web
     restart: unless-stopped
     ports:
@@ -103,12 +104,18 @@ services:
       retries: 3
       start_period: 5s
 
+# ==============================================================================
+# Definición de Redes Aisladas
+# ==============================================================================
 networks:
   frontend-net:
     driver: bridge
   backend-net:
     driver: bridge
 
+# ==============================================================================
+# Definición de Volúmenes Persistentes
+# ==============================================================================
 volumes:
   postgres_data:
   storage_documentos:

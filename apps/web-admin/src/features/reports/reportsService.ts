@@ -267,7 +267,7 @@ export function exportToPdf(
 ) {
   const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    alert("Por favor habilita las ventanas emergentes para generar el PDF.");
+    console.warn("No se pudo abrir la ventana emergente para exportar a PDF. Por favor habilita las ventanas emergentes en tu navegador.");
     return;
   }
 

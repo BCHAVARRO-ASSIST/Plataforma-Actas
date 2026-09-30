@@ -1,0 +1,35 @@
+# ==============================================================================
+# Docker Ignore - PlataformaActas API (.NET 10)
+# ==============================================================================
+
+**/.git
+**/.github
+**/.vs
+**/.vscode
+**/.idea
+
+# Binarios y artefactos de compilación local
+bin/
+obj/
+**/*.user
+**/*.suo
+
+# Secretos y credenciales
+Secrets/
+Secrets/*.json
+**/*.key
+**/*.pfx
+**/*.pem
+
+# Variables de entorno
+.env*
+!.env.example
+
+# Documentos generados localmente
+storage/documentos/*
+!storage/documentos/.gitkeep
+
+# Logs y temporales
+*.log
+.DS_Store
+Thumbs.db
