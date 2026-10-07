@@ -26,10 +26,20 @@ Secrets/*.json
 !.env.example
 
 # Documentos generados localmente
+storage
+storage/
+/app/storage/
 storage/documentos/*
 !storage/documentos/.gitkeep
 
 # Logs y temporales
 *.log
+*.tmp
+*.doc
+*.docx
+*.pdf
+temp/
+logs/
 .DS_Store
 Thumbs.db
+

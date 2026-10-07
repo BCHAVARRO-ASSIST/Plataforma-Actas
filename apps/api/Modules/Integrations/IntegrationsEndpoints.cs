@@ -92,11 +92,12 @@ public static class IntegrationsEndpoints
             var result = await googleAuthService.AuthenticateWithGoogleAsync(request?.IdToken, cancellationToken);
             if (result is Microsoft.AspNetCore.Http.HttpResults.Ok<LoginResponse> okResult && okResult.Value is { Token: not null } loginResp)
             {
-                var expiresMinutes = int.TryParse(configuration["Jwt:ExpiresMinutes"], out var minutes) ? minutes : 30;
+                var expiresMinutes = int.TryParse(configuration["Jwt:ExpiresMinutes"], out var minutes) ? minutes : 480;
                 AuthEndpoints.AppendSessionCookie(httpContext, loginResp.Token, expiresMinutes);
             }
             return result;
-        });
+        })
+        .RequireRateLimiting("auth-limit");
 
         return endpoints;
     }

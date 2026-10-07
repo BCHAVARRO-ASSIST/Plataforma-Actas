@@ -39,6 +39,16 @@ token.txt
 *.orig
 *.old
 *.log
+*.doc
+*.docx
+*.pdf
+*.swp
+**/temp/
+**/logs/
+**/coverage/
+coverage/
+temp/
+logs/
 
 # Herramientas y metadatos de entorno / IDE
 *.exe
@@ -57,7 +67,11 @@ Thumbs.db
 *.sql.bak
 
 # Almacenamiento persistente de documentos en runtime
+storage/
+**/storage/
+/app/storage/
 storage/documentos/*
 !storage/documentos/.gitkeep
 **/storage/documentos/*
 !**/storage/documentos/.gitkeep
+

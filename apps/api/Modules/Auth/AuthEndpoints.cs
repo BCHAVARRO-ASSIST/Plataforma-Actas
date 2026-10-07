@@ -59,8 +59,8 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
                 Secure = isHttps, // true de forma obligatoria en HTTPS / Cloudflare; false en HTTP localhost
                 SameSite = SameSiteMode.Lax,
                 Path = "/",
-                Expires = DateTimeOffset.UtcNow.AddHours(8),
-                MaxAge = TimeSpan.FromHours(8)
+                Expires = DateTimeOffset.UtcNow.AddMinutes(expiresMinutes),
+                MaxAge = TimeSpan.FromMinutes(expiresMinutes)
             };
             context.Response.Cookies.Append(SessionCookieName, token, cookieOptions);
         }
@@ -110,7 +110,7 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
 
                 var expiresMinutes = int.TryParse(configuration["Jwt:ExpiresMinutes"], out var minutes)
                     ? minutes
-                    : 30;
+                    : 480;
 
                 AppendSessionCookie(httpContext, token, expiresMinutes);
 

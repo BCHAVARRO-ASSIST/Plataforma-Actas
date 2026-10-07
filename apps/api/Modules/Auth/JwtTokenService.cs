@@ -35,7 +35,7 @@ public sealed class JwtTokenService : IJwtTokenService
         var expiresMinutes =
             int.TryParse(_configuration["Jwt:ExpiresMinutes"], out var minutes)
                 ? minutes
-                : 30;
+                : 480;
 
         // Claims del token corporativo: NameIdentifier, Name, Role y permission por cada código
         var claims = new List<Claim>
@@ -60,12 +60,12 @@ public sealed class JwtTokenService : IJwtTokenService
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-        // Expiración fija sincronizada con la cookie de sesión: 8 horas
+        // Expiración sincronizada con configuración del sistema y cookie de sesión
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(8),
+            expires: DateTime.UtcNow.AddMinutes(expiresMinutes),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

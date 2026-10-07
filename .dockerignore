@@ -34,10 +34,28 @@
 **/*.pem
 
 # Volúmenes locales y almacenamiento de pruebas
+storage
+storage/
+**/storage/
+/app/storage/
 **/storage/documentos/*
 !**/storage/documentos/.gitkeep
 **/tests
 **/scratch
+**/temp
+**/logs
+temp
+logs
+**/coverage
+coverage
 **/*.log
+*.tmp
+*.doc
+*.docx
+*.pdf
+*.swp
+scripts
 .DS_Store
 Thumbs.db
+
+

@@ -22,5 +22,12 @@ yarn-error.log*
 
 # Logs y SO
 *.log
+*.tmp
+*.doc
+*.docx
+*.pdf
+temp/
+logs/
 .DS_Store
 Thumbs.db
+

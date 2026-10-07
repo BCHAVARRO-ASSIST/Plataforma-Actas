@@ -63,9 +63,9 @@ public static class DependencyInjectionExtensions
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             {
                 var path = httpContext.Request.Path.Value ?? string.Empty;
-                if (path.StartsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase))
+                if (path.StartsWith("/api/auth", StringComparison.OrdinalIgnoreCase))
                 {
-                    return RateLimitPartition.GetNoLimiter("no-global-limit-for-login");
+                    return RateLimitPartition.GetNoLimiter("no-global-limit-for-auth");
                 }
 
                 var clientKey = httpContext.User.Identity?.IsAuthenticated == true
@@ -161,8 +161,12 @@ public static class DependencyInjectionExtensions
         {
             options.AddPolicy("WebAdmin", policy =>
             {
+                var configuredOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+                var defaultOrigins = new[] { "http://localhost:5173", "http://localhost:3000", "http://localhost" };
+                var allowedOrigins = configuredOrigins.Concat(defaultOrigins).Distinct().ToArray();
+
                 policy
-                    .SetIsOriginAllowed(_ => true)
+                    .WithOrigins(allowedOrigins)
                     .AllowCredentials()
                     .WithHeaders("Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin")
                     .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH");

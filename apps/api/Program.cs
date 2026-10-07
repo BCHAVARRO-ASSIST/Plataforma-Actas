@@ -38,7 +38,14 @@ builder.Services.AddDbContext<PlataformaActasDbContext>(options =>
 // =========================================================
 // LICENCIAMIENTO QUESTPDF Y MÓDULOS DE NEGOCIO
 // =========================================================
-QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+try
+{
+    QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+}
+catch (Exception)
+{
+    // Resiliencia ante entornos con políticas de AppLocker restrictivas en pruebas o sin binarios nativos
+}
 
 builder.Services.AddActaModule();
 builder.Services.AddEquiposModule();
@@ -67,8 +74,11 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Documentación Swagger / OpenAPI
-app.MapSwaggerDocumentation();
+// Documentación Swagger / OpenAPI (Habilitada en Desarrollo o explícitamente por configuración)
+if (app.Environment.IsDevelopment() || builder.Configuration.GetValue<bool>("EnableSwagger", false))
+{
+    app.MapSwaggerDocumentation();
+}
 
 // =========================================================
 // REGISTRO DE ENDPOINTS POR MÓDULOS

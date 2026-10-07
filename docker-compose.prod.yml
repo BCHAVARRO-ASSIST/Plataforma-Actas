@@ -1,0 +1,116 @@
+name: plataforma-actas-prod
+
+services:
+  # ============================================================================
+  # 1. Base de datos PostgreSQL 17 (Totalmente aislada en red interna)
+  # ============================================================================
+  db:
+    image: postgres:17-alpine
+    container_name: plataforma-actas-db-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-plataforma_actas}
+      POSTGRES_USER: ${POSTGRES_USER:-plataforma_user}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Error: POSTGRES_PASSWORD es obligatoria en produccion}"
+    # SEGURIDAD CRÍTICA: Sin mapeo de puertos al host. Aislamiento estricto en backend-net.
+    expose:
+      - "5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - backend-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-plataforma_user} -d ${POSTGRES_DB:-plataforma_actas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ============================================================================
+  # 2. Backend API ASP.NET Core 10 (Sin puertos públicos expuestos)
+  # ============================================================================
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: plataforma-actas-api-prod
+    restart: always
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=${POSTGRES_DB:-plataforma_actas};Username=${POSTGRES_USER:-plataforma_user};Password=${POSTGRES_PASSWORD}"
+      Jwt__Key: "${JWT_KEY:?Error: JWT_KEY es obligatoria y debe tener al menos 32 caracteres}"
+      Jwt__Issuer: ${JWT_ISSUER:-PlataformaActas.Api}
+      Jwt__Audience: ${JWT_AUDIENCE:-PlataformaActas.Web}
+      Jwt__ExpiresMinutes: ${JWT_EXPIRES_MINUTES:-30}
+      Cors__AllowedOrigins__0: ${CORS_ORIGIN:-http://localhost}
+      Frontend__BaseUrl: ${FRONTEND_BASE_URL:-http://localhost}
+      GoogleIntegration__ClientId: ${GOOGLE_CLIENT_ID:-}
+      GoogleIntegration__ServiceAccountKeyPath: ${GOOGLE_SERVICE_ACCOUNT_KEY_PATH:-/app/Secrets/google-credentials.json}
+      GoogleIntegration__AdminImpersonationEmail: ${GOOGLE_ADMIN_IMPERSONATION_EMAIL:-soporte@assist.com.co}
+      GoogleIntegration__GmailImpersonationEmail: ${GOOGLE_GMAIL_IMPERSONATION_EMAIL:-soporte@assist.com.co}
+      GoogleIntegration__DriveFileId: ${GOOGLE_DRIVE_FILE_ID:-}
+      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__EnableSsl: ${SMTP_ENABLE_SSL:-true}
+      Smtp__User: ${SMTP_USER:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__From: ${SMTP_FROM:-soporte@assist.com.co}
+      Smtp__FromName: ${SMTP_FROM_NAME:-Soporte - Assist Consultores}
+      EnableSwagger: "false"
+    # Sin puertos expuestos al host: la comunicación ingresa exclusivamente a través de Nginx (web)
+    expose:
+      - "8080"
+    volumes:
+      - storage_documentos_prod:/app/storage/documentos
+      - ./apps/api/Secrets/google-credentials.json:/app/Secrets/google-credentials.json:ro
+      - ./apps/api/Resources/assist-logo.png:/app/Resources/assist-logo.png:ro
+      - ./apps/api/Resources/authorized-signature.png:/app/Resources/authorized-signature.png:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend-net
+      - frontend-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ============================================================================
+  # 3. Frontend SPA & Reverse Proxy (Nginx) - Único punto de entrada público
+  # ============================================================================
+  web:
+    build:
+      context: .
+      dockerfile: apps/web-admin/Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    container_name: plataforma-actas-web-prod
+    restart: always
+    ports:
+      - "${WEB_PORT:-80}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - frontend-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+  storage_documentos_prod:
