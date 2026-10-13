@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using PlataformaActas.Api.Authorization;
 using PlataformaActas.Api.Infrastructure.Email;
@@ -149,6 +150,38 @@ public static class DependencyInjectionExtensions
                         {
                             context.Fail("Usuario inactivo");
                         }
+                    },
+                    OnChallenge = async context =>
+                    {
+                        context.HandleResponse();
+
+                        var problem = new ProblemDetails
+                        {
+                            Type = "https://tools.ietf.org/html/rfc9110#section-15.5.2",
+                            Title = "No autorizado",
+                            Status = StatusCodes.Status401Unauthorized,
+                            Detail = !string.IsNullOrWhiteSpace(context.ErrorDescription)
+                                ? context.ErrorDescription
+                                : "No se proporcionó una credencial de autenticación válida o la sesión ha expirado.",
+                            Instance = context.Request.Path
+                        };
+                        problem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                        await Results.Json(problem, contentType: "application/problem+json", statusCode: StatusCodes.Status401Unauthorized).ExecuteAsync(context.HttpContext);
+                    },
+                    OnForbidden = async context =>
+                    {
+                        var problem = new ProblemDetails
+                        {
+                            Type = "https://tools.ietf.org/html/rfc9110#section-15.5.4",
+                            Title = "Acceso prohibido",
+                            Status = StatusCodes.Status403Forbidden,
+                            Detail = "No cuenta con los privilegios o permisos necesarios para acceder a este recurso.",
+                            Instance = context.Request.Path
+                        };
+                        problem.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+                        await Results.Json(problem, contentType: "application/problem+json", statusCode: StatusCodes.Status403Forbidden).ExecuteAsync(context.HttpContext);
                     }
                 };
             });

@@ -131,7 +131,13 @@ public static class EquiposEndpoints
             CancellationToken cancellationToken) =>
         {
             var eq = await service.GetByIdAsync(id, cancellationToken);
-            return eq is null ? Results.NotFound() : Results.Ok(eq);
+            return eq is null
+                ? Results.Problem(
+                    statusCode: StatusCodes.Status404NotFound,
+                    title: "Recurso no encontrado",
+                    detail: $"El equipo tecnológico con identificador '{id}' no fue encontrado en el sistema.",
+                    type: "https://tools.ietf.org/html/rfc9110#section-15.5.5")
+                : Results.Ok(eq);
         })
         .RequirePermission(Permissions.EquiposConsultar);
 

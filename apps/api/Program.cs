@@ -13,7 +13,24 @@ using PlataformaActas.Api.Modules.Usuarios;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+        context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+
+        if (context.ProblemDetails.Status == StatusCodes.Status500InternalServerError)
+        {
+            context.ProblemDetails.Title = "Error interno del servidor";
+            context.ProblemDetails.Type = "https://tools.ietf.org/html/rfc9110#section-15.6.1";
+            if (!builder.Environment.IsDevelopment())
+            {
+                context.ProblemDetails.Detail = "Ha ocurrido un error inesperado al procesar la solicitud. Por favor contacte al administrador con el identificador de rastreo.";
+            }
+        }
+    };
+});
 builder.Services.AddHealthChecks();
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
@@ -69,6 +86,7 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 app.UseSecurityHeaders();
 app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.UseCors("WebAdmin");
 app.UseRateLimiter();
 app.UseAuthentication();

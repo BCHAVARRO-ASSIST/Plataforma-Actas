@@ -97,13 +97,34 @@ namespace PlataformaActas.Api.Modules.Auth.Endpoints
             {
                 if (string.IsNullOrWhiteSpace(request.Usuario) || string.IsNullOrWhiteSpace(request.Password))
                 {
-                    return Results.BadRequest(new { message = "El usuario y la contraseña son obligatorios." });
+                    var errors = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+                    if (string.IsNullOrWhiteSpace(request.Usuario))
+                    {
+                        errors["usuario"] = ["El campo usuario o correo electrónico es obligatorio."];
+                    }
+                    if (string.IsNullOrWhiteSpace(request.Password))
+                    {
+                        errors["password"] = ["El campo contraseña es obligatorio."];
+                    }
+
+                    return Results.ValidationProblem(
+                        errors: errors,
+                        title: "Uno o más errores de validación ocurrieron.",
+                        statusCode: StatusCodes.Status400BadRequest,
+                        instance: httpContext.Request.Path
+                    );
                 }
 
                 var login = await authService.AuthenticateAsync(request.Usuario, request.Password, cancellationToken);
                 if (login is null)
                 {
-                    return Results.Unauthorized();
+                    return Results.Problem(
+                        statusCode: StatusCodes.Status401Unauthorized,
+                        title: "No autorizado",
+                        detail: "Credenciales de acceso inválidas o usuario inactivo.",
+                        type: "https://tools.ietf.org/html/rfc9110#section-15.5.2",
+                        instance: httpContext.Request.Path
+                    );
                 }
 
                 var token = jwtTokenService.GenerateToken(login.Usuario, login.Rol, login.Permisos);

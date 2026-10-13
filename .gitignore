@@ -1,21 +1,77 @@
 # ==============================================================================
-# Git Ignore - Plataforma de Actas
+# .gitignore - Plataforma de Actas Monorepo (Production Hardened)
+# Stack: ASP.NET Core 10 (C#), React 19 / Vite (TypeScript), PostgreSQL 17, Docker
 # ==============================================================================
 
-# Dependencias y artefactos generados de compilación
-**/node_modules/
-**/dist/
-**/build/
+# ------------------------------------------------------------------------------
+# 1. Scripts de Prueba Temporales y Volátiles
+# ------------------------------------------------------------------------------
+test_*.ps1
+test_*.sh
+*.test.sh
+*_test_battery.ps1
+scripts/test_*
+scripts/temp_*
+scratch/
+tools/*.ps1
+tools/*.sh
+
+# ------------------------------------------------------------------------------
+# 2. Compilados y Artefactos de Build - .NET 10 / C#
+# ------------------------------------------------------------------------------
 **/bin/
 **/obj/
-**/.vite/
-*.tsbuildinfo
+**/Release/
+**/Debug/
+TestResults/
+**/TestResults/
+[Bb]in/
+[Oo]bj/
 
-# Configuración local, variables de entorno y secretos
+# Archivos de usuario y estado de solución Visual Studio / JetBrains / VS Code
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+*.pidb
+*.booproj
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.fleet/
+*.DotSettings.user
+
+# ------------------------------------------------------------------------------
+# 3. Dependencias y Builds Frontend - React 19 / Vite / Node
+# ------------------------------------------------------------------------------
+**/node_modules/
+node_modules/
+**/dist/
+dist/
+**/build/
+build/
+**/.vite/
+.vite/
+*.tsbuildinfo
+.npm/
+.yarn/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ------------------------------------------------------------------------------
+# 4. Secretos, Variables de Entorno y Credenciales Criptográficas
+# ------------------------------------------------------------------------------
 **/.env
 **/.env.*
 !**/.env.example
 **/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
 **/appsettings.Development.json
 !**/appsettings.Development.example.json
 **/google-credentials*.json
@@ -26,47 +82,47 @@
 **/*.pem
 **/*.cer
 **/*.crt
-*.user
-*.suo
 cookies.txt
 token.txt
 *token*.txt
 *cookie*.txt
 
-# Archivos temporales y de respaldo
+# ------------------------------------------------------------------------------
+# 5. Logs, Archivos Temporales y Reportes Efímeros
+# ------------------------------------------------------------------------------
+*.log
+**/logs/
+logs/
 *.bak
 *.tmp
 *.orig
 *.old
-*.log
-*.doc
-*.docx
-*.pdf
 *.swp
-**/temp/
-**/logs/
-**/coverage/
-coverage/
-temp/
-logs/
-
-# Herramientas y metadatos de entorno / IDE
-*.exe
-tools/*.exe
-.vs/
-.vscode/*
-!.vscode/extensions.json
-.idea/
-.fleet/
-.DS_Store
-Thumbs.db
-
-# Respaldos y dumps de base de datos
+*~
 *.dump
 *.backup
 *.sql.bak
+temp/
+**/temp/
+coverage/
+**/coverage/
+*.lcov
 
-# Almacenamiento persistente de documentos en runtime
+# ------------------------------------------------------------------------------
+# 6. Archivos de Sistema Operativo
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ------------------------------------------------------------------------------
+# 7. Almacenamiento Persistente en Runtime (Storage de PDFs y Actas)
+# ------------------------------------------------------------------------------
 storage/
 **/storage/
 /app/storage/
@@ -75,3 +131,10 @@ storage/documentos/*
 **/storage/documentos/*
 !**/storage/documentos/.gitkeep
 
+# ------------------------------------------------------------------------------
+# 8. Binarios y Ejecutables Nativos
+# ------------------------------------------------------------------------------
+*.exe
+tools/*.exe
+*.dll
+!**/tests/**/*.dll.reference
